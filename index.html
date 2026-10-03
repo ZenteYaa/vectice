@@ -148,15 +148,6 @@
   .skin .buy { border: 1px solid var(--c1); background: #0008; padding: 10px; cursor: pointer; letter-spacing: 2px; font-weight: 800; font-size: 12px !important; white-space: nowrap; }
   .skin .buy:hover:not(:disabled) { background: var(--c1); color: #0b1016; }
   .skin .buy:disabled { opacity: .6; cursor: default; }
-  .collection { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
-  .coll { border: 1px solid var(--line); background: #ffffff08; padding: 10px; min-height: 104px; display: flex; flex-direction: column; gap: 4px; cursor: default; text-align: left; }
-  .coll.has { cursor: pointer; }
-  .coll.has:hover { border-color: var(--c1, var(--cy)); }
-  .coll.eq { border-color: var(--c1); background: linear-gradient(160deg, var(--c2), transparent 80%); }
-  .coll .art { height: 46px; color: var(--c1, #cfd6dc); }
-  .coll .art svg { width: 100%; height: 100%; }
-  .coll b { font-size: 12px; letter-spacing: 2px; }
-  .coll small { font-size: 10px; opacity: .6; letter-spacing: 1px; }
 
   #social { position: absolute; top: 62px; right: 0; bottom: 0; width: 300px; background: #070a0ee6; border-left: 1px solid var(--line); transition: width .25s; }
   #lobby.social-collapsed #social { width: 44px; }
@@ -175,6 +166,86 @@
   .friend .fi em { font-style: normal; font-size: 10px; letter-spacing: 1px; display: block; }
   .friend.off { opacity: .45; }
   .st-game { color: var(--rd); } .st-lobby { color: var(--cy); } .st-idle { color: #ffc04d; }
+
+  /* ===================== Cuenta de Google ===================== */
+  .acct { position: relative; display: flex; align-items: center; }
+  .acct-login { display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 14px; background: #ffffff0d; border: 1px solid var(--line); cursor: pointer;
+    letter-spacing: 2px; font-weight: 800; font-size: 11px !important; white-space: nowrap; }
+  .acct-login:hover:not(:disabled) { border-color: var(--cy); background: #3fd6c41f; }
+  .acct-login:disabled { opacity: .55; cursor: default; }
+  .acct-login svg { width: 16px; height: 16px; flex: none; }
+  .acct-user { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px 0 4px; background: #ffffff0a; border: 1px solid var(--line); cursor: pointer; text-align: left; }
+  .acct-user:hover, .acct.open .acct-user { border-color: var(--cy); }
+  .acct-user[hidden], .acct-login[hidden] { display: none; }
+  .acct-av { width: 32px; height: 32px; flex: none; display: grid; place-items: center; background: #0b1016; border: 1px solid var(--cy); overflow: hidden; font-weight: 900; font-size: 15px; }
+  .acct-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .acct-user b { display: block; font-size: 12px; letter-spacing: 1px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .acct-st { display: block; font-size: 9px; letter-spacing: 2px; white-space: nowrap; }
+  .acct-st::before { content: '\25CF'; margin-right: 5px; }
+  .acct-st.ok { color: var(--cy); } .acct-st.busy { color: #ffc04d; } .acct-st.bad { color: var(--rd); }
+  .acct-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: #0b1016f7; border: 1px solid #ffffff2a; padding: 14px; z-index: 15; box-shadow: 0 16px 40px #000a; }
+  .acct-menu[hidden] { display: none; }
+  .acct-menu h5 { margin: 0 0 10px; font-size: 10px; letter-spacing: 3px; opacity: .55; }
+  .acct-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .acct-stats div { background: #ffffff08; border: 1px solid var(--line); padding: 7px 8px; }
+  .acct-stats b { display: block; font-size: 17px; }
+  .acct-stats small { font-size: 9px; letter-spacing: 2px; opacity: .55; }
+  .acct-menu p { font-size: 11px; line-height: 1.5; opacity: .7; margin: 0 0 12px; }
+  .acct-menu p:empty { display: none; }
+  .acct-menu .btn { width: 100%; padding: 10px 14px; font-size: 12px; letter-spacing: 3px; margin-top: 6px; }
+  .acct-menu .btn[hidden] { display: none; }
+  #toast { position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 20px); background: #0b1016f2; border: 1px solid var(--cy); color: #e9eef2; padding: 12px 20px; font-size: 13px;
+    letter-spacing: 1px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 40; max-width: min(640px, 90vw); text-align: center; line-height: 1.5; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.bad { border-color: var(--rd); }
+  body.state-menu #toast { left: calc(50% - 150px); bottom: 118px; }   /* lobby: centrado en el área principal, encima del botón de jugar y sin tapar el monitor */
+
+  /* ===================== Tienda: confirmación de compra ===================== */
+  .shop-earn { font-size: 11px; letter-spacing: 1px; opacity: .6; }
+  .skin .buy.poor { border-color: #ffffff33; }
+  .confirm-art { height: 150px; display: flex; align-items: center; justify-content: center; color: var(--c1); background: linear-gradient(160deg, var(--c2), #0b1016 80%);
+    border: 1px solid var(--line); margin: 14px 0 10px; }
+  .confirm-art svg { width: 80%; height: 120px; filter: drop-shadow(0 6px 18px var(--c1)); }
+  .confirm-line { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .confirm-line b { color: var(--cy); }
+  .confirm-line .neg { color: var(--rd); }
+  .modal-foot .btn + .btn { margin-left: 10px; }
+  .btn.primary { border-color: var(--cy); background: #3fd6c42a; }
+  .btn:disabled { opacity: .45; cursor: default; }
+
+  /* ===================== Colección (loadout estilo Valorant) ===================== */
+  .inv-sum { font-size: 11px; letter-spacing: 2px; color: var(--cy); }
+  .loadout { display: grid; grid-template-columns: repeat(6, minmax(130px, 1fr)); gap: 14px; align-items: start; }
+  .loadout[hidden], .lo-detail[hidden] { display: none; }
+  .lo-col h5 { margin: 0 0 8px; font-size: 10px; letter-spacing: 3px; opacity: .55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lo-w { width: 100%; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; padding: 8px 10px; background: #ffffff08; border: 1px solid var(--line); cursor: pointer;
+    text-align: left; transition: border-color .12s, transform .12s; }
+  .lo-w:hover { border-color: var(--c1, var(--cy)); transform: translateY(-2px); }
+  .lo-w.eq { border-color: var(--c1); background: linear-gradient(160deg, var(--c2), transparent 85%); }
+  .lo-w .art { height: 40px; color: var(--c1, #cfd6dc); }
+  .lo-w .art svg { width: 100%; height: 100%; }
+  .lo-w b { font-size: 11px; letter-spacing: 2px; }
+  .lo-w small { font-size: 9px; letter-spacing: 1px; opacity: .6; }
+  .lo-w .cnt { font-style: normal; font-size: 9px; letter-spacing: 1px; color: var(--cy); }
+  .lo-detail { display: grid; grid-template-columns: 300px 1fr; gap: 20px; min-height: 400px; }
+  .lo-list { display: flex; flex-direction: column; gap: 8px; }
+  .lo-back { align-self: flex-start; background: none; border: 1px solid var(--line); padding: 8px 14px; cursor: pointer; letter-spacing: 3px; font-size: 11px !important; font-weight: 800; margin-bottom: 6px; }
+  .lo-back:hover { border-color: var(--cy); }
+  .lo-skin { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #ffffff08; border: 1px solid var(--line); cursor: pointer; text-align: left; }
+  .lo-skin:hover { border-color: #ffffff55; }
+  .lo-skin .sw { width: 26px; height: 26px; flex: none; background: linear-gradient(135deg, var(--c1), var(--c2)); border: 1px solid #ffffff33; }
+  .lo-skin b { display: block; font-size: 12px; letter-spacing: 2px; }
+  .lo-skin small { font-size: 9px; letter-spacing: 1px; opacity: .6; }
+  .lo-skin.sel { border-color: var(--c1); background: #ffffff12; }
+  .lo-skin.locked { opacity: .55; }
+  .lo-skin.on::after { content: 'EQUIPADA'; margin-left: auto; font-size: 9px; letter-spacing: 2px; color: var(--cy); font-weight: 800; }
+  .lo-preview { border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 60%, var(--c2), #0b1016 75%); display: flex; flex-direction: column; padding: 18px 22px; }
+  .lo-preview .tier { font-size: 10px; letter-spacing: 3px; color: var(--c1); font-weight: 800; }
+  .lo-preview h3 { margin: 4px 0 0; font-size: 26px; letter-spacing: 5px; text-transform: uppercase; }
+  .lo-preview .art { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--c1); }
+  .lo-preview .art svg { width: 86%; height: 210px; filter: drop-shadow(0 10px 28px var(--c1)); }
+  .lo-preview .acts { display: flex; gap: 10px; }
+  .lo-preview .btn { padding: 12px 22px; }
 
   /* ===================== Pausa / Ajustes / Fundido ===================== */
   #pause { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #05080ccc; backdrop-filter: blur(5px); }
@@ -254,7 +325,20 @@
       <button class="tab" data-tab="collection">COLECCIÓN</button>
     </nav>
     <div class="nav-right">
-      <div class="wallet" title="Créditos de cuenta (virtuales)"><i>¤</i><span id="acct-credits">0</span></div>
+      <div class="acct" id="acct">
+        <button class="acct-login" id="acct-login" disabled title="Inicia sesión con Google para guardar tu progreso en la nube">
+          <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span id="acct-login-t">CONECTANDO…</span></button>
+        <button class="acct-user" id="acct-user" hidden><span class="acct-av" id="acct-av"></span><span><b id="acct-name"></b><span class="acct-st" id="acct-st"></span></span></button>
+        <div class="acct-menu" id="acct-menu" hidden>
+          <h5>CARRERA</h5>
+          <div class="acct-stats" id="acct-stats"></div>
+          <p id="acct-note"></p>
+          <button class="btn" id="acct-retry" hidden>REINTENTAR CONEXIÓN</button>
+          <button class="btn" id="acct-logout">CERRAR SESIÓN</button>
+        </div>
+      </div>
+      <div class="wallet" title="Créditos de cuenta: se gastan en skins y se ganan jugando"><i>¤</i><span id="acct-credits">0</span></div>
       <button class="gear" data-open-settings title="Ajustes"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.8a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.8a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5ZM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7Z"/></svg></button>
     </div>
   </header>
@@ -273,12 +357,14 @@
 
     <section class="panel" data-panel="skins" hidden>
       <div class="play-head"><span class="kicker">VITRINA DESTACADA</span><small class="muted">Las skins cambian los colores del modelo del arma en partida.</small></div>
+      <div class="shop-earn" id="shop-earn"></div>
       <div class="skins" id="skin-list"></div>
     </section>
 
     <section class="panel" data-panel="collection" hidden>
-      <div class="play-head"><span class="kicker">ARSENAL</span><small class="muted">Clic en una skin que poseas para equiparla o quitarla.</small></div>
-      <div class="collection" id="collection"></div>
+      <div class="play-head"><span class="kicker">ARSENAL</span><span class="inv-sum" id="inv-sum"></span><small class="muted">Elige un arma para ver sus skins y equiparlas.</small></div>
+      <div class="loadout" id="collection"></div>
+      <div class="lo-detail" id="coll-detail" hidden></div>
     </section>
   </main>
 
@@ -338,12 +424,49 @@
     <div class="modal-foot"><button class="btn" data-close-settings>CERRAR</button></div>
   </div>
 </div>
+<div id="buy-confirm" class="modal">
+  <div class="modal-box" style="width: min(460px, 92vw)">
+    <div class="modal-head"><b>CONFIRMAR COMPRA</b><button class="x" data-close-buy>✕</button></div>
+    <div class="modal-body" id="buy-body"></div>
+    <div class="modal-foot"><button class="btn" data-close-buy>CANCELAR</button><button class="btn primary" id="buy-ok">COMPRAR</button></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 <div id="fade"></div>
 <div id="shop"></div>
 <div id="error"></div>
 
 <script type="module">
 import * as THREE from 'three';
+
+/* =====================================================================================
+ *  FIREBASE · credenciales del proyecto (Consola de Firebase › Configuración del proyecto › Tus apps).
+ *  No son secretas: van en todas las webs con Firebase. Lo que protege los datos son las reglas
+ *  de Firestore (archivo firestore.rules, junto a este index.html).
+ * ===================================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyB5YIKHomTzX6rhmizli3-FVCPoRAL-ZxC",
+  authDomain: "vertice-7f000.firebaseapp.com",
+  projectId: "vertice-7f000",
+  storageBucket: "vertice-7f000.firebasestorage.app",
+  messagingSenderId: "871951238487",
+  appId: "1:871951238487:web:d6e701950728241fabaa12"
+};
+
+/**
+ * SDK oficial de Firebase v10 por CDN (ES Modules). Se carga con import() en paralelo al juego,
+ * no con import estático: si Google tarda o está bloqueado, VÉRTICE arranca igual (como invitado)
+ * y el primer frame no espera a ~400 KB de SDK.
+ *   firebase-app.js       → initializeApp
+ *   firebase-auth.js      → getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider
+ *   firebase-firestore.js → getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp
+ */
+const FIREBASE_SDK = {
+  app: 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+  auth: 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
+  firestore: 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
+};
 
 /* =====================================================================================
  *  CONFIGURACIÓN GLOBAL
@@ -367,7 +490,7 @@ const CONFIG = {
     minSensitivity: 0.01, maxSensitivity: 30,
     rawInput: true,           // Pointer Lock con unadjustedMovement (sin aceleración del SO).
     spikeCountsPerMs: 400,    // SOLO sin raw input: descarta saltos imposibles para un ratón real (bug de cursor de algunos navegadores).
-    spikeMinCounts: 900,      // ...pero nunca con un límite por evento más bajo que este.
+    spikeMinCounts: 900,      // pero nunca con un límite por evento más bajo que este.
   },
   camera: {
     vFov: 73.74,              // = 90° horizontales en 4:3 (Hor+ en panorámico).
@@ -606,6 +729,12 @@ const SHIELDS = [
   { id: 'shield_heavy', name: 'Escudo pesado', price: 1000, value: 50, desc: '+50 HP de escudo: recibe el daño antes que la vida.' },
 ];
 const ECONOMY = { startCredits: 800, maxCredits: 9000, killReward: 200, headshotKillReward: 300 };
+/**
+ * Economía de CUENTA (persistente, para skins), aparte de los créditos de partida de arriba.
+ * Se gana jugando y se suma al volver al menú. firestore.rules repite estos topes: si los cambias,
+ * cámbialos también allí (una baja vale como mucho killReward + headshotBonus).
+ */
+const ACCOUNT_ECONOMY = { startCredits: 5000, killReward: 10, headshotBonus: 5, waveReward: 75 };
 
 /* =====================================================================================
  *  BOTS (enemigos controlados por IA)
@@ -1891,8 +2020,9 @@ class BotManager {
       b.state = BotState.DEAD; b.health = 0; b.moving = false; b.flashT = 0;
       this._disableCollider(b);
       this.alive--;
-      this.game.onBotKilled();
+      this.game.onBotKilled(zone === 'head');
       if (this.alive === 0) {
+        this.game.onWaveCleared();
         this.respawnT = BOT_CFG.respawnDelay;
         this.game.hud.showNotice(`ZONA DESPEJADA · NUEVA OLEADA EN ${BOT_CFG.respawnDelay} s`, BOT_CFG.respawnDelay);
       }
@@ -3114,7 +3244,9 @@ class Shop {
 }
 
 /* =====================================================================================
- *  PERFIL DE CUENTA, SKINS Y AJUSTES (persistidos en localStorage cuando está disponible)
+ *  PERFIL DE CUENTA, SKINS Y AJUSTES
+ *  Invitado: localStorage. Con cuenta de Google: Firestore (CloudAccount, más abajo).
+ *  Si cambias precios o añades skins, actualiza también la tabla de precios de firestore.rules.
  * ===================================================================================== */
 const SKINS = [
   { id: 'martillo_prime', weapon: 'martillo', name: 'Martillo Prime', tier: 'PREMIUM', price: 1775,
@@ -3127,28 +3259,371 @@ const SKINS = [
     colors: { body: 0x1c1a2c, trim: 0x31f2e0, accent: 0xff3bd4 }, css: ['#ff4fd8', '#14303a'] },
 ];
 
+const SKIN_BY_ID = Object.fromEntries(SKINS.map((s) => [s.id, s]));
+
 const store = {
   load(key, fallback) { try { const v = localStorage.getItem(key); return v ? { ...fallback, ...JSON.parse(v) } : { ...fallback }; } catch { return { ...fallback }; } },
   save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* modo privado: sin persistencia */ } },
 };
 
-/** Cuenta del jugador fuera de la partida: créditos virtuales, skins compradas y equipadas. */
+/** Estadísticas de carrera. Las mismas claves valida firestore.rules. */
+const STAT_KEYS = ['matches', 'kills', 'deaths', 'headshots', 'waves'];
+const emptyStats = () => ({ matches: 0, kills: 0, deaths: 0, headshots: 0, waves: 0 });
+const GUEST_PROFILE = { credits: ACCOUNT_ECONOMY.startCredits, owned: [], equipped: {}, stats: null };
+
+/**
+ * Cuenta del jugador fuera de la partida: créditos de cuenta, inventario de skins, skin equipada
+ * por arma (loadout) y estadísticas de carrera. Dos orígenes con el mismo modelo:
+ *  · INVITADO: localStorage ('vertice.profile').
+ *  · CUENTA DE GOOGLE: Firestore (players/{uid}), a través de CloudAccount.
+ * El resto del juego solo habla con Profile y no sabe de dónde vienen los datos.
+ */
 class Profile {
   constructor() {
-    const d = store.load('vertice.profile', { credits: 5000, owned: [], equipped: {} });
-    this.credits = d.credits; this.owned = new Set(d.owned); this.equipped = d.equipped;
+    this.cloud = null;                 // CloudAccount mientras haya una cuenta cargada
+    this.useGuest();
   }
-  save() { store.save('vertice.profile', { credits: this.credits, owned: [...this.owned], equipped: this.equipped }); }
-  skinFor(weaponId) { return SKINS.find((s) => s.id === this.equipped[weaponId]) ?? null; }
+
+  get isGuest() { return this.cloud === null; }
+
+  useGuest() {
+    this.cloud = null;
+    this._assign(store.load('vertice.profile', GUEST_PROFILE));
+  }
+
+  /** Documento de Firestore → modelo. */
+  fromCloud(d) { this._assign({ credits: d.credits, owned: d.skins, equipped: d.loadout, stats: d.stats }); }
+
+  _assign(d) {
+    this.credits = Number.isFinite(d.credits) ? Math.max(0, Math.floor(d.credits)) : ACCOUNT_ECONOMY.startCredits;
+    // El orden importa: las reglas exigen que cada compra añada su skin al FINAL de la lista.
+    this.owned = new Set(Array.isArray(d.owned) ? d.owned.filter((id) => typeof id === 'string') : []);
+    this.equipped = {};
+    if (d.equipped && typeof d.equipped === 'object') {
+      for (const w in d.equipped) {
+        const id = d.equipped[w];
+        if (this.owned.has(id) && SKIN_BY_ID[id]?.weapon === w) this.equipped[w] = id;
+      }
+    }
+    this.stats = emptyStats();
+    for (const k of STAT_KEYS) if (Number.isFinite(d.stats?.[k])) this.stats[k] = Math.max(0, Math.floor(d.stats[k]));
+  }
+
+  /** Mismo formato para localStorage y para Firestore. */
+  data() { return { credits: this.credits, skins: [...this.owned], loadout: { ...this.equipped }, stats: { ...this.stats } }; }
+
+  /** kind: 'purchase' | 'loadout' | 'progress' → con cuenta se sube solo lo que cambió. */
+  save(kind) {
+    if (this.cloud) this.cloud.push(kind);
+    else store.save('vertice.profile', { credits: this.credits, owned: [...this.owned], equipped: this.equipped, stats: this.stats });
+  }
+
+  skinFor(weaponId) { return SKIN_BY_ID[this.equipped[weaponId]] ?? null; }
+  canBuy(skin) { return !this.owned.has(skin.id) && this.credits >= skin.price; }
+
+  /** Compra: descuenta el precio, la añade al inventario y la equipa. */
   buy(skin) {
-    if (this.owned.has(skin.id) || this.credits < skin.price) return false;
-    this.credits -= skin.price; this.owned.add(skin.id); this.equipped[skin.weapon] = skin.id; this.save();
+    if (!this.canBuy(skin)) return false;
+    this.credits -= skin.price;
+    this.owned.add(skin.id);
+    this.equipped[skin.weapon] = skin.id;
+    this.save('purchase');
     return true;
   }
-  toggleEquip(skin) {
-    if (!this.owned.has(skin.id)) return;
-    if (this.equipped[skin.weapon] === skin.id) delete this.equipped[skin.weapon]; else this.equipped[skin.weapon] = skin.id;
-    this.save();
+
+  /** Equipa una skin en su arma (skinId null = Estándar). */
+  equip(weaponId, skinId) {
+    if (skinId !== null && (!this.owned.has(skinId) || SKIN_BY_ID[skinId]?.weapon !== weaponId)) return false;
+    if ((this.equipped[weaponId] ?? null) === skinId) return false;
+    if (skinId === null) delete this.equipped[weaponId]; else this.equipped[weaponId] = skinId;
+    this.save('loadout');
+    return true;
+  }
+
+  /** Suma lo jugado (m tiene las claves de STAT_KEYS) y los créditos de cuenta ganados. Devuelve lo ganado. */
+  addProgress(m) {
+    const e = ACCOUNT_ECONOMY;
+    const earned = m.kills * e.killReward + m.headshots * e.headshotBonus + m.waves * e.waveReward;
+    for (const k of STAT_KEYS) this.stats[k] += m[k];
+    this.credits += earned;
+    this.save('progress');
+    return earned;
+  }
+}
+
+/* =====================================================================================
+ *  CloudAccount · cuentas de Google (Firebase Auth) y guardado en la nube (Firestore).
+ *
+ *  Documento players/{uid}:
+ *    { schema: 1, name, photo, credits, skins: [ids en orden de compra], loadout: {arma: skin},
+ *      settings: {sensibilidad, inercia, dificultad}, stats: {matches, kills, deaths, headshots, waves},
+ *      createdAt, updatedAt }
+ *
+ *  · Cada cambio sube solo sus campos con updateDoc. El SDK los envía en orden, y las reglas
+ *    validan cada escritura contra la anterior: una compra paga el precio exacto de UNA skin
+ *    nueva y los créditos solo suben en proporción a las bajas y oleadas nuevas.
+ *  · onSnapshot mantiene la cuenta al día si juegas en otro dispositivo o pestaña.
+ *  · Nada de esto corre dentro del bucle de juego: solo en clics del menú, al volver al menú y
+ *    al ocultar la pestaña. El bucle de 128 Hz y el render no se enteran.
+ * ===================================================================================== */
+const SYNCED_SETTINGS = ['sensitivity', 'weaponSway', 'botDifficulty'];   // vídeo y sonido son de cada dispositivo
+
+/** Errores de Firebase Auth → texto para el jugador (null = no avisar, p. ej. si cerró el popup). */
+function authErrorText(err) {
+  switch (err?.code) {
+    case 'auth/popup-closed-by-user': case 'auth/cancelled-popup-request': case 'auth/user-cancelled': return null;
+    case 'auth/popup-blocked': return 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes para este sitio y vuelve a intentarlo.';
+    case 'auth/unauthorized-domain': return `Este dominio (${location.hostname}) no está autorizado en Firebase: Authentication › Settings › Authorized domains.`;
+    case 'auth/operation-not-allowed': return 'El inicio de sesión con Google no está activado en Firebase: Authentication › Sign-in method › Google.';
+    case 'auth/network-request-failed': return 'Sin conexión con Google. Revisa tu red y vuelve a intentarlo.';
+    case 'auth/invalid-api-key': case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.': return 'La configuración de Firebase (apiKey) no es válida.';
+    default: return `No se pudo iniciar sesión (${err?.code || err?.message || err}).`;
+  }
+}
+
+function cloudErrorText(err) {
+  switch (err?.code) {
+    case 'permission-denied': return 'Firestore ha denegado el acceso. Publica las reglas de firestore.rules en la consola de Firebase.';
+    case 'unavailable': return 'Sin conexión con la nube. Tus cambios se guardarán al recuperarla.';
+    case 'failed-precondition': case 'not-found': return 'La base de datos de Firestore no existe todavía: créala en la consola de Firebase.';
+    default: return `Error de la nube (${err?.code || err?.message || err}).`;
+  }
+}
+
+class CloudAccount {
+  constructor(game) {
+    this.game = game;
+    // loading | guest | busy | online | saving | offline | error
+    this.status = 'loading';
+    this.message = '';
+    this.user = null;                  // { uid, name, photo }
+    this.fb = null;                    // funciones del SDK + auth, db y provider
+    this.ref = null;                   // doc players/{uid}
+    this._unsub = null;
+    this._pending = 0;                 // escrituras sin confirmar por el servidor
+    this._writes = new Set();
+    this._fromCache = false;
+    this._settingsTimer = 0;
+    this._sig = '';
+    this._signingIn = false;           // el toast de bienvenida solo tras pulsar "Iniciar sesión", no en cada recarga
+    addEventListener('online', () => { if (this.status === 'error' && this.user) this.retry(); else this._refreshStatus(); });
+    addEventListener('offline', () => this._refreshStatus());
+  }
+
+  async init() {
+    try {
+      const [appSdk, authSdk, fsSdk] = await Promise.all([import(FIREBASE_SDK.app), import(FIREBASE_SDK.auth), import(FIREBASE_SDK.firestore)]);
+      const app = appSdk.initializeApp(firebaseConfig);
+      const auth = authSdk.getAuth(app);
+      const db = fsSdk.getFirestore(app);
+      const provider = new authSdk.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      this.fb = {
+        auth, db, provider,
+        signInWithPopup: authSdk.signInWithPopup, signOut: authSdk.signOut,
+        doc: fsSdk.doc, getDoc: fsSdk.getDoc, setDoc: fsSdk.setDoc, updateDoc: fsSdk.updateDoc,
+        onSnapshot: fsSdk.onSnapshot, serverTimestamp: fsSdk.serverTimestamp,
+      };
+      // Firebase recuerda la sesión: al recargar, este callback llega solo con el usuario de antes.
+      authSdk.onAuthStateChanged(auth, (u) => { this._onUser(u); });
+    } catch (err) {
+      console.warn('[VÉRTICE] Firebase no disponible:', err);
+      this._set('error', 'No se pudo cargar Firebase (sin conexión o bloqueado por una extensión). Puedes jugar como invitado.');
+    }
+  }
+
+  /** Clic en "Iniciar sesión". Debe ejecutarse dentro del clic: el navegador exige ese gesto para el popup. */
+  async signIn() {
+    if (!this.fb || this.user || this.status === 'busy') return;
+    this._set('busy', '');
+    this._signingIn = true;
+    try {
+      await this.fb.signInWithPopup(this.fb.auth, this.fb.provider);   // onAuthStateChanged hace el resto
+    } catch (err) {
+      this._signingIn = false;
+      if (!this.user) this._set('guest', '');
+      const text = authErrorText(err);
+      if (text) this.game.ui.toast(text, true);
+    }
+  }
+
+  async signOut() {
+    if (!this.fb || !this.user) return;
+    this.game.commitProgress(false);
+    await this.flush();
+    try { await this.fb.signOut(this.fb.auth); } catch (err) { this.game.ui.toast(`No se pudo cerrar sesión (${err?.code || err}).`, true); }
+  }
+
+  retry() { if (this.fb) this._onUser(this.fb.auth.currentUser); }
+
+  async _onUser(u) {
+    this._detach();
+    if (!u) {
+      this.user = null;
+      this.game.profile.useGuest();
+      this._set('guest', '');
+      this.game.ui.refreshProfile();
+      return;
+    }
+    this.user = { uid: u.uid, name: u.displayName || 'Agente', photo: u.photoURL || '' };
+    this._set('busy', 'Cargando tu cuenta…');
+    const fb = this.fb, ref = fb.doc(fb.db, 'players', u.uid);
+    this.ref = ref;
+    try {
+      let snap = await fb.getDoc(ref);
+      if (this.ref !== ref) return;                  // otro cambio de sesión mientras tanto
+      const fresh = !snap.exists();
+      if (fresh) {
+        await fb.setDoc(ref, {
+          schema: 1, name: this.user.name.slice(0, 60), photo: this.user.photo.slice(0, 1024),
+          credits: ACCOUNT_ECONOMY.startCredits, skins: [], loadout: {}, settings: this._pickSettings(), stats: emptyStats(),
+          createdAt: fb.serverTimestamp(), updatedAt: fb.serverTimestamp(),
+        });
+        snap = await fb.getDoc(ref);
+        if (this.ref !== ref) return;
+      }
+      this.game.profile.cloud = this;
+      this._applyRemote(snap.data(), true);
+      if (fresh) this._migrateGuest();
+      this._unsub = fb.onSnapshot(ref, { includeMetadataChanges: true }, (s) => this._onSnap(s), (err) => this._fail(err));
+      this.status = 'online';
+      this._refreshStatus(true);
+      if (!fresh && this._signingIn) this.game.ui.toast(`Sesión iniciada como ${this.user.name}. Tu cuenta se guarda en la nube.`);
+      this._signingIn = false;
+    } catch (err) {
+      if (this.ref === ref) this._fail(err);
+    }
+  }
+
+  /**
+   * Cuenta nueva: lo que tenías como invitado se pasa a la cuenta. Cada skin se "recompra" con la
+   * misma escritura que una compra normal, así que las reglas la validan igual que cualquier otra.
+   */
+  _migrateGuest() {
+    const guest = store.load('vertice.profile', GUEST_PROFILE), p = this.game.profile;
+    let moved = 0;
+    for (const id of Array.isArray(guest.owned) ? guest.owned : []) {
+      const skin = SKIN_BY_ID[id];
+      if (skin && p.buy(skin)) moved++;
+    }
+    for (const w in p.equipped) if (guest.equipped?.[w] !== p.equipped[w]) p.equip(w, null);
+    for (const w in guest.equipped ?? {}) p.equip(w, guest.equipped[w]);
+    const gs = guest.stats ?? null;
+    if (gs) {
+      const m = emptyStats();
+      for (const k of STAT_KEYS) m[k] = Number.isFinite(gs[k]) ? Math.max(0, Math.floor(gs[k])) : 0;
+      // Lo ganado como invitado = saldo - (inicial - lo gastado), con el tope que aceptan las reglas.
+      const spent = (Array.isArray(guest.owned) ? guest.owned : []).reduce((a, id) => a + (SKIN_BY_ID[id]?.price ?? 0), 0);
+      const earned = Math.max(0, Math.floor(guest.credits) - (ACCOUNT_ECONOMY.startCredits - spent));
+      const cap = m.kills * (ACCOUNT_ECONOMY.killReward + ACCOUNT_ECONOMY.headshotBonus) + m.waves * ACCOUNT_ECONOMY.waveReward;
+      if (STAT_KEYS.some((k) => m[k] > 0)) {
+        for (const k of STAT_KEYS) p.stats[k] += m[k];
+        p.credits += Math.min(earned, cap);
+        p.save('progress');
+      }
+    }
+    const hadProgress = moved > 0 || (gs !== null && STAT_KEYS.some((k) => gs[k] > 0));
+    store.save('vertice.profile', { ...GUEST_PROFILE, stats: emptyStats() });   // movido, no copiado
+    this.game.ui.refreshProfile();
+    this.game.ui.toast(hadProgress ? 'Cuenta creada. Tu progreso de invitado se ha pasado a tu cuenta de Google.' : 'Cuenta creada. Tu progreso se guarda en la nube.');
+  }
+
+  /** Profile ha cambiado: se sube solo lo que corresponde a ese cambio. */
+  push(kind) {
+    if (!this.ref) return;
+    const d = this.game.profile.data();
+    const fields = kind === 'purchase' ? { credits: d.credits, skins: d.skins, loadout: d.loadout }
+      : kind === 'loadout' ? { loadout: d.loadout }
+        : { credits: d.credits, stats: d.stats };
+    this._write(fields);
+  }
+
+  /** Ajustes de juego: se suben 1,2 s después del último cambio (arrastrar el slider no son 50 escrituras). */
+  queueSettings() {
+    if (!this.ref || !this.game.profile.cloud) return;
+    clearTimeout(this._settingsTimer);
+    this._settingsTimer = setTimeout(() => { this._settingsTimer = 0; this._write({ settings: this._pickSettings() }); }, 1200);
+  }
+
+  _pickSettings() {
+    const s = this.game.settings, o = {};
+    for (const k of SYNCED_SETTINGS) o[k] = s[k];
+    return o;
+  }
+
+  _write(fields) {
+    fields.updatedAt = this.fb.serverTimestamp();
+    this._pending++;
+    this._refreshStatus();
+    let call;
+    try { call = this.fb.updateDoc(this.ref, fields); } catch (err) { call = Promise.reject(err); }
+    const w = call
+      .catch((err) => {
+        // Si las reglas rechazan algo, el SDK deshace el cambio local y onSnapshot restaura el estado del servidor.
+        this.game.ui.toast(err?.code === 'permission-denied' ? 'La nube rechazó un cambio y se ha restaurado tu cuenta.' : cloudErrorText(err), true);
+      })
+      .finally(() => { this._pending--; this._writes.delete(w); this._refreshStatus(); });
+    this._writes.add(w);
+  }
+
+  /** Espera a las escrituras pendientes (con tope de 4 s, por si no hay conexión). */
+  async flush() {
+    if (this._settingsTimer) { clearTimeout(this._settingsTimer); this._settingsTimer = 0; if (this.ref) this._write({ settings: this._pickSettings() }); }
+    if (!this._writes.size) return;
+    await Promise.race([Promise.allSettled([...this._writes]), new Promise((r) => setTimeout(r, 4000))]);
+  }
+
+  _onSnap(s) {
+    if (!s.exists()) return;
+    this._fromCache = s.metadata.fromCache;
+    // Con escrituras locales pendientes el snapshot ya refleja nuestro estado: solo se aplica lo confirmado.
+    if (!s.metadata.hasPendingWrites) this._applyRemote(s.data(), false);
+    this._refreshStatus();
+  }
+
+  _applyRemote(d, first) {
+    const p = this.game.profile;
+    p.fromCloud(d);
+    if (d.settings && typeof d.settings === 'object' && !this._settingsTimer) {
+      const s = this.game.settings;
+      let changed = false;
+      for (const k of SYNCED_SETTINGS) {
+        if (d.settings[k] !== undefined && typeof d.settings[k] === typeof s[k] && d.settings[k] !== s[k]) { s[k] = d.settings[k]; changed = true; }
+      }
+      if (changed) this.game.applySettings(false);
+    }
+    const sig = JSON.stringify(p.data());
+    if (first || sig !== this._sig) { this._sig = sig; this.game.ui.refreshProfile(); }
+  }
+
+  _refreshStatus(force = false) {
+    if (!this.user || !this.game.profile.cloud) return;
+    const st = !navigator.onLine || this._fromCache ? 'offline' : this._pending > 0 ? 'saving' : 'online';
+    if (force || st !== this.status) this._set(st, st === 'offline' ? 'Sin conexión: tus cambios se guardan aquí y se subirán al recuperarla.' : '');
+  }
+
+  _fail(err) {
+    console.warn('[VÉRTICE] nube:', err);
+    this._detach();
+    this.game.profile.useGuest();
+    this.game.ui.refreshProfile();
+    const text = cloudErrorText(err);
+    this._set('error', text + ' Mientras tanto juegas con el perfil de invitado.');
+    this.game.ui.toast(text, true);
+  }
+
+  _detach() {
+    if (this._unsub) { this._unsub(); this._unsub = null; }
+    clearTimeout(this._settingsTimer); this._settingsTimer = 0;
+    this.ref = null;
+    this._fromCache = false;
+    this.game.profile.cloud = null;
+  }
+
+  _set(status, message) {
+    this.status = status;
+    this.message = message;
+    this.game.ui?.renderAccount();
   }
 }
 
@@ -3174,24 +3649,48 @@ class LobbyUI {
     this.root = document.getElementById('lobby');
     this.settingsEl = document.getElementById('settings');
     this.pauseEl = document.getElementById('pause');
+    this.detailWeapon = null;                     // arma abierta en la colección (null = vista de loadout)
+    this.detailSel = null;
+    this.buySkin = null;
+    this._art = {};                                // siluetas SVG cacheadas por arma
+    this._toastT = 0;
     this._buildMaps();
     this._buildFriends();
+    const e = ACCOUNT_ECONOMY;
+    document.getElementById('shop-earn').textContent =
+      `Los créditos de cuenta se ganan jugando: +${e.killReward} por baja (+${e.headshotBonus} si es a la cabeza) y +${e.waveReward} por oleada despejada. Se suman al volver al menú.`;
     this.renderSkins();
     this.renderCollection();
     this.updateWallet();
+    this.renderAccount();
     this._bind();
   }
 
   _sfx(kind) { const a = this.game.audio; a.init(); a.ui(kind); }
 
+  showTab(name) {
+    this.root.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
+    this.root.querySelectorAll('.panel').forEach((p) => { p.hidden = p.dataset.panel !== name; });
+    if (name === 'collection') { this.closeWeapon(); this.renderCollection(); }
+  }
+
   _bind() {
     // Pestañas
-    this.root.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
-      this._sfx('click');
-      this.root.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
-      this.root.querySelectorAll('.panel').forEach((p) => { p.hidden = p.dataset.panel !== t.dataset.tab; });
-      if (t.dataset.tab === 'collection') this.renderCollection();
-    }));
+    this.root.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { this._sfx('click'); this.showTab(t.dataset.tab); }));
+    // Cuenta de Google. signIn() se llama directamente desde el clic: el navegador exige ese gesto para abrir el popup.
+    const acct = document.getElementById('acct');
+    document.getElementById('acct-login').addEventListener('click', () => { this._sfx('click'); this.game.account.signIn(); });
+    document.getElementById('acct-user').addEventListener('click', () => { this._sfx('click'); this.accountMenuOpen ? this.closeAccountMenu() : this.openAccountMenu(); });
+    document.getElementById('acct-logout').addEventListener('click', () => { this._sfx('click'); this.closeAccountMenu(); this.game.account.signOut(); });
+    document.getElementById('acct-retry').addEventListener('click', () => { this._sfx('click'); this.game.account.retry(); });
+    document.addEventListener('pointerdown', (e) => { if (this.accountMenuOpen && !acct.contains(e.target)) this.closeAccountMenu(); });
+    // Confirmación de compra
+    const buy = document.getElementById('buy-confirm');
+    buy.querySelectorAll('[data-close-buy]').forEach((b) => b.addEventListener('click', () => { this._sfx('click'); this.closeBuy(); }));
+    buy.addEventListener('click', (e) => { if (e.target === buy) this.closeBuy(); });
+    document.getElementById('buy-ok').addEventListener('click', () => this.confirmBuy());
+    // Colección: vista de arma (lista de skins + vista previa)
+    document.getElementById('coll-detail').addEventListener('click', (e) => this._onDetailClick(e));
     // Sonido de hover en todo lo pulsable del menú.
     this.root.addEventListener('pointerover', (e) => {
       const b = e.target.closest('button:not(:disabled)');
@@ -3273,45 +3772,248 @@ class LobbyUI {
 
   updateWallet() { document.getElementById('acct-credits').textContent = this.game.profile.credits; }
 
+  /* ----------------------------- Cuenta de Google ----------------------------- */
+  /** Botón de login o chip del jugador (foto, nombre, estado de la nube) según CloudAccount. */
+  renderAccount() {
+    const a = this.game.account, signed = a.user !== null;
+    const login = document.getElementById('acct-login'), user = document.getElementById('acct-user');
+    login.hidden = signed;
+    user.hidden = !signed;
+    if (!signed) {
+      this.closeAccountMenu();
+      login.disabled = a.fb === null || a.status === 'busy';
+      document.getElementById('acct-login-t').textContent =
+        a.status === 'loading' ? 'CONECTANDO…' : a.status === 'busy' ? 'ABRIENDO GOOGLE…' : a.status === 'error' ? 'CUENTAS NO DISPONIBLES' : 'INICIAR SESIÓN';
+      login.title = a.status === 'error' ? a.message : 'Inicia sesión con Google para guardar tu progreso en la nube';
+      return;
+    }
+    document.getElementById('acct-name').textContent = a.user.name;
+    const av = document.getElementById('acct-av');
+    if (av.dataset.src !== a.user.photo) {
+      av.dataset.src = a.user.photo;
+      av.textContent = a.user.name.charAt(0).toUpperCase();
+      if (a.user.photo) {
+        const img = new Image();
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';         // las fotos de Google fallan con Referer de otro dominio
+        img.onload = () => { av.textContent = ''; av.appendChild(img); };
+        img.src = a.user.photo;
+      }
+    }
+    const LABELS = {
+      online: ['ok', 'SINCRONIZADO'], saving: ['busy', 'GUARDANDO…'], busy: ['busy', 'CARGANDO CUENTA…'],
+      offline: ['bad', 'SIN CONEXIÓN'], error: ['bad', 'ERROR DE NUBE'], loading: ['busy', 'CONECTANDO…'], guest: ['busy', '…'],
+    };
+    const [cls, text] = LABELS[a.status] ?? LABELS.busy;
+    const st = document.getElementById('acct-st');
+    st.className = 'acct-st ' + cls;
+    st.textContent = text;
+    document.getElementById('acct-note').textContent = a.message;
+    document.getElementById('acct-retry').hidden = a.status !== 'error';
+  }
+
+  get accountMenuOpen() { return !document.getElementById('acct-menu').hidden; }
+
+  openAccountMenu() {
+    if (!this.game.account.user) return;
+    this.renderAccountStats();
+    document.getElementById('acct-menu').hidden = false;
+    document.getElementById('acct').classList.add('open');
+  }
+
+  closeAccountMenu() {
+    document.getElementById('acct-menu').hidden = true;
+    document.getElementById('acct').classList.remove('open');
+  }
+
+  renderAccountStats() {
+    const s = this.game.profile.stats;
+    const kd = s.deaths > 0 ? (s.kills / s.deaths).toFixed(2) : String(s.kills);
+    const hs = s.kills > 0 ? Math.round((s.headshots / s.kills) * 100) + '%' : '0%';
+    const cell = (v, k) => `<div><b>${v}</b><small>${k}</small></div>`;
+    document.getElementById('acct-stats').innerHTML =
+      cell(s.matches, 'PARTIDAS') + cell(s.kills, 'BAJAS') + cell(s.deaths, 'MUERTES') +
+      cell(kd, 'K/D') + cell(hs, 'HEADSHOT') + cell(s.waves, 'OLEADAS');
+  }
+
+  /** El perfil ha cambiado (login, logout, compra, otro dispositivo): se repinta todo lo que depende de él. */
+  refreshProfile() {
+    this.updateWallet();
+    this.renderSkins();
+    this.renderCollection();
+    if (this.accountMenuOpen) this.renderAccountStats();
+    if (this.buySkin) this._renderBuy();
+  }
+
+  /** Aviso breve abajo en el centro (compras, recompensas, errores de la nube). */
+  toast(text, bad = false) {
+    const t = document.getElementById('toast');
+    t.textContent = text;
+    t.classList.toggle('bad', bad);
+    t.classList.add('show');
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => t.classList.remove('show'), bad ? 6500 : 3800);
+  }
+
+  /** Esc: cierra lo que esté encima (compra, menú de cuenta, ajustes). Devuelve true si cerró algo. */
+  closeTop() {
+    if (this.buySkin) { this.closeBuy(); return true; }
+    if (this.accountMenuOpen) { this.closeAccountMenu(); return true; }
+    if (this.settingsOpen) { this.closeSettings(); return true; }
+    return false;
+  }
+
+  /* ----------------------------- Compra con confirmación ----------------------------- */
+  openBuy(skin) {
+    this.buySkin = skin;
+    this._renderBuy();
+    document.getElementById('buy-confirm').classList.add('open');
+  }
+
+  _renderBuy() {
+    const p = this.game.profile, skin = this.buySkin, w = WEAPON_DEFS[skin.weapon];
+    const owned = p.owned.has(skin.id), after = p.credits - skin.price;
+    document.getElementById('buy-body').innerHTML = `
+      <div class="confirm-art" style="--c1:${skin.css[0]};--c2:${skin.css[1]}">${this._weaponArt(w)}</div>
+      <div class="confirm-line"><span>${skin.name.toUpperCase()}</span><span>${skin.tier} · ${w.name.toUpperCase()}</span></div>
+      <div class="confirm-line"><span>Precio</span><b>¤ ${skin.price}</b></div>
+      <div class="confirm-line"><span>Saldo después de comprar</span><span class="${after < 0 ? 'neg' : ''}">¤ ${after}</span></div>
+      <p class="note">${owned ? 'Ya tienes esta skin.'
+        : after < 0 ? `Te faltan ¤ ${-after}. Los créditos de cuenta se ganan jugando partidas.`
+          : p.isGuest ? 'Juegas como invitado: la compra se guarda solo en este navegador. Inicia sesión con Google para guardarla en tu cuenta.'
+            : 'Se guardará en tu cuenta de Google y se equipará al momento.'}</p>`;
+    document.getElementById('buy-ok').disabled = !p.canBuy(skin);
+  }
+
+  closeBuy() {
+    this.buySkin = null;
+    document.getElementById('buy-confirm').classList.remove('open');
+  }
+
+  confirmBuy() {
+    const skin = this.buySkin;
+    if (!skin) return;
+    this.closeBuy();
+    if (this.game.profile.buy(skin)) {
+      this.game.audio.init(); this.game.audio.buy();
+      this.toast(`${skin.name} añadida a tu colección y equipada.`);
+      this.refreshProfile();
+    } else {
+      this.game.audio.init(); this.game.audio.deny();
+    }
+  }
+
+  /** Silueta del arma para tienda y colección (cacheada: se genera una vez por arma). */
+  _weaponArt(w) {
+    if (!this._art[w.id]) {
+      this._art[w.id] = w.category === 'melee'
+        ? '<svg viewBox="0 0 100 30" fill="currentColor"><path d="M5 15 L60 9 L95 15 L60 21 Z"/><rect x="0" y="12" width="14" height="6"/></svg>'
+        : ViewmodelFactory.svg(w.model);
+    }
+    return this._art[w.id];
+  }
+
+  /* ----------------------------- Tienda de skins ----------------------------- */
   renderSkins() {
     const p = this.game.profile, list = document.getElementById('skin-list');
     list.innerHTML = SKINS.map((s) => {
-      const owned = p.owned.has(s.id), poor = p.credits < s.price;
+      const w = WEAPON_DEFS[s.weapon], owned = p.owned.has(s.id), poor = !owned && p.credits < s.price;
+      const label = owned ? (p.equipped[s.weapon] === s.id ? 'EQUIPADA' : 'EN PROPIEDAD') : `COMPRAR · ¤ ${s.price}`;
       return `<div class="skin" style="--c1:${s.css[0]};--c2:${s.css[1]}">
-        <span class="tier">${s.tier} · ${WEAPON_DEFS[s.weapon].name.toUpperCase()}</span>
-        <div class="art">${ViewmodelFactory.svg(WEAPON_DEFS[s.weapon].model)}</div>
+        <span class="tier">${s.tier} · ${w.name.toUpperCase()}</span>
+        <div class="art">${this._weaponArt(w)}</div>
         <b>${s.name}</b>
-        <button class="buy" data-skin="${s.id}" ${owned || poor ? 'disabled' : ''}>${owned ? 'EN PROPIEDAD' : `COMPRAR · ¤ ${s.price}`}</button>
+        <button class="buy${poor ? ' poor' : ''}" data-skin="${s.id}" ${owned ? 'disabled' : ''}>${label}</button>
       </div>`;
     }).join('');
     list.onclick = (e) => {
       const b = e.target.closest('.buy'); if (!b || b.disabled) return;
-      const skin = SKINS.find((s) => s.id === b.dataset.skin);
-      if (p.buy(skin)) { this.game.audio.buy(); this.updateWallet(); this.renderSkins(); this.renderCollection(); }
-      else this.game.audio.deny();
+      this._sfx('click');
+      this.openBuy(SKIN_BY_ID[b.dataset.skin]);
     };
   }
 
+  /* ----------------------------- Colección (loadout estilo Valorant) ----------------------------- */
   renderCollection() {
     const p = this.game.profile, el = document.getElementById('collection');
-    const cards = [];
-    for (const w of WEAPON_LIST) {
-      const skins = SKINS.filter((s) => s.weapon === w.id && p.owned.has(s.id));
-      const eq = p.skinFor(w.id);
-      const art = w.category === 'melee' ? '<svg viewBox="0 0 100 30"><path d="M5 15 L60 9 L95 15 L60 21 Z" fill="currentColor"/></svg>' : ViewmodelFactory.svg(w.model);
-      cards.push(`<div class="coll${eq ? ' eq' : ''}" ${eq ? `style="--c1:${eq.css[0]};--c2:${eq.css[1]}"` : ''}><div class="art">${art}</div><b>${w.name.toUpperCase()}</b><small>${eq ? eq.name : 'Estándar'}</small></div>`);
-      for (const s of skins) {
-        const on = p.equipped[w.id] === s.id;
-        cards.push(`<button class="coll has${on ? ' eq' : ''}" data-skin="${s.id}" style="--c1:${s.css[0]};--c2:${s.css[1]}"><div class="art">${ViewmodelFactory.svg(w.model)}</div><b>${s.name.toUpperCase()}</b><small>${on ? 'EQUIPADA · clic para quitar' : 'Clic para equipar'}</small></button>`);
-      }
-    }
-    el.innerHTML = cards.join('');
+    const owned = SKINS.filter((s) => p.owned.has(s.id));
+    document.getElementById('inv-sum').textContent =
+      `INVENTARIO ${owned.length}/${SKINS.length} SKINS · VALOR ¤ ${owned.reduce((a, s) => a + s.price, 0)}`;
+    const COLUMNS = [['PISTOLAS', ['sidearm']], ['SUBFUSILES', ['smg']], ['ESCOPETAS', ['shotgun']], ['RIFLES', ['rifle']],
+      ['FRANCOTIRADOR', ['sniper']], ['PESADAS · CUCHILLO', ['heavy', 'melee']]];
+    el.innerHTML = COLUMNS.map(([title, cats]) => `<div class="lo-col"><h5>${title}</h5>${
+      WEAPON_LIST.filter((w) => cats.includes(w.category)).map((lw) => {
+        const w = WEAPON_DEFS[lw.id], eq = p.skinFor(w.id);
+        const have = SKINS.filter((s) => s.weapon === w.id && p.owned.has(s.id)).length;
+        const total = SKINS.filter((s) => s.weapon === w.id).length;
+        return `<button class="lo-w${eq ? ' eq' : ''}" data-weapon="${w.id}" ${eq ? `style="--c1:${eq.css[0]};--c2:${eq.css[1]}"` : ''}>
+          <div class="art">${this._weaponArt(w)}</div><b>${w.name.toUpperCase()}</b>
+          <small>${eq ? eq.name : 'Estándar'}</small>${total ? `<em class="cnt">${have}/${total} SKINS</em>` : ''}</button>`;
+      }).join('')}</div>`).join('');
     el.onclick = (e) => {
-      const b = e.target.closest('.coll.has'); if (!b) return;
+      const b = e.target.closest('.lo-w'); if (!b) return;
       this._sfx('click');
-      p.toggleEquip(SKINS.find((s) => s.id === b.dataset.skin));
-      this.renderCollection();
+      this.openWeapon(b.dataset.weapon);
     };
+    if (this.detailWeapon) this.openWeapon(this.detailWeapon, this.detailSel);
+  }
+
+  /** Vista de un arma: Estándar + sus skins (las que no tienes, bloqueadas con enlace a la tienda). */
+  openWeapon(weaponId, sel) {
+    const p = this.game.profile, w = WEAPON_DEFS[weaponId];
+    const eqId = p.equipped[weaponId] ?? null;
+    if (sel === undefined || (sel !== null && !SKIN_BY_ID[sel])) sel = eqId;
+    this.detailWeapon = weaponId;
+    this.detailSel = sel;
+    const skin = sel ? SKIN_BY_ID[sel] : null;
+    const c1 = skin ? skin.css[0] : '#cfd6dc', c2 = skin ? skin.css[1] : '#1a2430';
+    const row = (s) => {
+      const id = s ? s.id : '', own = !s || p.owned.has(s.id), on = (s ? s.id : null) === eqId, cur = (s ? s.id : null) === sel;
+      return `<button class="lo-skin${cur ? ' sel' : ''}${own ? '' : ' locked'}${on ? ' on' : ''}" data-skin="${id}"
+        style="--c1:${s ? s.css[0] : '#cfd6dc'};--c2:${s ? s.css[1] : '#2a3440'}"><span class="sw"></span>
+        <span><b>${s ? s.name.toUpperCase() : 'ESTÁNDAR'}</b><small>${s ? (own ? s.tier : `BLOQUEADA · ¤ ${s.price}`) : 'DE SERIE'}</small></span></button>`;
+    };
+    const ownSel = !skin || p.owned.has(skin.id), isOn = sel === eqId;
+    const action = ownSel
+      ? `<button class="btn primary" data-act="equip" ${isOn ? 'disabled' : ''}>${isOn ? 'EQUIPADA' : 'EQUIPAR'}</button>`
+      : `<button class="btn primary" data-act="shop">COMPRAR EN LA TIENDA · ¤ ${skin.price}</button>`;
+    const detail = document.getElementById('coll-detail');
+    detail.innerHTML = `
+      <div class="lo-list"><button class="lo-back" data-act="back">‹ VOLVER AL ARSENAL</button>
+        ${[null, ...SKINS.filter((s) => s.weapon === weaponId)].map(row).join('')}</div>
+      <div class="lo-preview" style="--c1:${c1};--c2:${c2}">
+        <span class="tier">${skin ? skin.tier : 'ESTÁNDAR'} · ${w.name.toUpperCase()}</span>
+        <h3>${skin ? skin.name : w.name}</h3>
+        <div class="art">${this._weaponArt(w)}</div>
+        <div class="acts">${action}</div>
+      </div>`;
+    document.getElementById('collection').hidden = true;
+    detail.hidden = false;
+  }
+
+  closeWeapon() {
+    this.detailWeapon = null;
+    this.detailSel = null;
+    document.getElementById('coll-detail').hidden = true;
+    document.getElementById('collection').hidden = false;
+  }
+
+  _onDetailClick(e) {
+    const b = e.target.closest('button'); if (!b) return;
+    this._sfx('click');
+    const p = this.game.profile, w = this.detailWeapon;
+    if (b.dataset.act === 'back') { this.closeWeapon(); return; }
+    if (b.dataset.act === 'equip') {
+      if (p.equip(w, this.detailSel)) this.refreshProfile();
+      return;
+    }
+    if (b.dataset.act === 'shop') {
+      const skin = SKIN_BY_ID[this.detailSel];
+      this.showTab('skins');
+      this.openBuy(skin);
+      return;
+    }
+    if (b.dataset.skin !== undefined) this.openWeapon(w, b.dataset.skin || null);
   }
 
   /** Refleja la sensibilidad en el modal sin pisar el control que se está editando (skip). */
@@ -3461,6 +4163,7 @@ class Game {
     this.settings = store.load('vertice.settings', { sensitivity: CONFIG.mouse.sensitivity, weaponSway: true, volume: 0.8, shadows: true, renderScale: 1, showFps: true, fpsCap: 0, botDifficulty: 'normal' });
     this.profile = new Profile();
     this.kills = 0; this.deaths = 0;
+    this.match = emptyStats();                     // progreso de cuenta aún no sumado (se suma al volver al menú)
 
     this.scene = new THREE.Scene();
     this.input = new InputController(canvas);
@@ -3475,13 +4178,14 @@ class Game {
     this.view = new ViewController(this);
     this.hud = new HUD(this);
     this.shop = new Shop(this);
+    this.account = new CloudAccount(this);
     this.ui = new LobbyUI(this);
     this.player.onDamaged = (amount, fromX, fromZ) => {
       this.hud.hurt(amount, fromX, fromZ); this.audio.hurt();
       if (this.player.shield <= 0) this.shop.shield = null;
     };
     this.player.onDeath = () => {
-      this.deaths++;
+      this.deaths++; this.match.deaths++;
       this.player.respawn(); this.view.reset(this.world.spawnYaw); this.shop.shield = null;
       this.bots.requestReset();                    // se aplica al final del tick de los bots
       this.hud.showNotice('HAS CAÍDO · LOS DEFENSORES VUELVEN A SUS PUESTOS', 2.5);
@@ -3507,8 +4211,12 @@ class Game {
       this.ui.syncFullscreen();                      // el checkbox de Ajustes siempre refleja el estado real
     });
 
+    // Lo jugado se guarda también si se oculta o se cierra la pestaña a mitad de partida.
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.commitProgress(false); });
+    addEventListener('pagehide', () => this.commitProgress(false));
+
     addEventListener('keydown', (e) => {
-      if (e.code === 'Escape' && this.ui.settingsOpen) { this.ui.closeSettings(); return; }
+      if (e.code === 'Escape' && this.ui.closeTop()) return;
       if (this.state !== GameState.INGAME || isFormField(e.target)) return;
       if (e.code === 'BracketLeft') this._nudgeSens(-0.1);
       if (e.code === 'BracketRight') this._nudgeSens(0.1);
@@ -3522,9 +4230,10 @@ class Game {
       if (e.code === 'KeyE' && this.input.locked && this.world.interact(this.player)) this.audio.metal(600, 0.12, 0.45);
     });
     addEventListener('resize', () => this.resize());
-    this.applySettings();
+    this.applySettings(false);
     this.setState(GameState.MENU);
     this.scheduler.start();
+    this.account.init();                           // Firebase carga en segundo plano: el juego ya está en marcha
   }
 
   /* ----------------------------- Máquina de estados ----------------------------- */
@@ -3554,6 +4263,7 @@ class Game {
   /** "INICIAR PARTIDA": carga el mapa, reinicia la partida y captura el ratón con el mismo clic. */
   startMatch(mapId) {
     this.audio.init();
+    this.match.matches++;
     this.ui.fade();
     this.loadMap(mapId);
     this.resetMatch();
@@ -3579,11 +4289,35 @@ class Game {
     this.accumulator = 0;
   }
 
-  onBotKilled() { this.kills++; }
+  /** Llamado por BotManager. Solo suma contadores: nada de memoria nueva ni red en mitad del tick. */
+  onBotKilled(head) {
+    this.kills++;
+    this.match.kills++;
+    if (head) this.match.headshots++;
+  }
+
+  onWaveCleared() { this.match.waves++; }
+
+  /**
+   * Suma a la cuenta lo jugado desde el último guardado: estadísticas y créditos de cuenta.
+   * Se llama al volver al menú y al ocultar/cerrar la pestaña, nunca en mitad del bucle.
+   */
+  commitProgress(announce) {
+    const m = this.match;
+    if (!(m.matches || m.kills || m.deaths || m.waves)) return;
+    const kills = m.kills, waves = m.waves;
+    const earned = this.profile.addProgress(m);
+    for (const k of STAT_KEYS) m[k] = 0;
+    this.ui.updateWallet();
+    if (announce && earned > 0) {
+      const wavesText = waves > 0 ? ` · ${waves} ${waves === 1 ? 'oleada despejada' : 'oleadas despejadas'}` : '';
+      this.ui.toast(`+¤ ${earned} de cuenta · ${kills} ${kills === 1 ? 'baja' : 'bajas'}${wavesText}`);
+    }
+  }
 
   resume() { this.input.requestLock(); }
 
-  quitToMenu() { this.ui.fade(); this.setState(GameState.MENU); }
+  quitToMenu() { this.commitProgress(true); this.ui.fade(); this.setState(GameState.MENU); }
 
   _onLockChange(locked) {
     if (this.state !== GameState.INGAME) return;
@@ -3602,7 +4336,7 @@ class Game {
     setMouseSensitivity(sens);
     this.settings.sensitivity = CONFIG.mouse.sensitivity;
     this.ui.syncMouse(from);
-    if (persist) store.save('vertice.settings', this.settings);
+    if (persist) { store.save('vertice.settings', this.settings); this.account.queueSettings(); }
   }
 
   _nudgeSens(d) {
@@ -3611,7 +4345,8 @@ class Game {
     this.hud.showNotice(`SENSIBILIDAD ${m.sensitivity.toFixed(2)} · ${+m.radPerCount.toPrecision(4)} rad/count`, 1.2);
   }
 
-  applySettings() {
+  /** Aplica y guarda los ajustes. sync = false cuando vienen de la nube (no se vuelven a subir). */
+  applySettings(sync = true) {
     const s = this.settings;
     if (!CONFIG.loop.fpsCaps.includes(s.fpsCap)) s.fpsCap = 0;
     setMouseSensitivity(s.sensitivity);
@@ -3627,6 +4362,7 @@ class Game {
     document.getElementById('perf').style.display = s.showFps ? '' : 'none';
     this.resize();
     store.save('vertice.settings', s);
+    if (sync) this.account.queueSettings();
   }
 
   /**

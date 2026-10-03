@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// VÉRTICE · reglas de Firestore.
+// Pégalas en la consola de Firebase: Firestore Database › Reglas › Publicar.
+//
+// Cada jugador tiene un documento players/{uid} que solo él puede leer y escribir. Además:
+//  · Una cuenta nueva empieza con 5000 créditos, sin skins y con estadísticas a cero.
+//  · Una compra añade UNA skin al final del inventario y descuenta su precio exacto.
+//  · Los créditos solo suben al sumar partidas, y como mucho 15 por baja nueva y 75 por oleada nueva.
+//  · Las estadísticas nunca bajan.
+// Si cambias precios o recompensas en index.html (SKINS y ACCOUNT_ECONOMY), cámbialos también aquí.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /players/{uid} {
+
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      function prices() {
+        return {
+          'martillo_prime': 1775,
+          'titan_dragon': 2475,
+          'cuervo_glaciar': 1275,
+          'pica_neon': 875
+        };
+      }
+
+      function statKeys() {
+        return ['matches', 'kills', 'deaths', 'headshots', 'waves'];
+      }
+
+      function validStats(st) {
+        return st is map
+          && st.keys().hasOnly(statKeys()) && st.keys().hasAll(statKeys())
+          && st.matches is int && st.matches >= 0
+          && st.kills is int && st.kills >= 0
+          && st.deaths is int && st.deaths >= 0
+          && st.headshots is int && st.headshots >= 0
+          && st.waves is int && st.waves >= 0;
+      }
+
+      function validPlayer(d) {
+        return d.keys().hasOnly(['schema', 'name', 'photo', 'credits', 'skins', 'loadout', 'settings', 'stats', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['schema', 'name', 'photo', 'credits', 'skins', 'loadout', 'settings', 'stats', 'createdAt', 'updatedAt'])
+          && d.schema == 1
+          && d.name is string && d.name.size() <= 60
+          && d.photo is string && d.photo.size() <= 1024
+          && d.credits is int && d.credits >= 0
+          && d.skins is list && d.skins.size() <= 64
+          && d.loadout is map && d.loadout.size() <= 32 && d.skins.hasAll(d.loadout.values())
+          && d.settings is map && d.settings.size() <= 16
+          && validStats(d.stats)
+          && d.updatedAt == request.time;
+      }
+
+      function statsGrow(o, n) {
+        return n.stats.matches >= o.stats.matches
+          && n.stats.kills >= o.stats.kills
+          && n.stats.deaths >= o.stats.deaths
+          && n.stats.headshots >= o.stats.headshots
+          && n.stats.waves >= o.stats.waves;
+      }
+
+      // Compra: exactamente una skin nueva al final de la lista, pagando su precio.
+      function isPurchase(o, n) {
+        return n.skins.size() == o.skins.size() + 1
+          && n.skins == o.skins.concat([n.skins[o.skins.size()]])
+          && n.skins[o.skins.size()] in prices()
+          && !(n.skins[o.skins.size()] in o.skins)
+          && n.credits == o.credits - prices()[n.skins[o.skins.size()]]
+          && n.stats == o.stats;
+      }
+
+      // Sin compras: los créditos se quedan igual o suben según las bajas y oleadas nuevas.
+      function isProgress(o, n) {
+        return n.skins == o.skins
+          && n.credits >= o.credits
+          && n.credits - o.credits <= (n.stats.kills - o.stats.kills) * 15 + (n.stats.waves - o.stats.waves) * 75;
+      }
+
+      allow read: if isOwner();
+
+      allow create: if isOwner()
+        && validPlayer(request.resource.data)
+        && request.resource.data.credits == 5000
+        && request.resource.data.skins.size() == 0
+        && request.resource.data.stats == { 'matches': 0, 'kills': 0, 'deaths': 0, 'headshots': 0, 'waves': 0 }
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isOwner()
+        && validPlayer(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && statsGrow(resource.data, request.resource.data)
+        && (isPurchase(resource.data, request.resource.data) || isProgress(resource.data, request.resource.data));
+
+      allow delete: if false;
+    }
+
+    // Todo lo demás, cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
