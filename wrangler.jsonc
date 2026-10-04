@@ -1,0 +1,10 @@
+// Cloudflare Workers Builds (proyecto tiny-voice-0c3c): sirve la web tal cual, como archivos estáticos.
+// La web oficial sigue en GitHub Pages (zenteyacompany.lat); esto solo hace que las builds de Cloudflare,
+// también las de vista previa de cada rama, sepan qué publicar.
+{
+  "name": "tiny-voice-0c3c",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "."
+  }
+}
