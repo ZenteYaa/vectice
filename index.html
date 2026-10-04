@@ -179,7 +179,19 @@
   .bevel { clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); }
 
   /* ---- JUGAR: escuadrón de 5 ranuras + barra de acción ---- */
-  .panel.play { align-items: center; justify-content: space-between; gap: 10px; }
+  .panel.play { position: relative; align-items: center; justify-content: space-between; gap: 10px; }
+  /* Agentes 3D del escuadrón: un canvas transparente encima de las ranuras (los clics pasan a través). */
+  .agent-stage { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+  .slot[data-agent] .rank { width: 34px; height: 34px; margin-bottom: 2px; }
+  .slot.center[data-agent] .rank { width: 40px; height: 40px; }
+  .agent-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px; max-width: 100%; }
+  .agent-name { display: flex; flex-direction: column; align-items: center; line-height: 1.05; min-width: 0; }
+  .agent-name b { font-size: 12px !important; letter-spacing: 3px !important; color: var(--ac); text-shadow: 0 0 10px var(--ac); }
+  .slot.center .agent-name b { font-size: 14px !important; }
+  .agent-name i { font-style: normal; font-size: 8px; letter-spacing: 2px; opacity: .6; }
+  #screen-lobby .agent-nav { position: relative; z-index: 4; width: 22px; height: 22px; padding: 0; background: #0b0e14cc; border: 1px solid var(--ac); color: var(--ac);
+    font-size: 15px; line-height: 1; cursor: pointer; }
+  #screen-lobby .agent-nav:hover { background: var(--ac); color: #0b0e14; }
   .party-bar { align-self: stretch; display: flex; align-items: baseline; gap: 14px; min-height: 26px; padding-left: 4px; }
   .squad { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px; }
   .slot { --h: clamp(230px, calc(100vh - 300px), 400px); position: relative; flex: none; height: var(--h); width: calc(var(--h) * .44); box-sizing: border-box; display: flex; flex-direction: column;
@@ -714,6 +726,7 @@
     <section class="panel play" data-panel="play">
       <div class="party-bar"><span class="kicker">ESCUADRÓN</span><small class="muted" id="party-info"></small><button class="party-leave" id="party-leave" hidden>SALIR DEL GRUPO</button></div>
       <div class="squad" id="party-slots"></div>
+      <canvas class="agent-stage" id="agent-stage" aria-hidden="true"></canvas>
       <div class="actionbar">
         <div class="mode-wrap">
           <button class="act-btn" id="mode-btn" aria-haspopup="true"><small id="mode-sub">SELECCIONAR MODO</small><b id="mode-label"></b></button>
@@ -1241,6 +1254,83 @@ const WeaponAssets = {
     }));
   },
 };
+
+/**
+ * Modelos .glb de los agentes (CHARACTERS): se cargan en segundo plano y, al llegar, sustituyen al soldado
+ * de cajas en los bots, en tus compañeros y en el escuadrón del lobby. De cada archivo se queda la malla
+ * del cuerpo (geometría + texturas de su paleta), el Muzzle_Point y las hitboxes, que se comparan con
+ * AGENT_HITBOX: si un .glb no cumple el estándar se avisa en consola (el juego siempre usa AGENT_HITBOX).
+ */
+const AgentAssets = {
+  list: {},                         // id → { geometry, material, muzzle, tris }
+  ready: false,
+  listeners: [],
+  onReady(fn) { if (this.ready) fn(); else this.listeners.push(fn); },
+  async load() {
+    let GLTFLoader;
+    try { ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js')); }
+    catch (err) { console.warn('[AGENTES] GLTFLoader no disponible: soldado procedural', err); return; }
+    const loader = new GLTFLoader();
+    await Promise.all(CHARACTER_IDS.map(async (id) => {
+      try { this._take(id, (await loader.loadAsync(CHARACTERS[id].file)).scene); }
+      catch (err) { console.warn(`[AGENTES] ${CHARACTERS[id].file} no se pudo cargar: soldado procedural`, err?.message ?? err); }
+    }));
+    this.ready = true;
+    for (const fn of this.listeners) fn();
+    this.listeners.length = 0;
+  },
+  _take(id, scene) {
+    scene.updateMatrixWorld(true);
+    let body = null;
+    const hb = {}, box = new THREE.Box3(), c = new THREE.Vector3(), sz = new THREE.Vector3();
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      if (o.name.startsWith('HITBOX_')) { box.setFromObject(o); hb[o.name.slice(7).toLowerCase()] = { c: box.getCenter(c).y, w: box.getSize(sz).x, h: sz.y }; }
+      else body = o;
+    });
+    if (!body) throw new Error('sin malla de cuerpo');
+    const H = AGENT_HITBOX, near = (a, b) => Math.abs(a - b) < 0.01;
+    const ok = hb.head && near(hb.head.c, H.head.y) && near(hb.head.h, H.head.r * 2)
+      && hb.body && near(hb.body.c, H.body.y) && near(hb.body.w, H.body.w) && near(hb.body.h, H.body.h)
+      && hb.legs && near(hb.legs.c, H.legs.y) && near(hb.legs.w, H.legs.w) && near(hb.legs.h, H.legs.h);
+    if (!ok) console.warn(`[AGENTES] ${id}: las hitboxes del .glb no coinciden con AGENT_HITBOX`, hb);
+    const geometry = body.geometry;
+    if (!body.matrixWorld.equals(new THREE.Matrix4())) geometry.applyMatrix4(body.matrixWorld);
+    geometry.computeBoundingSphere();
+    const muzzle = scene.getObjectByName('Muzzle_Point')?.getWorldPosition(new THREE.Vector3()) ?? null;
+    this.list[id] = { geometry, material: body.material, muzzle, tris: geometry.index ? geometry.index.count / 3 : 0 };
+  },
+};
+const AGENT_RIM = { enemy: 0xff3b30, ally: 0x3fd6c4 };
+/**
+ * Material de un agente en partida: el del .glb (paleta) + dos extras en el shader, sin texturas nuevas:
+ *  · uFlash: destello de impacto (es el mismo THREE.Color que el emisivo del soldado procedural del bot);
+ *  · uRim: contorno del color del bando (rojo rival, turquesa aliado): la silueta se lee de un vistazo.
+ * Todos comparten programa (customProgramCacheKey): cambiar de agente solo cambia texturas y uniforms.
+ */
+function makeAgentMaterial(asset, flash, rim) {
+  const src = asset.material;
+  const m = new THREE.MeshStandardMaterial({ map: src.map, metalnessMap: src.metalnessMap, roughnessMap: src.roughnessMap,
+    emissiveMap: src.emissiveMap, emissive: 0xffffff, metalness: 1, roughness: 1 });
+  const u = { uFlash: { value: flash }, uRim: { value: new THREE.Color(rim) } };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uFlash;\nuniform vec3 uRim;')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n'
+        + '  totalEmissiveRadiance += uFlash + uRim * (0.4 * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0));');
+  };
+  m.customProgramCacheKey = () => 'agent-rim';
+  m.userData.rim = u.uRim.value;
+  return m;
+}
+/** Pone el agente `asset` en un material de makeAgentMaterial (mismas texturas presentes: sin recompilar). */
+function dressAgentMaterial(m, asset, rim) {
+  const src = asset.material;
+  m.map = src.map; m.metalnessMap = src.metalnessMap; m.roughnessMap = src.roughnessMap; m.emissiveMap = src.emissiveMap;
+  m.userData.rim.setHex(rim);
+}
+
 const STARTER_WEAPON = 'pica';
 const MELEE_WEAPON = 'cuchillo';
 
@@ -1266,11 +1356,7 @@ const BOT_CFG = {
   health: 150,
   legMultiplier: 0.75,
   halfWidth: 0.3, height: 1.8, eye: 1.64,
-  hitbox: {                         // AABB en coordenadas locales (x/z simétricos: no dependen del giro)
-    head: { half: 0.15, minY: 1.49, maxY: 1.80 },
-    body: { half: 0.27, minY: 0.92, maxY: 1.49 },
-    legs: { half: 0.21, minY: 0.00, maxY: 0.92 },
-  },
+  // Hitboxes: las estándar de los agentes (AGENT_HITBOX), iguales para todos los cuerpos.
   fov: 115,                         // grados de visión
   viewRange: 45, hearRange: 30, quietHearRange: 10,
   leash: 2.6, strafeSpeed: 2.8,     // se mueven alrededor de su puesto, nunca lo abandonan
@@ -1282,6 +1368,39 @@ const BOT_CFG = {
     normal:  { label: 'Normal',  reaction: [0.35, 0.60], spreadMult: 1.0,  damageMult: 1.0,  tracking: 10, aimHeight: 0.68 },
     dificil: { label: 'Difícil', reaction: [0.20, 0.32], spreadMult: 0.6,  damageMult: 1.25, tracking: 16, aimHeight: 0.76 },
   },
+};
+
+/* =====================================================================================
+ *  AGENTES · plantilla de 5 personajes tácticos (3 mujeres, 2 hombres) con estatura y hitboxes
+ *  idénticas: lo que cambia es la silueta, nunca el tamaño a la hora de acertar.
+ *  Modelos: blender/generate_agents.py → assets/characters/<id>.glb (1 malla + 1 material, 4.500-6.000 tris,
+ *  pivote en los pies, +Y arriba, mira a -Z) con HITBOX_HEAD / HITBOX_BODY / HITBOX_LEGS invisibles dentro.
+ * ===================================================================================== */
+const CHARACTERS = {
+  valquiria: { id: 'valquiria', name: 'Valquiria', role: 'Duelista', sex: 'F', file: 'assets/characters/valquiria.glb', accent: '#ff4655',
+    look: 'Atlética, pelo corto táctico, hombrera derecha y rodilleras reforzadas.' },
+  kage: { id: 'kage', name: 'Kage', role: 'Vanguardia', sex: 'F', file: 'assets/characters/kage.glb', accent: '#00f3ff',
+    look: 'Ligera y ágil, traje ceñido con arnés cruzado, coleta alta y visor monofocal.' },
+  nyx: { id: 'nyx', name: 'Nyx', role: 'Iniciadora', sex: 'F', file: 'assets/characters/nyx.glb', accent: '#2ec4b6',
+    look: 'Capucha táctica, traje técnico y brazo izquierdo cibernético con interfaz.' },
+  aegis: { id: 'aegis', name: 'Aegis', role: 'Centinela', sex: 'M', file: 'assets/characters/aegis.glb', accent: '#ffb703',
+    look: 'Pesado, hombros anchos, placas balísticas y casco angular cerrado.' },
+  vortex: { id: 'vortex', name: 'Vortex', role: 'Controlador', sex: 'M', file: 'assets/characters/vortex.glb', accent: '#7b2cbf',
+    look: 'Gabardina técnica hasta los muslos y máscara antigás de doble filtro.' },
+};
+const CHARACTER_IDS = Object.keys(CHARACTERS);
+const DEFAULT_AGENT = 'valquiria';
+const agentOf = (id) => (CHARACTERS[id] ? id : DEFAULT_AGENT);
+/**
+ * Hitboxes estándar (metros, desde los pies; las mismas que llevan los .glb). La cabeza es una ESFERA
+ * (test rayo-esfera: el headshot es justo la silueta de la cabeza); cuerpo y piernas son cajas de fondo =
+ * ancho, así no dependen del giro. Las usan los bots, tu jugador y tus compañeros; agachado se escalan en altura.
+ */
+const AGENT_HITBOX = {
+  height: 1.80,
+  head: { y: 1.65, r: 0.12 },
+  body: { y: 1.15, w: 0.38, h: 0.65 },
+  legs: { y: 0.45, w: 0.30, h: 0.75 },
 };
 
 /* ====================================== Utilidades ====================================== */
@@ -1318,10 +1437,27 @@ const safeInv = (v) => 1 / (Math.abs(v) > 1e-9 ? v : (v < 0 ? -1e-9 : 1e-9));
  *  en el heap: rayBox(b) devuelve 0 si no corta, o 1/2/3 = eje X/Y/Z de la cara de entrada, y
  *  deja la distancia en RAY[7]. Cada acierto acorta RAY[6] para descartar cajas más lejanas.
  * ===================================================================================== */
-const RAY = new Float64Array(8);    // 0-2 origen · 3-5 1/dirección · 6 alcance · 7 distancia del último corte
+const RAY = new Float64Array(11);   // 0-2 origen · 3-5 1/dirección · 6 alcance · 7 distancia del último corte · 8-10 dirección
 function setRay(o, d, far) {
   RAY[0] = o.x; RAY[1] = o.y; RAY[2] = o.z;
   RAY[3] = safeInv(d.x); RAY[4] = safeInv(d.y); RAY[5] = safeInv(d.z); RAY[6] = far;
+  RAY[8] = d.x; RAY[9] = d.y; RAY[10] = d.z;
+}
+/**
+ * Rayo contra la esfera de la cabeza (h.cx, h.cy, h.cz, h.r; ver setAgentHitboxes). Mismo contrato que
+ * rayBox: 0 si no corta, o 1/2/3 = eje dominante de la normal en el punto de entrada, distancia en RAY[7].
+ */
+function rayHead(h) {
+  const dx = RAY[8], dy = RAY[9], dz = RAY[10];
+  const ox = RAY[0] - h.cx, oy = RAY[1] - h.cy, oz = RAY[2] - h.cz;
+  const b = ox * dx + oy * dy + oz * dz, c = ox * ox + oy * oy + oz * oz - h.r * h.r;
+  const disc = b * b - c;
+  if (disc < 0) return 0;
+  const t = -b - Math.sqrt(disc);
+  if (t < 0 || t >= RAY[6]) return 0;                       // detrás (o dentro), o más lejos que lo ya encontrado
+  RAY[7] = t;
+  const nx = Math.abs(ox + dx * t), ny = Math.abs(oy + dy * t), nz = Math.abs(oz + dz * t);
+  return nx >= ny && nx >= nz ? 1 : ny >= nz ? 2 : 3;
 }
 function rayBox(b) {
   const ox = RAY[0], oy = RAY[1], oz = RAY[2], ix = RAY[3], iy = RAY[4], iz = RAY[5];
@@ -2593,6 +2729,17 @@ function setBoxXZ(b, x, z, half, minY, maxY) {
   b.minX = x - half; b.maxX = x + half; b.minZ = z - half; b.maxZ = z + half; b.minY = minY; b.maxY = maxY;
 }
 const newBox = () => ({ minX: 0, maxX: 0, minY: 0, maxY: 0, minZ: 0, maxZ: 0 });
+/** Hitboxes de un cuerpo: la cabeza lleva además su esfera (cx, cy, cz, r) y su AABB envolvente. */
+const newHitboxes = () => ({ head: { ...newBox(), cx: 0, cy: 0, cz: 0, r: 0 }, body: newBox(), legs: newBox() });
+/** Coloca las hitboxes estándar de agente en los pies (x, y, z). k = altura actual / 1,80 (agachado < 1). */
+function setAgentHitboxes(hb, x, y, z, k = 1) {
+  const H = AGENT_HITBOX, h = hb.head, r = H.head.r;
+  h.cx = x; h.cy = y + H.head.y * k; h.cz = z; h.r = r;
+  setBoxXZ(h, x, z, r, h.cy - r, h.cy + r);
+  setBoxXZ(hb.body, x, z, H.body.w / 2, y + (H.body.y - H.body.h / 2) * k, y + (H.body.y + H.body.h / 2) * k);
+  setBoxXZ(hb.legs, x, z, H.legs.w / 2, y + (H.legs.y - H.legs.h / 2) * k, y + (H.legs.y + H.legs.h / 2) * k);
+  return hb;
+}
 
 class PlayerController {
   constructor(world) {
@@ -2608,7 +2755,7 @@ class PlayerController {
     this.walking = false;
     this._wish = new THREE.Vector3();
     this._lists = [world.boxes, world.dynamicBoxes];   // mismas referencias siempre (se vacían con length = 0)
-    this._hb = { head: newBox(), body: newBox(), legs: newBox() };
+    this._hb = newHitboxes();
     this.maxHealth = 100;
     this.health = 100;
     this.shield = 0;              // Puntos de escudo actuales (los compra la tienda).
@@ -2648,13 +2795,7 @@ class PlayerController {
   horizontalSpeed() { return Math.hypot(this.vel.x, this.vel.z); }
 
   /** Hitboxes del jugador para los disparos de los bots (cabeza / cuerpo / piernas). */
-  hitboxes() {
-    const p = this.pos, h = this.height, hb = this._hb;
-    setBoxXZ(hb.head, p.x, p.z, 0.16, p.y + h - 0.3, p.y + h);
-    setBoxXZ(hb.body, p.x, p.z, 0.3, p.y + h * 0.48, p.y + h - 0.3);
-    setBoxXZ(hb.legs, p.x, p.z, 0.24, p.y, p.y + h * 0.48);
-    return hb;
-  }
+  hitboxes() { const p = this.pos; return setAgentHitboxes(this._hb, p.x, p.y, p.z, this.height / AGENT_HITBOX.height); }
 
   /** ¿Solapa la caja del jugador con alguna AABB (mapa o bots) en (x, y, z) con altura h? */
   overlapsAt(x, y, z, h) {
@@ -3425,7 +3566,7 @@ class BotManager {
       state: BotState.HOLD, health: BOT_CFG.health, seen: false, react: 0, lostT: 0, alertT: 0, alertYaw: 0,
       phase: 0, phaseT: 0, burstLeft: 0, fireT: 0, strafeDir: 1, moving: false,
       fall: 0, flashT: 0, hitFlash: 0, target: null,
-      hb: { head: newBox(), body: newBox(), legs: newBox() }, collider: newBox(),
+      hb: newHitboxes(), collider: newBox(), agent: DEFAULT_AGENT,
       // Partida en grupo, en los miembros: las dos últimas fotos del anfitrión (posición, giro, mira, hora).
       nx0: 0, nz0: 0, ny0: 0, np0: 0, nt0: 0, nx1: 0, nz1: 0, ny1: 0, np1: 0, nt1: 0, nState: 0, nCount: 0,
     };
@@ -3452,7 +3593,7 @@ class BotManager {
       const b = this.bots[i];
       b.active = i < posts.length;
       b.root.visible = b.active;
-      this._setTeam(b, 1, '');
+      this._setTeam(b, 1, '', CHARACTER_IDS[i % CHARACTER_IDS.length]);     // los 5 rivales, 5 agentes distintos
       b.W = this.W; b.maxHealth = BOT_CFG.health; b.shield = b.shieldMax = 0;
       if (b.active) { b.post.x = posts[i].x; b.post.z = posts[i].z; b.post.yaw = posts[i].yaw; }
     }
@@ -3460,10 +3601,23 @@ class BotManager {
     this.resetAll();
   }
 
-  _setTeam(b, team, name) {
-    b.team = team; b.name = name;
-    b.mesh.geometry = team === 0 ? this.allyGeometry : this.geometry;
+  _setTeam(b, team, name, agent = b.agent) {
+    b.team = team; b.name = name; b.agent = agentOf(agent);
+    this._dress(b);
   }
+
+  /** Cuerpo del bot: el modelo de su agente si ya cargó; si no, el soldado de cajas del color de su bando. */
+  _dress(b) {
+    const a = AgentAssets.list[b.agent];
+    if (!a) { b.mesh.geometry = b.team === 0 ? this.allyGeometry : this.geometry; b.mesh.material = b.mat; return; }
+    const rim = b.team === 0 ? AGENT_RIM.ally : AGENT_RIM.enemy;
+    if (!b.agentMat) b.agentMat = makeAgentMaterial(a, b.mat.emissive, rim);
+    else dressAgentMaterial(b.agentMat, a, rim);
+    b.mesh.geometry = a.geometry; b.mesh.material = b.agentMat;
+  }
+
+  /** Los .glb acaban de llegar: viste a los bots que ya existen. */
+  refreshAgents() { for (let i = 0; i < this.bots.length; i++) this._dress(this.bots[i]); }
 
   /**
    * Partida por rondas: `enemies` rivales (equipo 1) y `allies` aliados (equipo 0). Los coloca el
@@ -3473,12 +3627,15 @@ class BotManager {
     const n = enemies + allies;
     while (this.bots.length < n) this.bots.push(this._makeBot(this.bots.length));
     this.friendlyTeam = 0; this.hidden = null; this.respawnT = 0; this.pendingReset = false;
+    // Sin agentes repetidos en un equipo: tus 4 aliados llevan los que tú no has elegido.
+    const mine = agentOf(this.game.settings?.agent), mates = CHARACTER_IDS.filter((id) => id !== mine);
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i], ally = i >= enemies;
       b.active = i < n;
       b.root.visible = b.active;
       if (!b.active) { this._disableCollider(b); continue; }
-      this._setTeam(b, ally ? 0 : 1, ally ? BOT_NAMES.ally[i - enemies] : BOT_NAMES.enemy[i]);
+      this._setTeam(b, ally ? 0 : 1, ally ? BOT_NAMES.ally[i - enemies] : BOT_NAMES.enemy[i],
+        ally ? mates[(i - enemies) % mates.length] : CHARACTER_IDS[i % CHARACTER_IDS.length]);
       b.maxHealth = 100; b.credits = ROUND_ECON.start; b.tier = 'pistol'; b.W = BOT_ARMS.pistol; b.shield = b.shieldMax = 0;
     }
   }
@@ -3574,10 +3731,8 @@ class BotManager {
   requestReset() { this.pendingReset = true; }
 
   _updateBoxes(b) {
-    const H = BOT_CFG.hitbox, x = b.pos.x, y = b.pos.y, z = b.pos.z;
-    setBoxXZ(b.hb.head, x, z, H.head.half, y + H.head.minY, y + H.head.maxY);
-    setBoxXZ(b.hb.body, x, z, H.body.half, y + H.body.minY, y + H.body.maxY);
-    setBoxXZ(b.hb.legs, x, z, H.legs.half, y + H.legs.minY, y + H.legs.maxY);
+    const x = b.pos.x, y = b.pos.y, z = b.pos.z;
+    setAgentHitboxes(b.hb, x, y, z);
     setBoxXZ(b.collider, x, z, BOT_CFG.halfWidth, y, y + BOT_CFG.height);
   }
   _disableCollider(b) { const c = b.collider; c.minX = c.maxX = c.minZ = c.maxZ = 1e6; c.minY = c.maxY = -1e6; }
@@ -3748,7 +3903,7 @@ class BotManager {
     const hb = target.hitboxes();
     let zone = 0;
     setRay(o, dir, wall ? hit.dist : W.range);
-    if (rayBox(hb.head)) { RAY[6] = RAY[7]; zone = 1; }
+    if (rayHead(hb.head)) { RAY[6] = RAY[7]; zone = 1; }
     if (rayBox(hb.body)) { RAY[6] = RAY[7]; zone = 2; }
     if (rayBox(hb.legs)) { RAY[6] = RAY[7]; zone = 3; }
     const end = this._end.copy(o).addScaledVector(dir, RAY[6]);
@@ -3893,7 +4048,7 @@ class BotManager {
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
       if (!b.active || b.state === BotState.DEAD || b.team === this.friendlyTeam) continue;
-      let ax = rayBox(b.hb.head);
+      let ax = rayHead(b.hb.head);
       if (ax) { RAY[6] = RAY[7]; hitBot = b; zone = 'head'; axis = ax - 1; }
       ax = rayBox(b.hb.body);
       if (ax) { RAY[6] = RAY[7]; hitBot = b; zone = 'body'; axis = ax - 1; }
@@ -5693,7 +5848,7 @@ class Profile {
  *  · Nada de esto corre dentro del bucle de juego: solo en clics del menú, al volver al menú y
  *    al ocultar la pestaña. El bucle de 128 Hz y el render no se enteran.
  * ===================================================================================== */
-const SYNCED_SETTINGS = ['sensitivity', 'weaponSway', 'botDifficulty'];   // vídeo y sonido son de cada dispositivo
+const SYNCED_SETTINGS = ['sensitivity', 'weaponSway', 'botDifficulty', 'agent'];   // vídeo y sonido son de cada dispositivo
 
 /** Errores de Firebase Auth → texto para el jugador (null = no avisar, p. ej. si cerró el popup). */
 function authErrorText(err) {
@@ -6045,6 +6200,8 @@ const SOCIAL = {
   // Acrópolis y Códice en grupo: solo con las reglas match-1 publicadas.
   matchMaps: ['acropolis', 'codice'],
   matchRulesVersion: 'match-1',
+  // Agente elegido en el perfil público (lo ven los miembros del grupo en su ranura): solo con agents-1 publicadas.
+  agentsRulesVersion: 'agents-1',
   chatMax: 40,               // mensajes que se cargan de cada canal
   chatGapMs: 1000,           // como mucho un mensaje por segundo
 };
@@ -6114,6 +6271,7 @@ class Social {
     this.people = new Map();             // uid → perfil público (amigos, solicitudes, invitaciones y grupo)
     this.party = null;                   // { id, leader, members, status, map, difficulty, launchSeq, launchAt, mode }
     this.lobbyOk = false;                // reglas lobby-1 publicadas: tarjeta, LISTO, modo del grupo y chat
+    this.agentsOk = false;               // reglas agents-1 publicadas: tu agente en el perfil público
     this.chat = { party: [], all: [] };  // últimos mensajes de cada canal, del más antiguo al más nuevo
     this._chatPartySub = null;
     this._chatAt = 0;
@@ -6187,6 +6345,7 @@ class Social {
       this.status = 'ready';
       this._watchAllChat(gen);
       this.syncCard();
+      this.syncAgent();
       this._hb = setInterval(() => this._beat(), SOCIAL.heartbeatMs);
       this._tick = setInterval(() => this._onTick(), SOCIAL.tickMs);
       this._refreshToken();
@@ -6235,6 +6394,8 @@ class Social {
     catch (err) { this.matchMapsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de mapas por rondas', err); }
     try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.lobbyRulesVersion)); this.lobbyOk = true; }
     catch (err) { this.lobbyOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca del lobby', err); }
+    try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.agentsRulesVersion)); this.agentsOk = true; }
+    catch (err) { this.agentsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de agentes', err); }
   }
 
   /** ¿Aceptan las reglas publicadas este mapa en un grupo? */
@@ -6420,6 +6581,7 @@ class Social {
       partySize: Number.isInteger(d.partySize) ? d.partySize : 1,
       card: CARD_BY_ID[d.card] ? d.card : null,
       ready: d.ready === true,
+      agent: CHARACTERS[d.agent] ? d.agent : null,
     };
   }
 
@@ -6784,6 +6946,15 @@ class Social {
     this.fb.updateDoc(this._ref('users', this.uid), { card, lastSeen: this._ts() }).catch((err) => this._log(err, 'publicar tu tarjeta', `users/${this.uid}`));
   }
 
+  /** Publica tu agente para que tu grupo lo vea en tu ranura (y en la partida, tu modelo). */
+  syncAgent() {
+    if (!this.ready || !this.agentsOk || !this.me) return;
+    const agent = agentOf(this.game.settings.agent);
+    if (this.me.agent === agent) return;
+    this.me.agent = agent;
+    this.fb.updateDoc(this._ref('users', this.uid), { agent, lastSeen: this._ts() }).catch((err) => this._log(err, 'publicar tu agente', `users/${this.uid}`));
+  }
+
   get chatOk() { return this.ready && this.lobbyOk === true; }
 
   _chatQuery(col) { const fb = this.fb; return fb.query(col, fb.orderBy('createdAt', 'desc'), fb.limit(SOCIAL.chatMax)); }
@@ -6903,6 +7074,107 @@ class Social {
  *  Se repinta con innerHTML cuando cambia algo (en partida espera a volver al menú) y los clics
  *  van por delegación en cada contenedor.
  * ===================================================================================== */
+/**
+ * Escuadrón 3D del lobby: los agentes de cada ranura (tú y tu grupo) de pie sobre su tarjeta, en su pose de
+ * reposo táctica (respiración y balanceo leves). Un único canvas WebGL transparente encima del escuadrón
+ * (no recibe clics) y un viewport recortado por ranura: 1 draw call por agente, solo con la pestaña JUGAR a la
+ * vista. Las ranuras dicen qué agente llevan con data-agent; SocialUI avisa (markDirty) cuando las redibuja.
+ */
+class LobbyStage {
+  constructor(game) {
+    this.game = game;
+    this.canvas = document.getElementById('agent-stage');
+    this.slotsEl = document.getElementById('party-slots');
+    this.renderer = null;
+    this.slots = [];                               // { el, agent, x, y, w, h, root, mesh, t0 }
+    this.pool = [];                                // grupos reutilizables (uno por ranura)
+    this.dirty = true;
+    this.t = 0;
+    this.failed = false;
+    new ResizeObserver(() => { this.dirty = true; }).observe(this.canvas.parentElement);
+  }
+
+  _init() {
+    try {
+      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
+    } catch (err) { this.failed = true; console.warn('[LOBBY] sin escuadrón 3D', err); return false; }
+    const r = this.renderer;
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1;
+    r.setClearColor(0x000000, 0);
+    r.autoClear = false;
+    this.scene = new THREE.Scene();
+    this.scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x1a1f27, 1.6));
+    const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-1.2, 2.4, 3); this.scene.add(key);
+    this.rim = new THREE.DirectionalLight(0x00f3ff, 2.2); this.rim.position.set(1.5, 2.2, -2.5); this.scene.add(this.rim);
+    this.camera = new THREE.PerspectiveCamera(24, 0.5, 0.1, 30);
+    return true;
+  }
+
+  markDirty() { this.dirty = true; }
+  refresh() { this.dirty = true; for (const g of this.pool) g.agent = null; }
+
+  /** Lee las ranuras (agente y rectángulo útil: de arriba a la ficha de abajo) relativas al canvas. */
+  _layout() {
+    const cw = this.canvas.clientWidth, ch = this.canvas.clientHeight;
+    if (!cw || !ch) return;
+    this.dirty = false;
+    if (this.renderer) this.renderer.setSize(cw, ch, false);
+    const base = this.canvas.getBoundingClientRect();
+    const els = this.slotsEl.querySelectorAll('.slot[data-agent]');
+    this.slots.length = 0;
+    els.forEach((el, i) => {
+      const id = el.dataset.agent, a = AgentAssets.list[id];
+      if (!a) return;
+      const r = el.getBoundingClientRect(), foot = el.querySelector('.slot-foot')?.getBoundingClientRect();
+      const top = r.top - base.top + 6, bottom = (foot ? foot.top : r.bottom) - base.top + 4;
+      let g = this.pool[i];
+      if (!g) {
+        g = this.pool[i] = { root: new THREE.Group(), mesh: null, agent: null, t0: 0, phase: i * 1.7 };
+        this.scene.add(g.root);
+      }
+      if (g.agent !== id) {
+        if (!g.mesh) { g.mesh = new THREE.Mesh(a.geometry, a.material); g.root.add(g.mesh); }
+        g.mesh.geometry = a.geometry; g.mesh.material = a.material;
+        g.agent = id; g.t0 = this.t;               // entra girando hacia ti
+      }
+      this.slots.push({ g, accent: CHARACTERS[id].accent, x: r.left - base.left, y: top, w: r.width, h: Math.max(0, bottom - top), center: el.classList.contains('center') });
+    });
+  }
+
+  render(dt) {
+    const lobby = this.game.ui?.root;
+    if (this.failed || this.game.state !== GameState.MENU || !lobby || lobby.hidden || !this.canvas.offsetParent) return;
+    if (!this.renderer && !this._init()) return;
+    this.t += dt;
+    if (this.dirty) this._layout();
+    const r = this.renderer, cam = this.camera, ch = this.canvas.clientHeight;
+    r.setScissorTest(false); r.clear();
+    for (const g of this.pool) g.root.visible = false;
+    r.setScissorTest(true);
+    for (const s of this.slots) {
+      if (s.w < 20 || s.h < 40) continue;
+      const g = s.g, t = this.t + g.phase;
+      g.root.visible = true;
+      // Pose de reposo: respiración (pecho arriba/abajo), balanceo de peso y giro de entrada al cambiar de agente.
+      const enter = Math.min(1, (this.t - g.t0) / 0.6), e = 1 - Math.pow(1 - enter, 3);
+      g.root.rotation.y = Math.PI - 0.38 + Math.sin(t * 0.45) * 0.05 + (1 - e) * 2.4;   // el modelo mira a -Z: π lo pone de cara
+      g.root.rotation.z = Math.sin(t * 0.9) * 0.008;
+      g.root.scale.set(1, 1 + Math.sin(t * 1.7) * 0.005, 1);
+      // Encuadre: la figura entera (1,85 m) cabe en el alto y en el ancho de la ranura.
+      cam.aspect = s.w / s.h;
+      const tanV = Math.tan(cam.fov * DEG / 2), dist = Math.max(0.98 / tanV, 0.62 / (tanV * cam.aspect));
+      cam.position.set(0, 0.95, dist); cam.lookAt(0, 0.92, 0); cam.updateProjectionMatrix();
+      this.rim.color.set(s.accent);
+      r.setViewport(s.x, ch - s.y - s.h, s.w, s.h);
+      r.setScissor(s.x, ch - s.y - s.h, s.w, s.h);
+      r.render(this.scene, cam);
+      g.root.visible = false;
+    }
+    r.setScissorTest(false);
+  }
+}
+
 class SocialUI {
   constructor(game) {
     this.game = game;
@@ -7125,6 +7397,7 @@ class SocialUI {
       else html += `<div class="slot ${size[i]} locked">${PLUS_SVG}<small>${account ? '' : 'CON CUENTA'}</small></div>`;
     }
     this._put(e.slots, html);
+    this.game.ui?.stage.markDirty();
     const p = s.party;
     e.partyInfo.textContent = !account ? 'Inicia sesión con Google para jugar en grupo con tus amigos.'
       : !s.ready ? ''
@@ -7157,11 +7430,16 @@ class SocialUI {
       ? `<div class="sacts"><button class="mini" data-act="promote" data-uid="${escapeHTML(uid)}" title="Hacer líder del grupo">★</button>`
         + `<button class="mini no" data-act="kick" data-uid="${escapeHTML(uid)}" title="Expulsar del grupo">✕</button></div>`
       : '';
+    // Agente: el tuyo se cambia con ‹ › (Ajustes guardados); el de los demás llega con su perfil (reglas agents-1).
+    const agent = me ? agentOf(this.game.settings.agent) : p?.agent ?? null, A = CHARACTERS[agent];
+    const agentRow = !A ? '' : `<div class="agent-row" style="--ac:${A.accent}">${me ? '<button class="agent-nav" data-act="agent-prev" title="Agente anterior">‹</button>' : ''}`
+      + `<span class="agent-name" title="${escapeHTML(A.look)}"><b>${A.name.toUpperCase()}</b><i>${A.role.toUpperCase()}</i></span>`
+      + `${me ? '<button class="agent-nav" data-act="agent-next" title="Agente siguiente">›</button>' : ''}</div>`;
     const readyBtn = me && grouped && !isLeader && s.lobbyOk && on && !ingame
       ? `<button class="ready-btn${s.me?.ready ? ' on' : ''}" data-act="ready">${s.me?.ready ? '✓ LISTO' : 'MARCAR LISTO'}</button>` : '';
-    return `<div class="slot ${size}${me ? ' me' : ''}${on ? '' : ' off'}">${playerArtHTML(card, photo, name)}
+    return `<div class="slot ${size}${me ? ' me' : ''}${on ? '' : ' off'}"${A ? ` data-agent="${agent}"` : ''}>${playerArtHTML(card, photo, name)}
       ${isLeader && grouped ? `<span class="crown">${CROWN_SVG}LÍDER</span>` : ''}${acts}
-      <div class="slot-foot">${RANK_SVG}<span class="rank-n">SIN RANGO</span><b>${escapeHTML(name)}</b><small class="tag">${escapeHTML(tag)}</small>
+      <div class="slot-foot">${agentRow}${RANK_SVG}<span class="rank-n">SIN RANGO</span><b>${escapeHTML(name)}</b><small class="tag">${escapeHTML(tag)}</small>
         <em class="${cls}">${me && !grouped ? 'TÚ · ' : ''}${state}</em>${readyBtn}</div></div>`;
   }
 
@@ -7177,6 +7455,10 @@ class SocialUI {
       if (!this.s.friends.size) this.el.input.focus();
     }
     if (b.dataset.act === 'ready') this.s.setReady(!this.s.me?.ready);
+    if (b.dataset.act === 'agent-prev' || b.dataset.act === 'agent-next') {
+      const ids = CHARACTER_IDS, i = ids.indexOf(agentOf(this.game.settings.agent));
+      this.game.setAgent(ids[(i + (b.dataset.act === 'agent-next' ? 1 : ids.length - 1)) % ids.length]);
+    }
     if (b.dataset.act === 'kick') this.s.kick(uid);
     if (b.dataset.act === 'promote') this.s.promote(uid);
   }
@@ -7364,6 +7646,7 @@ class LobbyUI {
     this._toastT = 0;
     this._buildMaps();
     this._buildModes();
+    this.stage = new LobbyStage(game);
     this.social = new SocialUI(game);
     const e = ACCOUNT_ECONOMY;
     document.getElementById('shop-earn').textContent =
@@ -8045,15 +8328,19 @@ class RemotePlayer {
     this.snap = new Float64Array(14);         // dos datos: [hora, x, y, z, yaw, pitch, altura] × 2
     this.fall = 0;
     this.flashT = 0;
-    this._hb = { head: newBox(), body: newBox(), legs: newBox() };
+    this._hb = newHitboxes();
     const bots = game.bots;
     this.root = new THREE.Group();
     this.hinge = new THREE.Group();
     this.root.add(this.hinge);
     this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.1 });
-    const mesh = new THREE.Mesh(bots.allyGeometry, this.mat);
+    const mesh = this.mesh = new THREE.Mesh(bots.allyGeometry, this.mat);
     mesh.receiveShadow = true;
     this.hinge.add(mesh);
+    // Su agente (lo publica en su perfil): el modelo .glb en cuanto esté cargado, con contorno aliado.
+    this.agent = agentOf(game.social?.person?.(uid)?.agent);
+    this.agentMat = null;
+    AgentAssets.onReady(() => this._dress());
     this.flash = new THREE.Sprite(bots.flashMat);
     this.flash.scale.set(0.45, 0.45, 1); this.flash.position.copy(bots.muzzleLocal); this.flash.visible = false;
     this.hinge.add(this.flash);
@@ -8076,13 +8363,14 @@ class RemotePlayer {
 
   eyeHeight() { return this.height - CONFIG.player.eyeOffset; }
 
-  hitboxes() {
-    const p = this.pos, h = this.height, hb = this._hb;
-    setBoxXZ(hb.head, p.x, p.z, 0.16, p.y + h - 0.3, p.y + h);
-    setBoxXZ(hb.body, p.x, p.z, 0.3, p.y + h * 0.48, p.y + h - 0.3);
-    setBoxXZ(hb.legs, p.x, p.z, 0.24, p.y, p.y + h * 0.48);
-    return hb;
+  _dress() {
+    const a = AgentAssets.list[this.agent];
+    if (!a || !this.mat) return;
+    this.agentMat = makeAgentMaterial(a, this.mat.emissive, AGENT_RIM.ally);
+    this.mesh.geometry = a.geometry; this.mesh.material = this.agentMat;
   }
+
+  hitboxes() { const p = this.pos; return setAgentHitboxes(this._hb, p.x, p.y, p.z, this.height / AGENT_HITBOX.height); }
 
   /** Nuevo estado recibido. Al reaparecer (o con el primer dato) no se interpola desde donde cayó. */
   push(now, x, y, z, yaw, pitch, h, health) {
@@ -8119,7 +8407,7 @@ class RemotePlayer {
 
   dispose() {
     this.game.scene.remove(this.root);
-    this.mat.dispose(); this.labelMat.dispose(); this.tex.dispose();
+    this.mat.dispose(); this.agentMat?.dispose(); this.labelMat.dispose(); this.tex.dispose(); this.mat = null;
   }
 }
 
@@ -8644,7 +8932,8 @@ class Game {
     this.renderer.toneMappingExposure = 1.15;
     WeaponTextureFactory.prepare(this.renderer);   // texturas de skins: se pintan y se suben a la GPU una sola vez
 
-    this.settings = store.load('vertice.settings', { sensitivity: CONFIG.mouse.sensitivity, weaponSway: true, volume: 0.8, shadows: true, renderScale: 1, showFps: true, fpsCap: 0, botDifficulty: 'normal' });
+    this.settings = store.load('vertice.settings', { sensitivity: CONFIG.mouse.sensitivity, weaponSway: true, volume: 0.8, shadows: true, renderScale: 1, showFps: true, fpsCap: 0, botDifficulty: 'normal', agent: DEFAULT_AGENT });
+    this.settings.agent = agentOf(this.settings.agent);
     this.profile = new Profile();
     this.kills = 0; this.deaths = 0;
     this.match = emptyStats();                     // progreso de cuenta aún no sumado (se suma al volver al menú)
@@ -8748,6 +9037,9 @@ class Game {
     // Modelos .glb de las skins base: al llegar sustituyen al procedural si esa arma no lleva otra skin.
     WeaponAssets.onReady = () => this.view.applySkin();
     WeaponAssets.load(this.renderer);
+    // Agentes .glb: visten a los bots y aparecen en el escuadrón del lobby.
+    AgentAssets.onReady(() => { this.bots.refreshAgents(); this.ui.stage?.refresh(); });
+    AgentAssets.load();
   }
 
   /* ----------------------------- Máquina de estados ----------------------------- */
@@ -8979,8 +9271,18 @@ class Game {
     }
     document.getElementById('perf').style.display = s.showFps ? '' : 'none';
     this.resize();
+    s.agent = agentOf(s.agent);
     store.save('vertice.settings', s);
     if (sync) { this.account.queueSettings(); this.social.syncPartySettings(); }
+    this.social?.syncAgent();
+    this.ui?.social.render();                      // tu agente en la ranura central del escuadrón
+  }
+
+  /** Elige tu agente (lobby): se guarda con tus ajustes y lo ven los miembros de tu grupo. */
+  setAgent(id) {
+    if (!CHARACTERS[id] || this.settings.agent === id) return;
+    this.settings.agent = id;
+    this.applySettings();
   }
 
   /** Dificultad de los bots: la del grupo en una partida de grupo; si no, la de Ajustes. */
@@ -9079,6 +9381,7 @@ class Game {
     this.bots.render(1);
     this.renderer.clear();
     this.renderer.render(this.scene, cam);
+    this.ui.stage.render(dt);                 // agentes del escuadrón (solo con el lobby a la vista)
   }
 
   frame(now) {
