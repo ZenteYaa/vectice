@@ -3,7 +3,16 @@ rules_version = '2';
 // VÉRTICE · reglas de Firestore.
 // Pégalas en la consola de Firebase: Firestore Database › Reglas › Publicar.
 //
-// Cada jugador tiene un documento players/{uid} que solo él puede leer y escribir. Además:
+// players/{uid}                     Cuenta privada: créditos, skins y estadísticas. Solo la lee y la escribe su dueño.
+// users/{uid}                       Perfil público para amigos y grupos: displayName + tag (Nombre#1234), foto, presencia y grupo actual.
+// handles/{nombre#tag}              Reserva única de cada nombre#tag (así se busca a un amigo).
+// users/{uid}/friends/{amigo}       Lista de amigos: al aceptar se crea a la vez en los dos jugadores.
+// users/{uid}/requests/{remitente}  Solicitudes de amistad recibidas.
+// users/{uid}/sent/{destinatario}   Solicitudes enviadas (para verlas y cancelarlas).
+// users/{uid}/partyInvites/{grupo}  Invitaciones a un grupo.
+// parties/{grupo}                   Grupo: líder, miembros (máx. 5), mapa, dificultad y arranque de partida.
+//
+// Cuentas (players):
 //  · Una cuenta nueva empieza con 5000 créditos, sin skins y con estadísticas a cero.
 //  · Una compra añade UNA skin al final del inventario y descuenta su precio exacto.
 //  · Los créditos solo suben al sumar partidas, y como mucho 15 por baja nueva y 75 por oleada nueva.
@@ -11,6 +20,38 @@ rules_version = '2';
 // Si cambias precios o recompensas en index.html (SKINS y ACCOUNT_ECONOMY), cámbialos también aquí.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    function userDoc(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function friendDoc(uid, fid) {
+      return /databases/$(database)/documents/users/$(uid)/friends/$(fid);
+    }
+
+    function requestDoc(uid, from) {
+      return /databases/$(database)/documents/users/$(uid)/requests/$(from);
+    }
+
+    function inviteDoc(uid, pid) {
+      return /databases/$(database)/documents/users/$(uid)/partyInvites/$(pid);
+    }
+
+    function partyDoc(pid) {
+      return /databases/$(database)/documents/parties/$(pid);
+    }
+
+    function handleDoc(key) {
+      return /databases/$(database)/documents/handles/$(key);
+    }
 
     match /players/{uid} {
 
@@ -98,6 +139,180 @@ service cloud.firestore {
         && (isPurchase(resource.data, request.resource.data) || isProgress(resource.data, request.resource.data));
 
       allow delete: if false;
+    }
+
+    // Perfil público. Lo lee cualquier jugador con sesión (para buscar amigos y ver su estado);
+    // solo lo escribe su dueño. lastSeen siempre es la hora del servidor: nadie puede fingir que
+    // está conectado. El nombre#tag no cambia una vez creado y está reservado en handles.
+    // Nombres: letras, números, espacio y . _ - (tildes y ñ solo en minúscula: el juego quita la tilde
+    // a las mayúsculas, Álvaro → Alvaro). nameKey es el nombre en minúsculas y sin tildes (José Muñoz →
+    // jose munoz): así "jose#1234" encuentra a José#1234, y el juego lo calcula exactamente igual.
+    match /users/{uid} {
+
+      function foldName(n) {
+        return n.lower().replace('[àáâãäå]', 'a').replace('ç', 'c').replace('[èéêë]', 'e').replace('[ìíîï]', 'i')
+          .replace('ñ', 'n').replace('[òóôõöø]', 'o').replace('[ùúûü]', 'u').replace('[ýÿ]', 'y');
+      }
+
+      function validUser(d) {
+        return d.keys().hasOnly(['displayName', 'nameKey', 'tag', 'handle', 'photo', 'status', 'lastSeen', 'partyId', 'partySize', 'createdAt'])
+          && d.keys().hasAll(['displayName', 'nameKey', 'tag', 'handle', 'photo', 'status', 'lastSeen', 'partyId', 'partySize', 'createdAt'])
+          && d.displayName is string && d.displayName.matches('[A-Za-z0-9àáâãäåçèéêëìíîïñòóôõöøùúûüýÿ._-][A-Za-z0-9àáâãäåçèéêëìíîïñòóôõöøùúûüýÿ ._-]{0,15}')
+          && d.nameKey == foldName(d.displayName)
+          && d.tag is string && d.tag.matches('[0-9]{4}')
+          && d.handle == d.nameKey + '#' + d.tag
+          && d.photo is string && d.photo.size() <= 1024 && (d.photo == '' || d.photo.matches('https://[^ "<>]+'))
+          && d.status in ['online', 'ingame', 'offline']
+          && d.lastSeen == request.time
+          && (d.partyId == null || (d.partyId is string && d.partyId.size() <= 40))
+          && d.partySize is int && d.partySize >= 1 && d.partySize <= 5
+          && d.createdAt is timestamp;
+      }
+
+      allow read: if signedIn();
+
+      allow create: if signedIn() && me() == uid
+        && validUser(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && getAfter(handleDoc(request.resource.data.handle)).data.uid == uid;
+
+      allow update: if signedIn() && me() == uid
+        && validUser(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.handle == resource.data.handle;
+
+      allow delete: if false;
+
+      // Amistad: solo la crea quien RECIBIÓ la solicitud (en su lista y en la del remitente).
+      match /friends/{fid} {
+        allow read: if signedIn() && me() == uid;
+        allow create: if signedIn() && uid != fid
+          && request.resource.data.keys().hasOnly(['since'])
+          && request.resource.data.since == request.time
+          && ((me() == uid && exists(requestDoc(uid, fid))) || (me() == fid && exists(requestDoc(fid, uid))));
+        allow update: if false;
+        allow delete: if signedIn() && (me() == uid || me() == fid);
+      }
+
+      // Solicitud de amistad: el id del documento es quien la envía.
+      match /requests/{from} {
+        allow read: if signedIn() && (me() == uid || me() == from);
+        allow create: if signedIn() && me() == from && from != uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time
+          && exists(userDoc(uid)) && exists(userDoc(from))
+          && !exists(friendDoc(uid, from));
+        allow update: if false;
+        allow delete: if signedIn() && (me() == uid || me() == from);
+      }
+
+      // Copia de cada solicitud enviada, escrita en el mismo lote que la solicitud.
+      match /sent/{to} {
+        allow read: if signedIn() && me() == uid;
+        allow create: if signedIn() && me() == uid && to != uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time
+          && existsAfter(requestDoc(to, uid));
+        allow update: if false;
+        allow delete: if signedIn() && (me() == uid || me() == to);
+      }
+
+      // Invitación a un grupo: la envía un amigo que está en ese grupo, si queda hueco.
+      match /partyInvites/{pid} {
+
+        function canInvite(p) {
+          return me() in p.members && !(uid in p.members) && p.members.size() < 5;
+        }
+
+        allow read: if signedIn() && me() == uid;
+        allow create, update: if signedIn() && me() != uid
+          && request.resource.data.keys().hasOnly(['from', 'createdAt'])
+          && request.resource.data.from == me()
+          && request.resource.data.createdAt == request.time
+          && exists(friendDoc(uid, me()))
+          && canInvite(get(partyDoc(pid)).data);
+        allow delete: if signedIn() && (me() == uid || resource.data.from == me());
+      }
+    }
+
+    // Reserva de nombre#tag: se crea en el mismo lote que el perfil y nunca cambia de dueño.
+    match /handles/{key} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == me()
+        && getAfter(userDoc(me())).data.handle == key;
+      allow update, delete: if false;
+    }
+
+    // Grupo (party). Cada jugador crea el suyo como líder; los demás entran con una invitación.
+    match /parties/{pid} {
+
+      function validParty(d) {
+        return d.keys().hasOnly(['leader', 'members', 'status', 'map', 'difficulty', 'launchSeq', 'launchAt', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['leader', 'members', 'status', 'map', 'difficulty', 'launchSeq', 'launchAt', 'createdAt', 'updatedAt'])
+          && d.members is list && d.members.size() >= 1 && d.members.size() <= 5
+          && d.leader in d.members
+          && d.status in ['idle', 'launching']
+          && d.map in ['santuario', 'bastion']
+          && d.difficulty in ['facil', 'normal', 'dificil']
+          && d.launchSeq is int && d.launchSeq >= 0
+          && (d.launchAt == null || d.launchAt is timestamp)
+          && d.updatedAt == request.time;
+      }
+
+      // El líder: mapa, dificultad, iniciar partida (launchSeq + 1), expulsar miembros o ceder el mando.
+      function leaderEdit(o, n) {
+        return me() == o.leader
+          && o.members.hasAll(n.members)
+          && n.createdAt == o.createdAt
+          && ((n.launchSeq == o.launchSeq && n.launchAt == o.launchAt)
+            || (n.launchSeq == o.launchSeq + 1 && n.launchAt == request.time && n.status == 'launching'));
+      }
+
+      // Unirse: solo con una invitación de este grupo de hace menos de 10 minutos.
+      function join(o, n) {
+        return !(me() in o.members)
+          && n.members == o.members.concat([me()])
+          && n.diff(o).affectedKeys().hasOnly(['members', 'updatedAt'])
+          && get(inviteDoc(me(), pid)).data.createdAt > request.time - duration.value(10, 'm');
+      }
+
+      // Salir: el miembro se quita a sí mismo; si era el líder, el mando pasa a otro miembro.
+      function leave(o, n) {
+        return me() in o.members
+          && n.members == o.members.removeAll([me()])
+          && n.diff(o).affectedKeys().hasOnly(['members', 'leader', 'updatedAt'])
+          && (n.leader == o.leader || o.leader == me());
+      }
+
+      // Tomar el mando si el líder lleva 3 minutos sin dar señales (cerró el juego sin salir del grupo).
+      function claim(o, n) {
+        return me() in o.members && me() != o.leader
+          && n.leader == me()
+          && n.diff(o).affectedKeys().hasOnly(['leader', 'updatedAt'])
+          && get(userDoc(o.leader)).data.lastSeen < request.time - duration.value(3, 'm');
+      }
+
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && validParty(request.resource.data)
+        && request.resource.data.leader == me()
+        && request.resource.data.members == [me()]
+        && request.resource.data.status == 'idle'
+        && request.resource.data.launchSeq == 0
+        && request.resource.data.launchAt == null
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if signedIn()
+        && validParty(request.resource.data)
+        && (leaderEdit(resource.data, request.resource.data)
+          || join(resource.data, request.resource.data)
+          || leave(resource.data, request.resource.data)
+          || claim(resource.data, request.resource.data));
+
+      allow delete: if signedIn() && resource.data.members == [me()];
     }
 
     // Todo lo demás, cerrado.
