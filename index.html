@@ -83,6 +83,55 @@
   #shop .st-bar { height: 5px; background: #ffffff1a; }
   #shop .st-bar div { height: 100%; background: #6fe3d2; }
   #shop .st-foot { margin-top: 8px; opacity: .65; }
+  /* ===================== Partida por rondas (NO CLASIFICATORIA) ===================== */
+  #round-hud, #round-side, #rb, #rbn, #killfeed, #spec { display: none; }
+  body.round-mode #hud-top { display: none; }
+  body.round-mode #round-hud, body.round-mode #round-side, body.round-mode #killfeed { display: flex; }
+  body.round-mode.spectating #spec { display: block; }
+  #round-hud { top: 10px; left: 50%; transform: translateX(-50%); align-items: stretch; gap: 0; }
+  .rh-team { display: flex; align-items: center; gap: 10px; padding: 0 12px; background: rgba(8,12,18,.6); border: 1px solid #ffffff1a; }
+  .rh-score { display: flex; align-items: baseline; gap: 8px; }
+  .rh-score b { font-size: 30px; font-weight: 800; min-width: 36px; text-align: center; }
+  .rh-score small { font-size: 10px; letter-spacing: 3px; opacity: .7; }
+  .rh-team.al .rh-score b { color: #3fd6c4; } .rh-team.en .rh-score b { color: #ff4655; }
+  .rh-pips { display: flex; gap: 3px; }
+  .rh-pips i { width: 6px; height: 18px; background: #ffffff1f; transform: skewX(-12deg); }
+  .rh-team.al .rh-pips i.on { background: #3fd6c4; } .rh-team.en .rh-pips i.on { background: #ff4655; }
+  .rh-mid { min-width: 128px; padding: 4px 14px 5px; text-align: center; background: rgba(8,12,18,.78); border: 1px solid #ffffff26; border-left: 0; border-right: 0; }
+  .rh-clock { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .rh-clock b { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+  .rh-spike { width: 20px; height: 20px; fill: #ff4655; display: none; }
+  .rh-clock.planted .rh-spike { display: block; animation: rh-pulse .5s infinite alternate; }
+  .rh-clock.planted b { color: #ff4655; }
+  @keyframes rh-pulse { to { opacity: .35; } }
+  #rh-phase { display: block; font-size: 9px; letter-spacing: 3px; opacity: .75; white-space: nowrap; }
+  #round-side { left: 16px; top: 34%; flex-direction: column; gap: 6px; width: 170px; padding: 10px 12px; background: rgba(8,12,18,.55); border: 1px solid #ffffff1a; border-left: 3px solid #3fd6c4; }
+  #round-side small { display: block; font-size: 9px; letter-spacing: 3px; opacity: .55; }
+  #round-side b { font-size: 17px; letter-spacing: 1px; }
+  #round-side b i { font-style: normal; font-size: 12px; opacity: .55; }
+  #round-side .cr { color: #6fe3d2; }
+  #rs-tip { margin: 2px 0 0; font-size: 11px; color: #ffcf5c; line-height: 1.35; min-height: 15px; }
+  #rb { left: 50%; top: 62%; transform: translateX(-50%); width: 300px; text-align: center; font-size: 11px; letter-spacing: 3px; }
+  #rb.show { display: block; }
+  .rb-track { position: relative; height: 8px; margin-top: 5px; background: #ffffff22; border: 1px solid #ffffff33; }
+  #rb-fill { position: absolute; inset: 0; background: #ff4655; transform-origin: left; transform: scaleX(0); }
+  #rb.defuse #rb-fill { background: #3fd6c4; }
+  .rb-track i { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: #fff; display: none; }
+  #rb.defuse .rb-track i { display: block; }
+  #rbn { left: 50%; top: 21%; transform: translateX(-50%); text-align: center; padding: 10px 40px 12px; background: linear-gradient(90deg, transparent, rgba(8,12,18,.85) 18%, rgba(8,12,18,.85) 82%, transparent); }
+  #rbn.show { display: block; animation: rbn-in .25s ease-out; }
+  #rbn b { display: block; font-size: 34px; font-weight: 900; letter-spacing: 8px; }
+  #rbn small { display: block; font-size: 12px; letter-spacing: 3px; opacity: .8; margin-top: 2px; }
+  #rbn.win b { color: #3fd6c4; } #rbn.loss b { color: #ff4655; }
+  @keyframes rbn-in { from { opacity: 0; transform: translateX(-50%) scale(1.15); } }
+  #killfeed { right: 18px; top: 168px; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; }
+  #killfeed div { padding: 3px 10px; background: rgba(8,12,18,.65); border: 1px solid #ffffff14; white-space: nowrap; }
+  #killfeed .al { color: #3fd6c4; } #killfeed .en { color: #ff4655; }
+  #killfeed i { font-style: normal; opacity: .8; margin: 0 6px; }
+  #killfeed span { opacity: .85; }
+  #spec { left: 50%; bottom: 120px; transform: translateX(-50%); padding: 6px 16px; font-size: 12px; letter-spacing: 3px; background: rgba(8,12,18,.7); border: 1px solid #ffffff22; }
+  #spec b { color: #3fd6c4; }
+  body.round-mode.spectating #hud-br, body.round-mode.spectating #hud-bl { visibility: hidden; }
   /* ===================== Estados de juego ===================== */
   body.state-menu .hud:not(#perf), body.state-menu #overlay2d, body.state-menu #scope-blur, body.state-menu #shop, body.state-menu #pause { display: none !important; }
   body.state-landing .hud, body.state-landing #overlay2d, body.state-landing #scope-blur, body.state-landing #shop, body.state-landing #pause { display: none !important; }
@@ -172,7 +221,7 @@
     cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: border-color .12s, background .12s; }
   .act-btn:hover { border-color: var(--cy); background: #00f3ff12; }
   .act-btn small { font-size: 9px; letter-spacing: 2px; opacity: .55; }
-  .act-btn b { font-size: 11px; letter-spacing: 1.5px; max-width: 224px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .act-btn b { font-size: 11px; letter-spacing: 1.5px; max-width: calc(100% - 14px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .act-btn.open { border-color: var(--cy); }
   .start { width: 340px; height: 66px; background: var(--rd); border: 0; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 0 26px #ff465566;
     font-size: 20px !important; font-weight: 900; letter-spacing: 7px; color: #fff; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
@@ -209,7 +258,7 @@
   .map .meta small { display: block; font-size: 9px; letter-spacing: 2px; color: var(--map-tint); margin-top: 2px; }
   .map .meta p { display: none; }
   .map .check { display: none; }
-  .maps.locked .map:not(.sel) { opacity: .35; }
+  .maps.locked .map:not(.sel), .maps .map.off { opacity: .35; }
 
   /* ---- Chat (esquina inferior izquierda, translúcido: no tapa el escuadrón) ---- */
   .chat { position: absolute; left: 16px; bottom: 16px; z-index: 2; width: 320px; height: 200px; display: flex; flex-direction: column; background: #0b0e14b3; border: 1px solid #ffffff22;
@@ -580,6 +629,22 @@
   <div class="kd"><b id="sc-kd">0 / 0</b><small>BAJAS / MUERTES</small></div>
   <div><b id="sc-wave">1</b><small>OLEADA</small></div>
 </div>
+<div class="hud" id="round-hud">
+  <div class="rh-team al"><div class="rh-pips" id="rh-ally-pips"></div><div class="rh-score"><small id="rh-ally-side">ATK</small><b id="rh-ally">0</b></div></div>
+  <div class="rh-mid"><div class="rh-clock"><svg class="rh-spike" viewBox="0 0 24 24"><path d="M12 1l7 7v9l-7 6-7-6V8z M12 6l-3 3v6l3 3 3-3V9z" fill-rule="evenodd"/></svg><b id="rh-timer">0:30</b></div><small id="rh-phase">FASE DE COMPRA</small></div>
+  <div class="rh-team en"><div class="rh-score"><b id="rh-enemy">0</b><small id="rh-enemy-side">DEF</small></div><div class="rh-pips" id="rh-enemy-pips"></div></div>
+</div>
+<div class="hud" id="round-side">
+  <div><small>RONDA</small><b><span id="rs-round">1</span><i> / 25</i></b></div>
+  <div><small>CRÉDITOS</small><b class="cr">¤ <span id="rs-credits">800</span></b></div>
+  <div><small>BANDO</small><b id="rs-side">ATACANTE</b></div>
+  <div><small>SPIKE</small><b id="rs-spike">—</b></div>
+  <p id="rs-tip"></p>
+</div>
+<div class="hud" id="rb"><span id="rb-label">PLANTANDO</span><div class="rb-track"><div id="rb-fill"></div><i></i></div></div>
+<div class="hud" id="rbn"><b id="rbn-title"></b><small id="rbn-sub"></small></div>
+<div class="hud" id="killfeed"></div>
+<div class="hud" id="spec">OBSERVANDO A <b id="spec-name"></b> · CLIC: SIGUIENTE</div>
 <div class="hud" id="hud-bl"><div id="status"></div><div id="move-info"></div>
   <div id="vitals">
     <div class="v-row"><span class="v-num" id="hp-num">100</span><div class="v-bar"><div id="hp-bar"></div></div><span class="v-lbl">VIDA</span></div>
@@ -651,7 +716,7 @@
       <div class="squad" id="party-slots"></div>
       <div class="actionbar">
         <div class="mode-wrap">
-          <button class="act-btn" id="mode-btn" aria-haspopup="true"><small>SELECCIONAR MODO</small><b id="mode-label"></b></button>
+          <button class="act-btn" id="mode-btn" aria-haspopup="true"><small id="mode-sub">SELECCIONAR MODO</small><b id="mode-label"></b></button>
           <div class="mode-pop" id="mode-pop" hidden>
             <h5>MODO</h5><div class="mode-list" id="mode-list"></div>
             <h5>MAPA</h5><div class="maps" id="map-list"></div>
@@ -883,6 +948,7 @@ const CONFIG = {
     jumpVelocity: 7.0,        // ~1.2 m de salto: suficiente para subir a coberturas bajas.
     crouchTransitionSpeed: 9, // 1/s
     stepEpsilon: 1e-4,
+    stepHeight: 0.45,         // escalones que se suben andando (los peldaños de los mapas miden ≤ 0,4 m)
   },
   viewmodel: {
     sway: true,               // Inercia del arma al girar (solo el modelo de tus manos, nunca la cámara). Ajustes › Ratón.
@@ -1500,6 +1566,21 @@ class TacticalAudio {
     o.start(t); o.stop(t + dur + 0.05);
   }
   dryFire() { this.metal(2900, 0.025, 0.55); this.metal(1600, 0.02, 0.25, 0.012); }
+  /** Pitido de la Spike plantada (se acelera hasta la detonación). */
+  beep(freq = 1640, dur = 0.07, gain = 0.4) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+    o.connect(this._env(t, gain, 0.002, dur)).connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+  }
+  /** Detonación de la Spike: golpe grave + ruido largo filtrado. */
+  boom() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(28, t + 1.2);
+    o.connect(this._env(t, 1.2, 0.005, 1.4)).connect(this.master); o.start(t); o.stop(t + 1.6);
+    const f = this._filter('lowpass', 1800); f.frequency.setValueAtTime(3000, t); f.frequency.exponentialRampToValueAtTime(200, t + 2);
+    this._noise(t, 2.4).connect(f).connect(this._env(t, 1.4, 0.004, 2.2)).connect(this.master);
+  }
   magOut()  { this.metal(900, 0.06, 0.5); this.metal(2100, 0.02, 0.3, 0.03); }
   magIn()   { this.metal(1300, 0.05, 0.65); this.metal(2600, 0.025, 0.5, 0.045); }
   bolt()    { this.metal(1900, 0.04, 0.6); this.metal(3200, 0.03, 0.55, 0.07); }
@@ -1539,42 +1620,183 @@ class TacticalAudio {
  *  b.box(...) / b.target(...) dentro de un build().
  * ===================================================================================== */
 const MAPS = {
+  // ---------------------------------------------------------------------------------------------
+  // Mapas tácticos de la partida NO CLASIFICATORIA. Cada uno define las dos bases (spawns.atk / def),
+  // las barreras de la fase de compra, los sites, los puestos de los defensores (los 5 primeros son
+  // los de las oleadas: ninguno ve la base de ataque) y las rutas de aproximación de los atacantes.
+  // Coordenadas: x = este, z = sur (el norte es -Z). Muros interiores de 4,5 m; perímetro de 6 m.
+  // ---------------------------------------------------------------------------------------------
   santuario: {
-    name: 'Santuario', size: 80, tint: '#3fd6c4',
-    desc: 'Patios abiertos y un pasillo central. Tres sites alineados al norte.',
-    spawn: { x: 0, z: 34, yaw: 0 },
+    name: 'Santuario', size: 90, dims: [90, 60], tint: '#3fd6c4', floor: 0xe7dcc8,
+    desc: 'Tres sites. A y C en los extremos con sus pasillos largos; B cerrado en el centro, con puerta de madera hacia C.',
+    spawn: { x: 0, z: 27, yaw: 0 },
+    spawns: { atk: { x: 0, z: 27, yaw: 0 }, def: { x: 0, z: -27, yaw: Math.PI } },
     build(b) {
-      const W = 40;
-      b.wall(-W, -W, W, -W, 6, 1); b.wall(-W, W, W, W, 6, 1); b.wall(-W, -W, -W, W, 6, 1); b.wall(W, -W, W, W, 6, 1);
-      // Fachada norte de los tres sites con sus entradas principales.
-      b.wall(-W, -6, -30, -6); b.wall(-24, -6, -14, -6);          // entrada A (x -30..-24)
-      b.wall(-14, -6, -4, -6); b.wall(4, -6, 14, -6);              // entrada B (x -4..4)
-      b.wall(14, -6, 24, -6); b.wall(30, -6, W, -6);               // entrada C (x 24..30)
-      // Separadores entre sites con conexiones (rotaciones de defensores).
-      b.wall(-14, -W, -14, -28); b.wall(-14, -22, -14, -6);
-      b.wall(14, -W, 14, -28); b.wall(14, -22, 14, -6);
-      // Carriles de ataque.
-      b.wall(-14, 2, -14, 12); b.wall(-14, 18, -14, 26);
-      b.wall(14, 2, 14, 8); b.wall(14, 14, 14, 26);
-      b.wall(-6, 4, 6, 4, 3.2, 0.4);                               // "garaje" central
-      // Site A
-      b.box(-27, -21, 3, 3, 1.2, 'crate'); b.box(-21, -15, 1, 4, 1.1, 'cover'); b.box(-33, -14, 2, 2, 2, 'crate');
-      b.box(-20, -27, 0.9, 0.9, 4, 'column'); b.box(-34, -30, 4, 1, 1.1, 'cover');
-      // Site B
-      b.box(0, -18, 4, 2, 1.2, 'cover'); b.box(-7, -25, 2, 2, 2, 'crate'); b.box(7, -13, 1, 3, 1.1, 'cover'); b.box(5, -30, 0.9, 0.9, 4, 'column');
-      // Site C
-      b.box(27, -20, 3, 3, 1.6, 'crate'); b.box(33, -27, 2, 2, 1, 'cover'); b.box(20, -15, 0.9, 0.9, 4, 'column'); b.box(34, -12, 1, 4, 1.1, 'cover');
-      // Zona de ataque
-      b.box(-27, 8, 2, 6, 1.1, 'cover'); b.box(0, 12, 6, 1, 1.1, 'cover'); b.box(27, 10, 2, 2, 2, 'crate'); b.box(0, 22, 2, 2, 1.2, 'crate');
-      b.box(-26, 24, 0.9, 0.9, 4, 'column'); b.box(26, 24, 0.9, 0.9, 4, 'column');
-      // Sites (marcadores listos para el futuro modo Spike).
-      b.site('A', -27, -22, 6); b.site('B', 0, -21, 5); b.site('C', 27, -22, 6);
-      // Defensores: (x, z) del puesto y punto al que vigilan. Ninguno ve la base de ataque.
-      b.bot(-31, -19, -27, -6);    // A: ancla mirando su entrada
-      b.bot(4, -25, 0, -6);        // B: fondo del site
-      b.bot(31, -19, 27, -6);      // C: ancla mirando su entrada
-      b.bot(0, -1, 0, 14);         // pasillo central, tapado por el "garaje"
-      b.bot(24, 2, 20, 20);        // carril de C
+      const X = 45, Z = 30, W = (x1, z1, x2, z2, h = 4.5) => b.wall(x1, z1, x2, z2, h, 0.6, 'plaster');
+      b.wall(-X, -Z, X, -Z, 6, 1); b.wall(-X, Z, X, Z, 6, 1); b.wall(-X, -Z, -X, Z, 6, 1); b.wall(X, -Z, X, Z, 6, 1);
+      // Base defensora (x ±10, z -30..-24) y pasillos traseros de rotación hacia A y C.
+      W(-24, -24, -3, -24); W(3, -24, 24, -24);                 // también es el muro norte de B
+      W(-10, -24.5, -10, -24); W(10, -24.5, 10, -24);
+      b.barrier(-10, -27.2, 0.7, 5.4); b.barrier(10, -27.2, 0.7, 5.4); b.barrier(0, -24, 6, 0.7);
+      // Base atacante (x ±8, z 24..30) con salidas a los dos lobbies y al pasillo de Mid.
+      W(-8, 24, -3, 24); W(3, 24, 8, 24); W(-8, 24, -8, 25.3); W(8, 24, 8, 25.3);
+      b.barrier(-8, 27.7, 0.7, 4.6); b.barrier(8, 27.7, 0.7, 4.6); b.barrier(0, 24, 6, 0.7);
+      W(-3, 8, -3, 24); W(3, 8, 3, 24);                          // pasillo de Mid
+      for (const s of [-1, 1]) {
+        // Lado A (s = -1) y lado C (s = +1), espejo en X.
+        W(s * 24, -24, s * 24, -15); W(s * 24, -10, s * 24, 8);    // muro este de A / oeste de C (hueco = entrada desde el Link)
+        W(s * 36, -6, s * 24, -6);                                  // muro sur del site (el Long entra por x 36..45)
+        b.box(s * 30, 1, 12, 14, 6, 'plaster');                    // edificio entre el Long y el Link
+        W(s * 36, 8, s * 36, 18);                                   // muro del Long junto al lobby
+        W(s * 24, 8, s * 21, 8); W(s * 17, 8, s * 14, 8);          // salida del Link al lobby (x 17..21)
+        W(s * 14, -7, s * 3, -7); W(s * 14, 8, s * 3, 8);          // Mid Courtyard (norte = muro sur de B)
+      }
+      // Link A y Mid Courtyard (x = -14): hueco z -3..2. B cerrado: sin paso hacia A.
+      W(-14, -24, -14, -3); W(-14, 2, -14, 8);
+      // Lado C: la puerta de madera de B da al C Link (x = 14, z -17..-13).
+      W(14, -24, 14, -17); W(14, -13, 14, -3); W(14, 2, 14, 8);
+      b.door(14, -15, 0.4, 4, 3.4, 'z', 'wood');
+      // Site A (centro -34, -18)
+      b.box(-36, -20, 3, 3, 1.2, 'crate'); b.box(-30, -14, 1, 4, 1.1, 'cover'); b.box(-41, -25, 2.4, 2.4, 2.4, 'crate');
+      b.box(-28, -27, 1.2, 1.2, 4.5, 'column'); b.box(-41, -12, 2, 1, 1.1, 'cover');
+      // A Long y A Link
+      b.box(-40, 6, 2, 2, 1.4, 'crate'); b.box(-42.5, -2, 1, 3, 1.1, 'cover');
+      b.box(-19, -19, 2, 2, 1.6, 'crate'); b.box(-21, -4, 1.2, 1.2, 4.5, 'column'); b.box(-17, 4, 3, 1, 1.1, 'cover');
+      // Mid Courtyard: jardinera central y cajas
+      b.box(0, 1, 4, 4, 0.9, 'stone'); b.box(0, 1, 1, 1, 3, 'column');
+      b.box(-9, -3, 2, 2, 1.4, 'crate'); b.box(9, 4, 2, 2, 1.4, 'crate');
+      // Site B (cerrado): pilares y coberturas
+      b.box(-7, -13, 1.2, 1.2, 4.5, 'column'); b.box(7, -19, 1.2, 1.2, 4.5, 'column');
+      b.box(0, -17, 4, 2, 1.2, 'cover'); b.box(-10, -20, 2, 2, 2, 'crate'); b.box(10, -10, 2, 2, 1.4, 'crate');
+      // Site C (centro 34, -18) y C Long / C Link
+      b.box(36, -20, 3, 3, 1.6, 'crate'); b.box(30, -13, 1, 4, 1.1, 'cover'); b.box(41, -25, 2.4, 2.4, 2.4, 'crate');
+      b.box(28, -27, 1.2, 1.2, 4.5, 'column'); b.box(41, -11, 2, 1, 1.1, 'cover');
+      b.box(40, 10, 2, 2, 1.4, 'crate'); b.box(42.5, -1, 1, 3, 1.1, 'cover');
+      b.box(19, -21, 2, 2, 1.4, 'crate'); b.box(21, -2, 1.2, 1.2, 4.5, 'column'); b.box(17, 3, 3, 1, 1.1, 'cover');
+      // Lobbies de ataque
+      b.box(-22, 18, 3, 3, 1.6, 'crate'); b.box(-12, 14, 1, 4, 1.1, 'cover'); b.box(-30, 25, 2, 2, 1.2, 'crate');
+      b.box(22, 17, 3, 3, 1.6, 'crate'); b.box(12, 15, 1, 4, 1.1, 'cover'); b.box(30, 24, 2, 2, 1.2, 'crate');
+      b.site('A', -34, -18, 6.5); b.site('B', 0, -15.5, 5.5); b.site('C', 34, -18, 6.5);
+      // Puestos (los 5 primeros = oleadas).
+      b.bot(-41, -14, -40, -4, 'A'); b.bot(6, -21, 0, -7, 'B'); b.bot(41, -14, 40, -4, 'C');
+      b.bot(-28, -21, -24, -12, 'A'); b.bot(28, -21, 24, -12, 'C');
+      b.bot(-10, -4, 0, 8, 'B'); b.bot(10, -21, 14, -15, 'B'); b.bot(-38, -24, -26, -27, 'A'); b.bot(38, -24, 26, -27, 'C');
+      b.route('A', [[-40, 22], [-40, 0], [-37, -14]]);
+      b.route('A', [[-19, 14], [-19, -6], [-26, -12], [-32, -16]]);
+      b.route('A', [[0, 14], [0, 2], [-10, 0], [-19, -1], [-19, -12], [-28, -13]]);
+      b.route('B', [[0, 14], [0, -3], [0, -12]]);
+      b.route('C', [[40, 22], [40, 0], [37, -14]]);
+      b.route('C', [[19, 14], [19, -6], [26, -12], [32, -16]]);
+      b.route('C', [[0, 14], [0, -4], [0, -11], [12, -15], [19, -15], [30, -14]]);
+    },
+  },
+  acropolis: {
+    name: 'Acrópolis', size: 86, dims: [85, 55], tint: '#ffc04d', floor: 0xdfe3e8,
+    desc: 'Tres carriles paralelos con sus sites al norte, unidos por los pasillos A-B Link y B-C Link. Cajas de radianita en cada site.',
+    spawn: { x: 0, z: 24.5, yaw: 0 },
+    spawns: { atk: { x: 0, z: 24.5, yaw: 0 }, def: { x: 0, z: -24.5, yaw: Math.PI } },
+    build(b) {
+      const X = 42.5, Z = 27.5, W = (x1, z1, x2, z2, h = 4.5) => b.wall(x1, z1, x2, z2, h, 0.6, 'plaster');
+      b.wall(-X, -Z, X, -Z, 6, 1); b.wall(-X, Z, X, Z, 6, 1); b.wall(-X, -Z, -X, Z, 6, 1); b.wall(X, -Z, X, Z, 6, 1);
+      // Bases: salas a lo ancho del mapa con una salida por carril (barrera en cada una).
+      for (const s of [-1, 1]) {
+        const z = s * 21.5;
+        W(-X, z, -30, z); W(-24, z, -3, z); W(3, z, 24, z); W(30, z, X, z);
+        b.barrier(-27, z, 6, 0.7); b.barrier(0, z, 6, 0.7); b.barrier(27, z, 6, 0.7);
+      }
+      // Separadores entre carriles: bloques macizos de 4 m con los pasillos transversales (z 2..7).
+      for (const s of [-1, 1]) {
+        b.box(s * 14, -9.75, 4, 23.5, 5, 'plaster'); b.box(s * 14, 14.25, 4, 14.5, 5, 'plaster');
+      }
+      // Muros de acceso a los sites (z = -3): A y C con entrada principal y flanco pegado al perímetro.
+      W(-40, -3, -33, -3); W(-27, -3, -16, -3);
+      W(-12, -3, -4, -3); W(4, -3, 12, -3);
+      W(16, -3, 27, -3); W(33, -3, 40, -3);
+      // Coberturas escalonadas en la mitad de cada carril (0,6 / 1,2 / 1,8 m).
+      for (const cx of [-29, 0, 29]) {
+        b.box(cx - 6, 12, 2, 2, 0.6, 'stone'); b.box(cx - 4, 12, 2, 2, 1.2, 'stone'); b.box(cx - 2, 12, 2, 2, 1.8, 'stone');
+        b.box(cx + 5, 5, 3, 1, 1.1, 'cover'); b.box(cx - 7, 1, 1.2, 1.2, 4.5, 'column');
+      }
+      // Cajas de radianita (1,2 y 2,4 m) delimitando cada zona de plantado.
+      for (const [cx, k] of [[-29, -1], [0, 1], [29, 1]]) {
+        b.box(cx + k * 5, -15, 2, 2, 2.4, 'radianite'); b.box(cx + k * 3, -15, 2, 2, 1.2, 'radianite');
+        b.box(cx - k * 5, -10, 2, 2, 1.2, 'radianite'); b.box(cx - k * 6, -19, 2.4, 2.4, 2.4, 'radianite');
+        b.box(cx, -7, 3, 1, 1.1, 'cover');
+      }
+      b.site('A', -29, -13, 6); b.site('B', 0, -13, 5.5); b.site('C', 29, -13, 6);
+      b.bot(-38, -17, -30, -3, 'A'); b.bot(5, -18, 0, -3, 'B'); b.bot(38, -17, 30, -3, 'C');
+      b.bot(-20, -18, -30, -3, 'A'); b.bot(20, -18, 30, -3, 'C');
+      b.bot(-6, -8, 0, -3, 'B'); b.bot(-40, -8, -41, -3, 'A'); b.bot(40, -8, 41, -3, 'C');
+      b.route('A', [[-28, 14], [-30, 0], [-29, -11]]);
+      b.route('A', [[-38, 14], [-41, 0], [-37, -12]]);
+      b.route('A', [[0, 14], [0, 4.5], [-14, 4.5], [-22, 3], [-30, 0], [-29, -11]]);
+      b.route('B', [[0, 14], [0, 0], [0, -11]]);
+      b.route('B', [[-28, 14], [-14, 4.5], [-5, 3], [0, 0], [0, -11]]);
+      b.route('C', [[28, 14], [30, 0], [29, -11]]);
+      b.route('C', [[38, 14], [41, 0], [37, -12]]);
+      b.route('C', [[0, 14], [0, 4.5], [14, 4.5], [22, 3], [30, 0], [29, -11]]);
+    },
+  },
+  codice: {
+    name: 'Códice', size: 80, dims: [80, 65], tint: '#b48cff', floor: 0xd2cbc0,
+    desc: 'Dos sites y un Mid elevado. A con plataforma Heaven, B con entrada cerrada (B Main) y dos atajos de Mid a la espalda de cada site.',
+    spawn: { x: 0, z: 29.5, yaw: 0 },
+    spawns: { atk: { x: 0, z: 29.5, yaw: 0 }, def: { x: 3, z: -30.5, yaw: Math.PI } },
+    build(b) {
+      const X = 40, Z = 32.5, W = (x1, z1, x2, z2, h = 4.5) => b.wall(x1, z1, x2, z2, h, 0.6, 'plaster');
+      b.wall(-X, -Z, X, -Z, 6, 1); b.wall(-X, Z, X, Z, 6, 1); b.wall(-X, -Z, -X, Z, 6, 1); b.wall(X, -Z, X, Z, 6, 1);
+      // ---- Base defensora (x -8..8, z -32,5..-26): escalera al Mid Top (sur), a Heaven (oeste) y pasillo a B (este).
+      W(-8, -26, -3, -26); W(3, -26, 8, -26); W(-8, -29, -8, -26); W(8, -26, 8, -27.2);
+      b.stairs(0, -27.25, 6, 2.5, 1.2, 's');                         // sube al Mid Top
+      b.stairs(-5, -30.75, 6, 3.5, 2.4, 'w');                        // sube a Heaven
+      b.barrier(0, -26, 6, 0.7, 6); b.barrier(-8, -30.75, 0.7, 3.5, 7); b.barrier(8, -29.85, 0.7, 4.8, 5);
+      // Pasillo trasero a B (x 8..18, z -32,5..-26).
+      W(8, -26, 18, -26);
+      // ---- Heaven: plataforma maciza de 2,4 m sobre la esquina NE de A, con baranda y escalera al site.
+      b.box(-15, -28.75, 14, 7.5, 2.4, 'stone');                    // x -22..-8, z -32,5..-25
+      b.box(-22.15, -30.5, 0.3, 4, 1, 'stone', 2.4);                // baranda (deja hueco para saltar al site)
+      b.stairs(-20, -22, 4, 6, 2.4, 'n');                           // del site (z -19) a Heaven (z -25)
+      // ---- Mid Top (1,2 m) entre la base y Mid Bottom, con escalera central y los dos atajos elevados.
+      b.box(0, -19.5, 24, 11, 1.2, 'stone');                        // x -12..12, z -25..-14
+      b.stairs(0, -12.5, 8, 3, 1.2, 'n');                           // baja a Mid Bottom (z -14..-11)
+      b.box(-15, -15, 6, 4, 1.2, 'stone'); b.stairs(-19.5, -15, 3, 4, 1.2, 'e');   // A Link → site A
+      b.box(15, -15, 6, 4, 1.2, 'stone'); b.stairs(19.5, -15, 3, 4, 1.2, 'w');     // B Link → site B
+      W(-21, -17.3, -12, -17.3); W(-21, -12.7, -12, -12.7);         // paredes de los atajos
+      W(12, -17.3, 21, -17.3); W(12, -12.7, 21, -12.7);
+      b.box(-15, -21, 6, 7, 4.5, 'plaster'); b.box(15, -21.5, 6, 8, 4.5, 'plaster');   // macizos entre atajo y base
+      b.box(-15, -10, 6, 4, 4.5, 'plaster'); b.box(15, -10, 6, 4, 4.5, 'plaster');
+      // ---- Mid Bottom (x -12..12, z -11..14) y pasillo a la base atacante.
+      W(-12, -12, -12, 14); W(12, -12, 12, 14);
+      W(-12, 14, -3, 14); W(3, 14, 12, 14); W(-3, 14, -3, 26); W(3, 14, 3, 26);
+      b.box(-6, 2, 2, 2, 1.4, 'crate'); b.box(7, -4, 2, 2, 1.6, 'crate'); b.box(0, 6, 4, 1, 1.1, 'cover'); b.box(-8, -7, 1.2, 1.2, 4.5, 'column');
+      // ---- Base atacante (x -8..8, z 26..32,5) con salidas a A Lobby, Mid y B Lobby.
+      W(-8, 26, -3, 26); W(3, 26, 8, 26); W(-8, 26, -8, 27); W(8, 26, 8, 27);
+      b.barrier(0, 26, 6, 0.7); b.barrier(-8, 29.75, 0.7, 5.5); b.barrier(8, 29.75, 0.7, 5.5);
+      // ---- Lado A: A Main por el oeste (x -40..-30) hasta el site.
+      W(-30, -8, -30, 16); W(-30, -8, -18, -8);
+      b.box(-21, 4, 18, 24, 5, 'plaster');                          // bloque entre A Main y Mid (x -30..-12)
+      W(-18, -17.3, -18, -8.6, 4.5);                                 // muro este de A bajo el atajo
+      b.box(-36, 6, 2, 2, 1.4, 'crate'); b.box(-33, -2, 1, 3, 1.1, 'cover');
+      // Site A (centro -30, -20)
+      b.box(-34, -22, 3, 3, 1.4, 'crate'); b.box(-27, -14, 1, 4, 1.1, 'cover'); b.box(-37, -29, 2.4, 2.4, 2.4, 'crate'); b.box(-26, -26, 2, 2, 1.2, 'crate');
+      // ---- Lado B: B Main cerrado (x 24..32) desde el lobby hasta el site.
+      W(24, -8, 24, 16); W(32, -8, 32, 16); W(18, -8, 24, -8); W(32, -8, X, -8);
+      b.box(18, 4, 12, 24, 5, 'plaster'); b.box(36, 4, 8, 24, 5, 'plaster');
+      W(18, -26, 18, -17.3); W(18, -12.7, 18, -8);
+      b.box(28, 6, 2, 2, 1.4, 'crate'); b.box(26, -3, 1, 2.5, 1.1, 'cover');
+      // Site B (centro 29, -20)
+      b.box(32, -22, 3, 3, 1.6, 'crate'); b.box(25, -16, 1, 4, 1.1, 'cover'); b.box(36, -29, 2.4, 2.4, 2.4, 'crate'); b.box(22, -26, 2, 2, 1.2, 'crate');
+      // Lobbies de ataque
+      b.box(-22, 22, 3, 3, 1.6, 'crate'); b.box(-34, 26, 2, 2, 1.2, 'crate'); b.box(-14, 19, 1, 3, 1.1, 'cover');
+      b.box(20, 22, 3, 3, 1.6, 'crate'); b.box(30, 26, 2, 2, 1.2, 'crate'); b.box(14, 19, 1, 3, 1.1, 'cover');
+      b.site('A', -30, -20, 6.5); b.site('B', 29, -20, 6.5);
+      b.bot(-36, -25, -35, -8, 'A'); b.bot(-14, -29, -30, -14, 'A'); b.bot(36, -24, 28, -8, 'B');
+      b.bot(23, -23, 18, -15, 'B'); b.bot(-25, -11, -18, -15, 'A');
+      b.bot(-5, -21, 0, -11, null); b.bot(5, -18, 0, -11, null); b.bot(34, -14, 28, -8, 'B');
+      b.route('A', [[-24, 24], [-35, 14], [-35, -6], [-31, -18]]);
+      b.route('A', [[0, 20], [0, 0], [0, -10], [-6, -15], [-16, -15], [-24, -16], [-30, -19]]);
+      b.route('B', [[22, 24], [28, 14], [28, -6], [29, -18]]);
+      b.route('B', [[0, 20], [0, 0], [0, -10], [6, -15], [16, -15], [24, -16], [29, -19]]);
     },
   },
   bastion: {
@@ -1667,27 +1889,39 @@ const MAPS = {
 };
 const DEFAULT_MAP = 'santuario';
 
-/** Grabadora 2D de un mapa: misma API que World, solo guarda rectángulos para el minimapa. */
+/** Grabadora 2D de un mapa: misma API que World, solo guarda rectángulos para el minimapa (esquema táctico). */
 class MapSketch {
   constructor(def) {
-    this.rects = []; this.sites = []; this.doors = []; this.size = def.size;
+    this.rects = []; this.sites = []; this.doors = []; this.barriers = []; this.size = def.size; this.def = def;
     def.build(this);
   }
-  wall(x1, z1, x2, z2, h = 3.2, t = 0.4) {
-    if (z1 === z2) this.box((x1 + x2) / 2, z1, Math.abs(x2 - x1) + t, t, h);
-    else this.box(x1, (z1 + z2) / 2, t, Math.abs(z2 - z1) + t, h);
+  wall(x1, z1, x2, z2, h = 3.2, t = 0.4, mat = 'wall') {
+    if (z1 === z2) this.box((x1 + x2) / 2, z1, Math.abs(x2 - x1) + t, t, h, mat);
+    else this.box(x1, (z1 + z2) / 2, t, Math.abs(z2 - z1) + t, h, mat);
   }
-  box(x, z, w, d, h, mat = 'wall') { this.rects.push({ x, z, w, d, mat }); }
-  door(x, z, w, d) { this.doors.push({ x, z, w, d }); }
+  box(x, z, w, d, h, mat = 'wall', y = 0) { this.rects.push({ x, z, w, d, mat, top: y + h }); }
+  stairs(x, z, w, d, rise) { this.rects.push({ x, z, w, d, mat: 'stairs', top: rise }); }
+  door(x, z, w, d, h, axis, mat = 'door') { this.doors.push({ x, z, w, d, mat }); }
+  barrier(x, z, w, d) { this.barriers.push({ x, z, w, d }); }
   site(id, x, z, r) { this.sites.push({ id, x, z, r }); }
   bot() {}                          // los puestos de los bots no se revelan en el minimapa
+  route() {}
   svg(tint) {
     const S = this.size / 2;
-    const fill = { wall: '#9aa6b2', cover: '#c98c4a', column: '#6f7a86', crate: '#7f8a55', container: '#8e6a52', rock: '#6c6862', neon: '#4fc3ff' };
-    const r = this.rects.map((o) => `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${fill[o.mat]}"/>`).join('');
-    const d = this.doors.map((o) => `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${tint}" opacity=".9"/>`).join('');
+    const fill = { wall: '#9aa6b2', plaster: '#b9b2a4', cover: '#c98c4a', column: '#6f7a86', crate: '#7f8a55', container: '#8e6a52', rock: '#6c6862',
+      neon: '#4fc3ff', wood: '#a0703f', stone: '#57606b', stairs: '#57606b', radianite: '#3fb7c9', post: '#3a3a3a' };
+    // Las plataformas (stone) se pintan primero y algo más claras cuanto más altas: se lee el desnivel.
+    const order = (o) => (o.mat === 'stone' || o.mat === 'stairs' ? 0 : 1);
+    const r = [...this.rects].sort((a, b) => order(a) - order(b)).map((o) => {
+      const lvl = o.mat === 'stone' || o.mat === 'stairs' ? Math.min(1, o.top / 3) : 0;
+      const col = lvl ? `hsl(210 10% ${24 + lvl * 22}%)` : fill[o.mat] ?? fill.wall;
+      return `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${col}"/>`;
+    }).join('');
+    const d = this.doors.map((o) => `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${o.mat === 'wood' ? '#c8894a' : tint}" opacity=".95"/>`).join('');
     const s = this.sites.map((o) => `<circle cx="${o.x}" cy="${o.z}" r="${o.r}" fill="${tint}" fill-opacity=".18" stroke="${tint}" stroke-width=".5"/><text x="${o.x}" y="${o.z + 2.4}" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">${o.id}</text>`).join('');
-    return `<svg viewBox="${-S} ${-S} ${S * 2} ${S * 2}"><rect x="${-S}" y="${-S}" width="${S * 2}" height="${S * 2}" fill="#0d141b"/>${r}${d}${s}</svg>`;
+    // Bases de cada bando (partida no clasificatoria): ATK / DEF.
+    const sp = this.def.spawns ? Object.entries(this.def.spawns).map(([k, p]) => `<text x="${p.x}" y="${p.z + 1.8}" text-anchor="middle" font-size="4.6" font-weight="800" fill="${k === 'atk' ? '#ff4655' : '#00f3ff'}">${k.toUpperCase()}</text>`).join('') : '';
+    return `<svg viewBox="${-S} ${-S} ${S * 2} ${S * 2}"><rect x="${-S}" y="${-S}" width="${S * 2}" height="${S * 2}" fill="#0d141b"/>${r}${d}${s}${sp}</svg>`;
   }
 }
 
@@ -1703,53 +1937,69 @@ class MapSketch {
  *  Todo lo del mapa cuelga de `mapGroup`, así cambiar de mapa es vaciar el grupo y reconstruir.
  * ===================================================================================== */
 const SITE_COLORS = { A: 0xff5a6e, B: 0x3fd6c4, C: 0xffc04d };
+/**
+ * Materiales del escenario. Todos comparten UN material de Three: cada vértice lleva su color y la
+ * capa de textura que usa (atlas de texturas en un DataArrayTexture) y cuánto brilla. Así todo el mapa
+ * estático, suelo incluido, es una sola malla y un solo draw call, con texturas distintas por pieza.
+ * layer: 0 hormigón · 1 chapa de contenedor · 2 baldosa del suelo (4 m) · 3 madera.
+ */
+const WORLD_MATS = {
+  wall: { layer: 0, color: 0xc9ccd0 }, cover: { layer: 0, color: 0xe0a663 }, column: { layer: 0, color: 0x7d8794 },
+  crate: { layer: 0, color: 0x7f8a55 }, door: { layer: 0, color: 0x5c6670 }, post: { layer: 0, color: 0x3a3a3a },
+  container: { layer: 1, color: 0xe4e8ec }, rock: { layer: 0, color: 0xb3ab9c },
+  neon: { layer: 0, color: 0x4fc3ff, glow: 1.6 },
+  wood: { layer: 3, color: 0xd29a62 },
+  stone: { layer: 0, color: 0xb9b2a4 },                // plataformas y escaleras
+  plaster: { layer: 0, color: 0xe6dccb },              // muros claros (Santuario, Acrópolis)
+  radianite: { layer: 1, color: 0x5fd0e0, glow: 0.35 }, // cajas de radianita (Acrópolis)
+  ground: { layer: 2, color: 0xffffff },
+};
 
 class World {
   constructor(scene, renderer) {
     this.scene = scene;
     this.renderer = renderer;
     this.boxes = [];          // { minX, minY, minZ, maxX, maxY, maxZ } (las puertas mutan las suyas)
-    this.dynamicBoxes = [];   // Colisionadores móviles (bots vivos): frenan al jugador, no a las balas.
-    this.sites = [];          // { id, center: Vector3, radius } → futuro modo plantar/desactivar
+    this.dynamicBoxes = [];   // Colisionadores móviles (bots vivos y barreras de compra): frenan al jugador, no a las balas.
+    this.sites = [];          // { id, center: Vector3, radius } → plantar / desactivar la Spike
     this.doors = [];
     this.lastDoor = -1;       // índice de la última puerta usada con E (se envía al grupo)
-    this.botPosts = [];       // { x, z, yaw } que rellena cada mapa con b.bot(...)
+    this.botPosts = [];       // { x, z, yaw, site } que rellena cada mapa con b.bot(...)
+    this.barriers = [];       // AABB de las barreras de la fase de compra (solo cuentan mientras está activa)
+    this.routes = {};         // site → [[x, z], ...]: caminos de aproximación de los atacantes
     this.spawn = new THREE.Vector3(0, 0, 3);
     this.spawnYaw = 0;
     this.mapId = null;
     this.mapGroup = new THREE.Group();
     scene.add(this.mapGroup);
-    this._pending = {};       // material → geometrías pendientes de fusionar
-    this._pendingEdges = [];
-    this._siteRings = []; this._siteDiscs = [];
+    this.nav = new NavGrid();
+    this._geos = []; this._edges = []; this._over = [];    // geometrías pendientes de fusionar
+    this._vCount = 0; this._eCount = 0;
+    this.worldMesh = null; this.edgeMesh = null; this.overMesh = null;
     this._buildMaterials();
     this._buildLighting();
   }
 
-  _canvasTexture(size, draw) {
+  _canvas(size, draw) {
     const c = document.createElement('canvas'); c.width = c.height = size;
     draw(c.getContext('2d'), size);
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 8;
-    return tex;
+    return c;
   }
 
   _buildMaterials() {
-    // Textura de 1 m × 1 m con borde: las paredes llevan UVs en coordenadas de mundo,
-    // así la cuadrícula sirve como regla visual para calibrar velocidad y distancias.
-    const concrete = this._canvasTexture(256, (g, s) => {
+    const L = 512;
+    // Capa 0 · hormigón: cuadrícula de 1 m con borde (regla visual para calibrar velocidad y distancias).
+    const concrete = this._canvas(L, (g, s) => {
       g.fillStyle = '#8a8d90'; g.fillRect(0, 0, s, s);
-      for (let i = 0; i < 2600; i++) {
+      for (let i = 0; i < 9000; i++) {
         const v = 110 + Math.random() * 50 | 0;
         g.fillStyle = `rgba(${v},${v},${v + 4},0.35)`;
-        g.fillRect(Math.random() * s, Math.random() * s, 2, 2);
+        g.fillRect(Math.random() * s, Math.random() * s, 3, 3);
       }
-      g.strokeStyle = 'rgba(40,40,45,0.55)'; g.lineWidth = 3; g.strokeRect(0, 0, s, s);
+      g.strokeStyle = 'rgba(40,40,45,0.55)'; g.lineWidth = 6; g.strokeRect(0, 0, s, s);
     });
-    // Chapa ondulada de contenedor (1 m = 4 ondas) con churretes de óxido.
-    const corrugated = this._canvasTexture(256, (g, sz) => {
+    // Capa 1 · chapa ondulada de contenedor (1 m = 4 ondas) con churretes de óxido.
+    const corrugated = this._canvas(L, (g, sz) => {
       g.fillStyle = '#6d747b'; g.fillRect(0, 0, sz, sz);
       for (let i = 0; i < 4; i++) {
         const x = i * sz / 4, gr = g.createLinearGradient(x, 0, x + sz / 4, 0);
@@ -1758,36 +2008,88 @@ class World {
       }
       for (let i = 0; i < 14; i++) {
         g.fillStyle = `rgba(${150 + Math.random() * 40 | 0},${70 + Math.random() * 30 | 0},30,${0.25 + Math.random() * 0.3})`;
-        g.fillRect(Math.random() * sz, Math.random() * sz * 0.4, 2 + Math.random() * 4, 20 + Math.random() * 90);
+        g.fillRect(Math.random() * sz, Math.random() * sz * 0.4, 4 + Math.random() * 8, 40 + Math.random() * 180);
       }
-      g.strokeStyle = 'rgba(30,30,32,0.5)'; g.lineWidth = 2; g.strokeRect(0, 0, sz, sz);
+      g.strokeStyle = 'rgba(30,30,32,0.5)'; g.lineWidth = 4; g.strokeRect(0, 0, sz, sz);
     });
-    this.mat = {
-      wall: new THREE.MeshStandardMaterial({ map: concrete, color: 0xc9ccd0, roughness: 0.92 }),
-      cover: new THREE.MeshStandardMaterial({ map: concrete, color: 0xe0a663, roughness: 0.85 }),
-      column: new THREE.MeshStandardMaterial({ map: concrete, color: 0x7d8794, roughness: 0.9 }),
-      crate: new THREE.MeshStandardMaterial({ map: concrete, color: 0x7f8a55, roughness: 0.9 }),
-      door: new THREE.MeshStandardMaterial({ color: 0x5c6670, roughness: 0.5, metalness: 0.4 }),
-      post: new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.6, metalness: 0.4 }),
-      container: new THREE.MeshStandardMaterial({ map: corrugated, color: 0xe4e8ec, roughness: 0.8 }),
-      rock: new THREE.MeshStandardMaterial({ map: concrete, color: 0xb3ab9c, roughness: 1 }),
-      neon: new THREE.MeshStandardMaterial({ color: 0x4fc3ff, emissive: 0x2aa8ff, emissiveIntensity: 1.6, roughness: 0.4 }),
-    };
-    this.edgeMat = new THREE.LineBasicMaterial({ color: 0x1b1e22, transparent: true, opacity: 0.45 });
-    this.siteRingMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false });
-    this.siteDiscMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.1, depthWrite: false });
-    const floorTex = this._canvasTexture(1024, (g, s) => {
+    // Capa 2 · baldosa del suelo: 1 tile = 4 m, líneas finas cada metro y borde amarillo.
+    const floor = this._canvas(L, (g, s) => {
       g.fillStyle = '#5b6066'; g.fillRect(0, 0, s, s);
       for (let i = 0; i < 9000; i++) {
         const v = 80 + Math.random() * 30 | 0;
         g.fillStyle = `rgba(${v},${v + 3},${v + 6},0.25)`; g.fillRect(Math.random() * s, Math.random() * s, 2, 2);
       }
-      const cell = s / 4;                       // 1 tile = 4 m, líneas finas cada metro.
+      const cell = s / 4;
       g.strokeStyle = 'rgba(25,28,32,0.55)'; g.lineWidth = 2;
       for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(i * cell, 0); g.lineTo(i * cell, s); g.moveTo(0, i * cell); g.lineTo(s, i * cell); g.stroke(); }
-      g.strokeStyle = 'rgba(230,200,90,0.55)'; g.lineWidth = 5; g.strokeRect(0, 0, s, s);
+      g.strokeStyle = 'rgba(230,200,90,0.55)'; g.lineWidth = 4; g.strokeRect(0, 0, s, s);
     });
-    this.floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.95 });
+    // Capa 3 · madera: tablones de 25 cm con vetas.
+    const wood = this._canvas(L, (g, s) => {
+      g.fillStyle = '#8a6440'; g.fillRect(0, 0, s, s);
+      const plank = s / 4;
+      for (let p = 0; p < 4; p++) {
+        const y = p * plank;
+        g.fillStyle = `rgba(${120 + p * 9},${84 + p * 5},${50},0.35)`; g.fillRect(0, y, s, plank);
+        for (let i = 0; i < 26; i++) {
+          g.strokeStyle = `rgba(60,38,20,${0.12 + Math.random() * 0.18})`; g.lineWidth = 1 + Math.random() * 2;
+          const yy = y + Math.random() * plank;
+          g.beginPath(); g.moveTo(0, yy); g.bezierCurveTo(s * 0.3, yy + rand(-6, 6), s * 0.6, yy + rand(-6, 6), s, yy); g.stroke();
+        }
+        g.fillStyle = 'rgba(35,22,12,0.7)'; g.fillRect(0, y, s, 3);
+      }
+    });
+    const layers = [concrete, corrugated, floor, wood];
+    const data = new Uint8Array(L * L * 4 * layers.length);
+    layers.forEach((c, i) => data.set(c.getContext('2d').getImageData(0, 0, L, L).data, i * L * L * 4));
+    const atlas = this.atlas = new THREE.DataArrayTexture(data, L, L, layers.length);
+    atlas.wrapS = atlas.wrapT = THREE.RepeatWrapping;
+    atlas.magFilter = THREE.LinearFilter; atlas.minFilter = THREE.LinearMipmapLinearFilter;
+    atlas.generateMipmaps = true; atlas.anisotropy = 8;
+    atlas.colorSpace = THREE.SRGBColorSpace;
+    atlas.needsUpdate = true;
+
+    // Material único del escenario: MeshStandardMaterial con el muestreo del atlas inyectado.
+    const mat = this.worldMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0.05 });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uAtlas = { value: atlas };
+      sh.vertexShader = 'attribute vec2 matInfo;\nvarying vec3 vAtl;\nvarying float vGlow;\n'
+        + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvAtl = vec3(uv, matInfo.x); vGlow = matInfo.y;');
+      sh.fragmentShader = 'uniform sampler2DArray uAtlas;\nvarying vec3 vAtl;\nvarying float vGlow;\n'
+        + sh.fragmentShader.replace('#include <map_fragment>', 'diffuseColor *= texture(uAtlas, vAtl);')
+          .replace('#include <emissivemap_fragment>', 'totalEmissiveRadiance += diffuseColor.rgb * vGlow;');
+    };
+    mat.customProgramCacheKey = () => 'world-atlas-1';
+    this.edgeMat = new THREE.LineBasicMaterial({ color: 0x1b1e22, transparent: true, opacity: 0.45 });
+
+    // Capa translúcida (3.er draw call): discos y anillos de los sites, carteles con la letra y las
+    // barreras de la fase de compra. Las barreras se ocultan en el shader (uBarrier = 0), sin otra malla.
+    const ov = this._canvas(512, () => {}), g = ov.getContext('2d');
+    ov.height = 128;
+    g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 128);
+    ['A', 'B', 'C'].forEach((id, i) => {
+      const x0 = (i + 1) * 128, col = '#' + SITE_COLORS[id].toString(16).padStart(6, '0');
+      g.fillStyle = 'rgba(10,14,20,0.8)'; g.beginPath(); g.moveTo(x0 + 64, 6); g.lineTo(x0 + 122, 64); g.lineTo(x0 + 64, 122); g.lineTo(x0 + 6, 64); g.closePath(); g.fill();
+      g.strokeStyle = col; g.lineWidth = 7; g.stroke();
+      g.fillStyle = '#fff'; g.font = '800 64px ui-monospace, Consolas, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(id, x0 + 64, 68);
+    });
+    const ovTex = new THREE.CanvasTexture(ov); ovTex.colorSpace = THREE.SRGBColorSpace;
+    const om = this.overMat = new THREE.MeshBasicMaterial({ map: ovTex, vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
+    this.barrierUniform = { value: 0 };
+    om.onBeforeCompile = (sh) => {
+      sh.uniforms.uBarrier = this.barrierUniform;
+      sh.vertexShader = 'attribute float barrier;\nuniform float uBarrier;\nvarying float vOvBar;\nvarying vec3 vOvPos;\n'
+        + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n\tvOvBar = barrier; vOvPos = position;'
+          + '\n\tif (barrier > 1.5) { vec4 bb = modelViewMatrix * vec4(position, 1.0); bb.xy += normal.xy; gl_Position = projectionMatrix * bb; }'
+          + '\n\telse if (barrier > 0.5 && uBarrier < 0.5) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);');
+      // Barrera: casi transparente, con una rejilla luminosa y un brillo a ras de suelo (se lee como muro de energía, no como niebla).
+      sh.fragmentShader = 'varying float vOvBar;\nvarying vec3 vOvPos;\n'
+        + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\tif (vOvBar > 0.5 && vOvBar < 1.5) {'
+          + ' vec2 q = abs(fract(vec2(vOvPos.x + vOvPos.z, vOvPos.y) * 1.4) - 0.5);'
+          + ' float line = smoothstep(0.42, 0.49, max(q.x, q.y)), base = 1.0 - smoothstep(0.0, 1.1, vOvPos.y);'
+          + ' diffuseColor.a = 0.05 + line * 0.5 + base * 0.3; }');
+    };
+    om.customProgramCacheKey = () => 'world-overlay-3';
   }
 
   _buildLighting() {
@@ -1806,24 +2108,33 @@ class World {
   /** Marca el mapa de sombras para redibujarse UNA vez en el próximo render. */
   requestShadowUpdate() { this.renderer.shadowMap.needsUpdate = true; }
 
+  /** Barreras de la fase de compra: visibles y sólidas (on) o retiradas. */
+  setBarriers(on) {
+    this.barrierUniform.value = on ? 1 : 0;
+    const dyn = this.dynamicBoxes;
+    for (const b of this.barriers) {
+      const i = dyn.indexOf(b);
+      if (on && i < 0) dyn.push(b);
+      if (!on && i >= 0) dyn.splice(i, 1);
+    }
+  }
+
   /** Vacía el mapa actual y construye el pedido. */
   load(mapId) {
     const def = MAPS[mapId] ?? MAPS[DEFAULT_MAP];
     this.mapId = MAPS[mapId] ? mapId : DEFAULT_MAP;
-    this.mapGroup.traverse((o) => {
-      if (o.geometry && !o.isSprite) o.geometry.dispose();   // los Sprite comparten una geometría global
-      if (o.userData.ownMaterial) { if (o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); }
-    });
+    this.def = def;
+    for (const m of [this.worldMesh, this.edgeMesh, this.overMesh]) if (m) m.geometry.dispose();
     this.mapGroup.clear();
-    this.boxes.length = 0; this.sites.length = 0; this.doors.length = 0; this.botPosts.length = 0;
+    this.worldMesh = this.edgeMesh = this.overMesh = null;
+    this.setBarriers(false);
+    this.boxes.length = 0; this.sites.length = 0; this.doors.length = 0; this.botPosts.length = 0; this.barriers.length = 0;
+    this.routes = {};
+    this._geos.length = 0; this._edges.length = 0; this._over.length = 0; this._vCount = 0; this._eCount = 0;
 
+    // Suelo: una losa más de la malla única (sin colisión: el plano y = 0 ya lo resuelven física y balas).
     const size = def.size + 8;
-    this.floorMat.map.repeat.set(size / 4, size / 4);
-    this.floorMat.color.set(def.floor ?? 0xffffff);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(size, size), this.floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    this.mapGroup.add(floor);
+    this._addGeo(size, 0.2, size, 0, -0.2, 0, 'ground', def.floor);
 
     // Sombras ajustadas al tamaño del mapa.
     const sc = this.sun.shadow.camera, half = def.size / 2 + 4;
@@ -1835,109 +2146,149 @@ class World {
     this._flushStatic();
     this.spawn.set(def.spawn.x, 0, def.spawn.z);
     this.spawnYaw = def.spawn.yaw;
+    // Las puertas no cuentan para la navegación: los bots las abren al llegar (BotManager._openDoors).
+    const doorBoxes = new Set(this.doors.map((d) => d.aabb));
+    this.nav.build(this.boxes.filter((b) => !doorBoxes.has(b)), def.size / 2 + 2);
     this.requestShadowUpdate();
   }
 
-  /** Fusiona todo lo estático acumulado durante build(): pocas mallas grandes en vez de cientos. */
+  /** Fusiona lo acumulado durante build(): 1 malla (todo el escenario), 1 de aristas y 1 translúcida. */
   _flushStatic() {
-    for (const key in this._pending) {
-      const list = this._pending[key];
-      if (!list.length) continue;
-      const mesh = new THREE.Mesh(mergeGeometries(list), this.mat[key] ?? this.mat.wall);
-      mesh.castShadow = mesh.receiveShadow = true;
-      this.mapGroup.add(mesh);
-      for (const g of list) g.dispose();
-      list.length = 0;
+    const wm = this.worldMesh = new THREE.Mesh(mergeGeometries(this._geos), this.worldMat);
+    wm.castShadow = wm.receiveShadow = true;
+    this.edgeMesh = new THREE.LineSegments(mergeGeometries(this._edges), this.edgeMat);
+    this.mapGroup.add(wm, this.edgeMesh);
+    if (this._over.length) {
+      this.overMesh = new THREE.Mesh(mergeGeometries(this._over), this.overMat);
+      this.overMesh.renderOrder = 2;
+      this.mapGroup.add(this.overMesh);
     }
-    if (this._pendingEdges.length) {
-      this.mapGroup.add(new THREE.LineSegments(mergeGeometries(this._pendingEdges), this.edgeMat));
-      for (const g of this._pendingEdges) g.dispose();
-      this._pendingEdges.length = 0;
-    }
-    if (this._siteRings.length) {
-      const discs = new THREE.Mesh(mergeGeometries(this._siteDiscs), this.siteDiscMat);
-      const rings = new THREE.Mesh(mergeGeometries(this._siteRings), this.siteRingMat);
-      this.mapGroup.add(discs, rings);
-      for (const g of this._siteRings) g.dispose();
-      for (const g of this._siteDiscs) g.dispose();
-      this._siteRings.length = 0; this._siteDiscs.length = 0;
+    for (const list of [this._geos, this._edges, this._over]) { for (const g of list) g.dispose(); list.length = 0; }
+    // Las puertas mueven sus vértices dentro de la malla fusionada: se guarda su posición original.
+    for (const d of this.doors) {
+      d.base = wm.geometry.attributes.position.array.slice(d.v0 * 3, (d.v0 + d.vn) * 3);
+      d.ebase = this.edgeMesh.geometry.attributes.position.array.slice(d.e0 * 3, (d.e0 + d.en) * 3);
     }
   }
 
+  /** Atributos por vértice del material único: color, capa del atlas y brillo. */
+  _paint(geo, key, colorHex) {
+    const m = WORLD_MATS[key] ?? WORLD_MATS.wall, n = geo.attributes.position.count;
+    _tmpColor.setHex(colorHex ?? m.color);
+    const col = new Float32Array(n * 3), info = new Float32Array(n * 2);
+    for (let i = 0; i < n; i++) {
+      col[i * 3] = _tmpColor.r; col[i * 3 + 1] = _tmpColor.g; col[i * 3 + 2] = _tmpColor.b;
+      info[i * 2] = m.layer; info[i * 2 + 1] = m.glow ?? 0;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('matInfo', new THREE.BufferAttribute(info, 2));
+  }
+
   /** UVs en metros de mundo (la geometría ya está trasladada) para que la textura no se estire. */
-  _worldUVs(geo) {
+  _worldUVs(geo, scale = 1) {
     const pos = geo.attributes.position, nor = geo.attributes.normal, uv = geo.attributes.uv;
     for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const x = pos.getX(i) * scale, y = pos.getY(i) * scale, z = pos.getZ(i) * scale;
       const nx = Math.abs(nor.getX(i)), ny = Math.abs(nor.getY(i));
       if (nx > 0.5) uv.setXY(i, z, y); else if (ny > 0.5) uv.setXY(i, x, z); else uv.setXY(i, x, y);
     }
   }
 
-  /** Caja estática colisionable. (x, z) = centro en planta. Se fusiona con las de su material. */
-  box(x, z, w, d, h, mat = 'wall', y = 0) {
+  /** Caja visual en la malla única (sin colisión). Devuelve el primer vértice y el de sus aristas. */
+  _addGeo(w, h, d, x, y, z, mat, colorHex) {
     const geo = new THREE.BoxGeometry(w, h, d);
     geo.translate(x, y + h / 2, z);
-    this._worldUVs(geo);
-    (this._pending[mat] ??= []).push(geo);
-    this._pendingEdges.push(new THREE.EdgesGeometry(geo));
+    this._worldUVs(geo, mat === 'ground' ? 0.25 : 1);
+    this._paint(geo, mat, colorHex);
+    const edges = new THREE.EdgesGeometry(geo);
+    const v0 = this._vCount, e0 = this._eCount;
+    this._geos.push(geo); this._vCount += geo.attributes.position.count;
+    if (mat !== 'ground') { this._edges.push(edges); this._eCount += edges.attributes.position.count; } else edges.dispose();
+    return { v0, vn: geo.attributes.position.count, e0, en: mat !== 'ground' ? this._eCount - e0 : 0 };
+  }
+
+  /** Caja estática colisionable. (x, z) = centro en planta; y = altura de su base. */
+  box(x, z, w, d, h, mat = 'wall', y = 0) {
+    this._addGeo(w, h, d, x, y, z, mat);
     const aabb = { minX: x - w / 2, maxX: x + w / 2, minY: y, maxY: y + h, minZ: z - d / 2, maxZ: z + d / 2 };
     this.boxes.push(aabb);
     return aabb;
   }
 
   /** Muro alineado a ejes entre dos puntos (solo horizontal o vertical en planta). */
-  wall(x1, z1, x2, z2, h = 3.2, t = 0.4) {
-    if (z1 === z2) this.box((x1 + x2) / 2, z1, Math.abs(x2 - x1) + t, t, h);
-    else this.box(x1, (z1 + z2) / 2, t, Math.abs(z2 - z1) + t, h);
+  wall(x1, z1, x2, z2, h = 3.2, t = 0.4, mat = 'wall') {
+    if (z1 === z2) this.box((x1 + x2) / 2, z1, Math.abs(x2 - x1) + t, t, h, mat);
+    else this.box(x1, (z1 + z2) / 2, t, Math.abs(z2 - z1) + t, h, mat);
   }
 
-  /** Puerta táctica: hoja que se desliza a lo largo de `axis` al pulsar E cerca. Su AABB se mueve
-   *  con ella, así colisión y balas la respetan sin casos especiales. Es la única malla de pared
-   *  que no se fusiona (se mueve). */
-  door(x, z, w, d, h, axis = 'x') {
+  /**
+   * Escalera maciza (sin huecos debajo): (x, z) centro de la huella w × d; sube `rise` metros hacia
+   * `dir` ('n' = -Z, 's' = +Z, 'e' = +X, 'w' = -X) en peldaños de ≤ 0,4 m que se suben andando.
+   */
+  stairs(x, z, w, d, rise, dir, mat = 'stone') {
+    const n = Math.max(1, Math.ceil(rise / 0.4)), alongX = dir === 'e' || dir === 'w', len = alongX ? w : d;
+    const sign = dir === 'e' || dir === 's' ? 1 : -1, run = len / n;
+    for (let i = 0; i < n; i++) {
+      const c = -len / 2 + run * (i + 0.5), h = rise * (i + 1) / n;     // del extremo bajo al alto
+      const off = c * sign;
+      if (alongX) this.box(x + off, z, run, d, h, mat); else this.box(x, z + off, w, run, h, mat);
+    }
+  }
+
+  /** Barrera de la fase de compra: translúcida, frena al jugador solo mientras dura la compra. */
+  barrier(x, z, w, d, h = 4) {
     const geo = new THREE.BoxGeometry(w, h, d);
-    const mesh = new THREE.Mesh(geo, this.mat.door);
-    mesh.position.set(x, h / 2, z);
-    mesh.castShadow = mesh.receiveShadow = true;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), this.edgeMat));
-    this.mapGroup.add(mesh);
+    geo.translate(x, h / 2, z);
+    this._overlay(geo, 0x00f3ff, 0.22, 0.03, 1);
+    this.barriers.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: h, minZ: z - d / 2, maxZ: z + d / 2 });
+  }
+
+  /** Atributos de la capa translúcida: color con alfa, UV a una celda del atlas y marca de barrera. */
+  _overlay(geo, hex, alpha, u, isBarrier = 0, cell = -1) {
+    _tmpColor.setHex(hex);
+    const n = geo.attributes.position.count, col = new Float32Array(n * 4), bar = new Float32Array(n), uv = geo.attributes.uv;
+    for (let i = 0; i < n; i++) {
+      col[i * 4] = _tmpColor.r; col[i * 4 + 1] = _tmpColor.g; col[i * 4 + 2] = _tmpColor.b; col[i * 4 + 3] = alpha;
+      bar[i] = isBarrier;
+      if (cell < 0) uv.setXY(i, u, 0.5); else uv.setXY(i, (cell + 0.04 + uv.getX(i) * 0.92) / 4, 0.04 + uv.getY(i) * 0.92);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 4));
+    geo.setAttribute('barrier', new THREE.BufferAttribute(bar, 1));
+    this._over.push(geo);
+  }
+
+  /** Puerta táctica: hoja que se desliza a lo largo de `axis` al pulsar E cerca. Va dentro de la malla
+   *  única (mueve sus propios vértices) y su AABB se mueve con ella: colisión y balas la respetan. */
+  door(x, z, w, d, h, axis = 'x', mat = 'door') {
+    const r = this._addGeo(w, h, d, x, 0, z, mat);
     const aabb = { minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: h, minZ: z - d / 2, maxZ: z + d / 2 };
     this.boxes.push(aabb);
-    this.doors.push({ mesh, aabb, axis, travel: (axis === 'x' ? w : d) * 0.92, w, d, open: false, t: 0, cx: x, cz: z });
+    this.doors.push({ aabb, axis, travel: (axis === 'x' ? w : d) * 0.92, w, d, open: false, t: 0, cx: x, cz: z, ...r, base: null, ebase: null });
   }
 
-  /** Marcador de site: disco + anillo en el suelo (fusionados para los 3 sites) y cartel con la letra. */
+  /** Marcador de site: disco + anillo en el suelo y un cartel con la letra (todo en la capa translúcida). */
   site(id, x, z, radius) {
-    const color = SITE_COLORS[id] ?? 0xffffff;
-    _tmpColor.setHex(color);
-    const paint = (g) => {
-      g.rotateX(-Math.PI / 2);
-      const n = g.attributes.position.count, col = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) { col[i * 3] = _tmpColor.r; col[i * 3 + 1] = _tmpColor.g; col[i * 3 + 2] = _tmpColor.b; }
-      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      return g;
-    };
-    this._siteRings.push(paint(new THREE.RingGeometry(radius - 0.25, radius, 64)).translate(x, 0.02, z));
-    this._siteDiscs.push(paint(new THREE.CircleGeometry(radius - 0.25, 64)).translate(x, 0.015, z));
-    // Cartel con la letra (sprite: siempre mira a cámara, legible desde cualquier ángulo).
-    const c = document.createElement('canvas'); c.width = c.height = 128;
-    const g = c.getContext('2d');
-    g.fillStyle = 'rgba(10,14,20,0.75)'; g.beginPath(); g.moveTo(64, 4); g.lineTo(124, 64); g.lineTo(64, 124); g.lineTo(4, 64); g.closePath(); g.fill();
-    g.strokeStyle = '#' + color.toString(16).padStart(6, '0'); g.lineWidth = 6; g.stroke();
-    g.fillStyle = '#fff'; g.font = '800 64px ui-monospace, Consolas, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(id, 64, 68);
-    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: true, transparent: true }));
-    sprite.scale.set(2.2, 2.2, 1); sprite.position.set(x, 4.6, z);
-    sprite.userData.ownMaterial = true; sprite.userData.ownMap = true;
-    this.mapGroup.add(sprite);
-    this.box(x, z, 0.08, 0.08, 3.5, 'post');       // mástil (estático, se fusiona)
+    const color = SITE_COLORS[id] ?? 0xffffff, cell = ['A', 'B', 'C'].indexOf(id) + 1;
+    const ring = new THREE.RingGeometry(radius - 0.25, radius, 64); ring.rotateX(-Math.PI / 2); ring.translate(x, 0.02, z);
+    const disc = new THREE.CircleGeometry(radius - 0.25, 64); disc.rotateX(-Math.PI / 2); disc.translate(x, 0.015, z);
+    // Ring y Circle no tienen índice: se les añade uno para fusionarlas con las cajas (que sí lo tienen).
+    for (const g of [ring, disc]) if (!g.index) g.setIndex([...Array(g.attributes.position.count).keys()]);
+    this._overlay(disc, color, 0.1, 0.06);
+    this._overlay(ring, color, 0.85, 0.06);
+    // Cartel con la letra: un cuadrado que el shader gira hacia la cámara (como un sprite, sin draw call propio).
+    // Los 4 vértices están en el centro y la normal guarda la esquina (no se usa para luz en este material).
+    const sign = new THREE.PlaneGeometry(2.2, 2.2), sp = sign.attributes.position, sn = sign.attributes.normal;
+    for (let i = 0; i < sp.count; i++) { sn.setXYZ(i, sp.getX(i), sp.getY(i), 0); sp.setXYZ(i, x, 4.6, z); }
+    this._overlay(sign, 0xffffff, 1, 0, 2, cell > 0 ? cell : 0);
+    this._addGeo(0.08, 3.75, 0.08, x, 0, z, 'post');   // mástil: solo se ve (no choca, así se puede plantar en el centro)
     this.sites.push({ id, center: new THREE.Vector3(x, 0, z), radius });
-    // PUNTO DE EXTENSIÓN · SPIKE: plantar = jugador dentro de `radius` + mantener tecla N segundos.
   }
 
-  /** Puesto de un bot defensor: posición y punto que vigila. BotManager coloca ahí a sus bots. */
-  bot(x, z, lookX, lookZ) { this.botPosts.push({ x, z, yaw: Math.atan2(-(lookX - x), -(lookZ - z)) }); }
+  /** Puesto de un defensor: posición, punto que vigila y (opcional) el site que guarda. */
+  bot(x, z, lookX, lookZ, site = null) { this.botPosts.push({ x, z, yaw: Math.atan2(-(lookX - x), -(lookZ - z)), site }); }
+
+  /** Camino de aproximación de los atacantes a un site (puntos intermedios; el último es el site). */
+  route(site, pts) { (this.routes[site] ??= []).push(pts); }
 
   /** Hitscan contra el suelo y todas las AABB del mapa. Rellena `out` (sin crear objetos). */
   raycast(o, d, far, out) {
@@ -1991,14 +2342,168 @@ class World {
       const d = this.doors[i], goal = d.open ? 1 : 0;
       if (d.t === goal) continue;
       d.t = approach(d.t, goal, dt * 1.6);
-      const off = smoothstep(d.t) * d.travel;
-      if (d.axis === 'x') {
-        d.mesh.position.x = d.cx + off; d.aabb.minX = d.cx + off - d.w / 2; d.aabb.maxX = d.cx + off + d.w / 2;
-      } else {
-        d.mesh.position.z = d.cz + off; d.aabb.minZ = d.cz + off - d.d / 2; d.aabb.maxZ = d.cz + off + d.d / 2;
-      }
+      const off = smoothstep(d.t) * d.travel, ax = d.axis === 'x' ? 0 : 2;
+      if (d.axis === 'x') { d.aabb.minX = d.cx + off - d.w / 2; d.aabb.maxX = d.cx + off + d.w / 2; }
+      else { d.aabb.minZ = d.cz + off - d.d / 2; d.aabb.maxZ = d.cz + off + d.d / 2; }
+      this._shift(this.worldMesh.geometry.attributes.position, d.v0, d.vn, d.base, ax, off);
+      this._shift(this.edgeMesh.geometry.attributes.position, d.e0, d.en, d.ebase, ax, off);
       this.requestShadowUpdate();               // la sombra de la hoja acompaña a la puerta
     }
+  }
+
+  /** Desplaza un tramo de vértices de la malla fusionada respecto a su posición original. */
+  _shift(attr, v0, n, base, axis, off) {
+    const a = attr.array;
+    for (let k = 0; k < n; k++) a[(v0 + k) * 3 + axis] = base[k * 3 + axis] + off;
+    attr.clearUpdateRanges(); attr.addUpdateRange(v0 * 3, n * 3); attr.needsUpdate = true;
+  }
+}
+
+/* =====================================================================================
+ *  NavGrid · navegación de los bots. Rejilla de 0,5 m con la altura del suelo en cada celda,
+ *  calculada de las mismas AABB del mapa (lo que pisa el jugador). Dos celdas vecinas se conectan
+ *  si se puede subir el escalón (≤ 0,55 m) o bajar de un salto (≤ 2,9 m). A* con montículo en
+ *  arrays tipados (sin basura) y caminos suavizados con líneas rectas transitables.
+ *  Restricción de los mapas: nada de voladizos bajos (todo lo que se pisa es macizo hasta el suelo).
+ * ===================================================================================== */
+const NAV = { cell: 0.5, radius: 0.38, step: 0.55, drop: 2.9, height: 1.8, maxPath: 96 };
+
+class NavGrid {
+  build(boxes, half) {
+    const c = NAV.cell, nx = this.nx = Math.ceil(half * 2 / c), N = nx * nx;
+    this.o = -half;
+    const h = this.h = new Float32Array(N);
+    // Cajas por celda (CSR): cada caja marca las celdas cuyo cuadrado (con el radio del bot) toca.
+    const count = new Int32Array(N + 1), r = NAV.radius;
+    const range = (b, fn) => {
+      const i0 = Math.max(0, Math.floor((b.minX - r - this.o) / c)), i1 = Math.min(nx - 1, Math.floor((b.maxX + r - this.o) / c));
+      const j0 = Math.max(0, Math.floor((b.minZ - r - this.o) / c)), j1 = Math.min(nx - 1, Math.floor((b.maxZ + r - this.o) / c));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const cx = this.o + (i + 0.5) * c, cz = this.o + (j + 0.5) * c;
+        if (cx + r > b.minX && cx - r < b.maxX && cz + r > b.minZ && cz - r < b.maxZ) fn(j * nx + i);
+      }
+    };
+    for (const b of boxes) range(b, (k) => count[k + 1]++);
+    for (let k = 0; k < N; k++) count[k + 1] += count[k];
+    const list = new Int32Array(count[N]), fill = count.slice(0, N);
+    boxes.forEach((b, bi) => range(b, (k) => { list[fill[k]++] = bi; }));
+    const tmp = [];
+    for (let k = 0; k < N; k++) {
+      if (count[k] === count[k + 1]) continue;
+      tmp.length = 0;
+      for (let q = count[k]; q < count[k + 1]; q++) tmp.push(boxes[list[q]]);
+      tmp.sort((a, b) => a.minY - b.minY);
+      let y = 0;
+      for (const b of tmp) {
+        if (b.minY >= y + NAV.height || b.maxY <= y) continue;   // voladizo con altura libre debajo, o ya está por debajo
+        y = b.maxY;                                                 // se pisa por encima
+      }
+      h[k] = y;
+    }
+    // A*: memoria fija por mapa.
+    this.g = new Float32Array(N); this.parent = new Int32Array(N); this.stamp = new Uint32Array(N); this.closed = new Uint32Array(N);
+    this.heapI = new Int32Array(N * 4); this.heapF = new Float32Array(N * 4); this.search = 0;
+    this.cells = new Int32Array(N);
+  }
+
+  cellAt(x, z) {
+    const c = NAV.cell, nx = this.nx;
+    const i = clamp(Math.floor((x - this.o) / c), 0, nx - 1), j = clamp(Math.floor((z - this.o) / c), 0, nx - 1);
+    return j * nx + i;
+  }
+  heightAt(x, z) { return this.h[this.cellAt(x, z)]; }
+  cx(k) { return this.o + (k % this.nx + 0.5) * NAV.cell; }
+  cz(k) { return this.o + ((k / this.nx | 0) + 0.5) * NAV.cell; }
+
+  /** ¿Se puede pasar de la celda a a la b (vecinas)? */
+  pass(a, b) { const d = this.h[b] - this.h[a]; return d <= NAV.step && d >= -NAV.drop; }
+
+  /** ¿Se puede ir en línea recta de A a B andando? (muestras cada 0,25 m, sin cortar esquinas) */
+  line(ax, az, bx, bz) {
+    const dx = bx - ax, dz = bz - az, n = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dz * dz) / 0.25)), nx = this.nx;
+    let prev = this.cellAt(ax, az);
+    for (let s = 1; s <= n; s++) {
+      const k = this.cellAt(ax + dx * s / n, az + dz * s / n);
+      if (k === prev) continue;
+      if (!this.pass(prev, k)) return false;
+      const pi = prev % nx, pj = prev / nx | 0, ki = k % nx, kj = k / nx | 0;
+      if (pi !== ki && pj !== kj && (!this.pass(prev, pj * nx + ki) || !this.pass(prev, kj * nx + pi))) return false;
+      prev = k;
+    }
+    return true;
+  }
+
+  /** Un paso corto de un bot (strafe, volver a su puesto): misma regla que la rejilla. */
+  canMove(x0, z0, x1, z1) { const a = this.cellAt(x0, z0), b = this.cellAt(x1, z1); return a === b || this.pass(a, b); }
+
+  _push(k, f) {
+    const I = this.heapI, F = this.heapF;
+    let i = this.hn++;
+    while (i > 0) { const p = (i - 1) >> 1; if (F[p] <= f) break; I[i] = I[p]; F[i] = F[p]; i = p; }
+    I[i] = k; F[i] = f;
+  }
+  _pop() {
+    const I = this.heapI, F = this.heapF, top = I[0], n = --this.hn, k = I[n], f = F[n];
+    let i = 0;
+    for (;;) {
+      let c = i * 2 + 1;
+      if (c >= n) break;
+      if (c + 1 < n && F[c + 1] < F[c]) c++;
+      if (F[c] >= f) break;
+      I[i] = I[c]; F[i] = F[c]; i = c;
+    }
+    I[i] = k; F[i] = f;
+    return top;
+  }
+
+  /**
+   * Camino de (sx, sz) a (gx, gz). Escribe los puntos (x, z) en `out` desde offset y devuelve cuántos.
+   * Si la meta no se alcanza, va a la celda explorada más cercana a ella.
+   */
+  find(sx, sz, gx, gz, out, offset = 0, max = NAV.maxPath) {
+    const nx = this.nx, h = this.h, g = this.g, par = this.parent, st = this.stamp, cl = this.closed;
+    const id = ++this.search, s = this.cellAt(sx, sz), t = this.cellAt(gx, gz);
+    const ti = t % nx, tj = t / nx | 0;
+    const heur = (k) => { const dx = Math.abs(k % nx - ti), dz = Math.abs((k / nx | 0) - tj); return (dx + dz + (Math.SQRT2 - 2) * Math.min(dx, dz)) * NAV.cell; };
+    this.hn = 0;
+    st[s] = id; g[s] = 0; par[s] = -1;
+    this._push(s, heur(s));
+    let best = s, bestH = heur(s), found = false;
+    while (this.hn > 0) {
+      const k = this._pop();
+      if (cl[k] === id) continue;
+      cl[k] = id;
+      if (k === t) { found = true; best = k; break; }
+      const hk = heur(k);
+      if (hk < bestH) { bestH = hk; best = k; }
+      const ki = k % nx, kj = k / nx | 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        if (!di && !dj) continue;
+        const i = ki + di, j = kj + dj;
+        if (i < 0 || j < 0 || i >= nx || j >= nx) continue;
+        const n = j * nx + i;
+        if (cl[n] === id || !this.pass(k, n)) continue;
+        if (di && dj && (!this.pass(k, kj * nx + i) || !this.pass(k, j * nx + ki))) continue;
+        const ng = g[k] + (di && dj ? Math.SQRT2 : 1) * NAV.cell + Math.abs(h[n] - h[k]) * 0.5;
+        if (st[n] === id && g[n] <= ng) continue;
+        st[n] = id; g[n] = ng; par[n] = k;
+        if (this.hn < this.heapI.length) this._push(n, ng + heur(n));
+      }
+    }
+    // Celdas del camino (de la meta hacia atrás) → puntos suavizados.
+    const cells = this.cells;
+    let n = 0;
+    for (let k = best; k !== -1 && n < cells.length; k = par[k]) cells[n++] = k;
+    let cnt = 0, i = n - 1, px = sx, pz = sz;
+    while (i > 0 && cnt < max) {
+      let j = i - 1;
+      while (j > 0 && this.line(px, pz, this.cx(cells[j - 1]), this.cz(cells[j - 1]))) j--;
+      px = this.cx(cells[j]); pz = this.cz(cells[j]);
+      out[offset + cnt * 2] = px; out[offset + cnt * 2 + 1] = pz; cnt++;
+      i = j;
+    }
+    if (found && cnt < max && this.line(px, pz, gx, gz)) { out[offset + cnt * 2] = gx; out[offset + cnt * 2 + 1] = gz; cnt++; }
+    return cnt;
   }
 }
 
@@ -2036,6 +2541,7 @@ class PlayerController {
     this.onDamaged = null;        // Callback(cantidad, origenX, origenZ) para HUD/audio.
     this.onDeath = null;
     this.spawnOffset = 0;         // en grupo cada jugador aparece desplazado a un lado de la base (m, a lo ancho de su mirada)
+    this.stepOffset = 0; this.prevStep = 0;   // suavizado de la cámara al subir/bajar escalones (solo visual)
   }
 
   /** Daño entrante: el escudo recibe el daño antes que la vida; lo que sobra pasa a la vida. */
@@ -2060,6 +2566,7 @@ class PlayerController {
     this.vel.set(0, 0, 0);
     this.crouchT = 0; this.height = this.cfg.standHeight; this.prevEye = this.eyeHeight();
     this.health = this.maxHealth; this.shield = 0;
+    this.stepOffset = this.prevStep = 0; this.onGround = true;
   }
 
   eyeHeight() { return this.height - this.cfg.eyeOffset; }
@@ -2093,6 +2600,9 @@ class PlayerController {
     const c = this.cfg;
     this.prevPos.copy(this.pos);
     this.prevEye = this.eyeHeight();
+    this.prevStep = this.stepOffset;
+    this.stepOffset = approach(this.stepOffset, 0, dt * 3.2);
+    const wasGround = this.onGround;
 
     // ---- Agacharse (con comprobación de techo al levantarse) ----
     const wantCrouch = input.down('ControlLeft') || input.down('ControlRight') || input.down('KeyC');
@@ -2120,7 +2630,8 @@ class PlayerController {
     const wishSpeed = wishLen > 0 ? (this.isCrouched ? c.crouchSpeed : this.walking ? c.walkSpeed : c.runSpeed) * speedScale : 0;
 
     // ---- Salto ----
-    if (this.onGround && input.wasPressed('Space')) { this.vel.y = c.jumpVelocity; this.onGround = false; }
+    let jumped = false;
+    if (this.onGround && input.wasPressed('Space')) { this.vel.y = c.jumpVelocity; this.onGround = false; jumped = true; }
 
     if (this.onGround) {
       this._friction(dt);
@@ -2135,6 +2646,23 @@ class PlayerController {
     this._moveAxisY(this.vel.y * dt);
     this._moveAxisXZ('x', this.vel.x * dt);
     this._moveAxisXZ('z', this.vel.z * dt);
+    // Bajando escalones el jugador sigue pegado al suelo (como en Source) en vez de ir dando saltitos.
+    if (wasGround && !this.onGround && !jumped && this.vel.y <= 0) this._snapDown();
+  }
+
+  /** Busca suelo hasta stepHeight por debajo de los pies y se apoya en él. */
+  _snapDown() {
+    const p = this.pos, r = this.cfg.halfWidth, list = this.world.boxes;
+    let top = p.y - this.cfg.stepHeight <= 0 ? 0 : -1;
+    for (let i = 0; i < list.length; i++) {
+      const b = list[i];
+      if (p.x + r > b.minX && p.x - r < b.maxX && p.z + r > b.minZ && p.z - r < b.maxZ && b.maxY <= p.y + 1e-3 && b.maxY > top && p.y - b.maxY <= this.cfg.stepHeight) top = b.maxY;
+    }
+    if (top < 0 || top >= p.y) return;
+    const y = top + (top > 0 ? this.cfg.stepEpsilon : 0);
+    if (this.overlapsAt(p.x, y, p.z, this.height)) return;
+    this.stepOffset = clamp(this.stepOffset + (p.y - y), -0.6, 0.6);
+    p.y = y; this.vel.y = 0; this.onGround = true;
   }
 
   /** Fricción de Source: con stopSpeed la frenada final es seca en vez de asintótica. */
@@ -2183,6 +2711,13 @@ class PlayerController {
       for (let i = 0; i < list.length; i++) {
         const b = list[i];
         if (p.x + r > b.minX && p.x - r < b.maxX && p.z + r > b.minZ && p.z - r < b.maxZ && p.y + h > b.minY && p.y < b.maxY) {
+          // Escalón bajo: se sube andando si hay sitio encima (peldaños, bordillos).
+          const up = b.maxY - p.y;
+          if (this.onGround && l === 0 && up <= this.cfg.stepHeight && !this.overlapsAt(p.x, b.maxY + eps, p.z, h)) {
+            this.stepOffset = clamp(this.stepOffset - (up + eps), -0.6, 0.6);
+            p.y = b.maxY + eps;
+            continue;
+          }
           const min = isX ? b.minX : b.minZ, max = isX ? b.maxX : b.maxZ;
           p[axis] = delta > 0 ? min - r - eps : max + r + eps;
           this.vel[axis] = 0;   // Solo se anula este eje → el otro sigue: wall sliding.
@@ -2206,6 +2741,529 @@ class PlayerController {
 const BotState = Object.freeze({ HOLD: 0, ENGAGE: 1, DEAD: 2 });
 const BOT_SHOT_SOUND = { thumpFrom: 140, thumpTo: 42, bodyCutoff: 2600, decay: 0.17, tail: 0.38, volume: 0.95 };
 
+/* =====================================================================================
+ *  MatchController · partida NO CLASIFICATORIA (por rondas, con Spike), reglas de Valorant.
+ *   · Al primero que gane 13 rondas (mejor de 25). Cambio de bando al acabar la ronda 12.
+ *   · Rondas de pistola: la 1 y la 13 (primera tras el cambio): todos vuelven a ¤ 800 y a la Pica.
+ *   · Muerte súbita a 12-12: la ronda 25 decide, con ¤ 5000 fijos para todos.
+ *   · Fases: COMPRA 30 s (barreras en las bases) → RONDA 100 s → SPIKE PLANTADA 45 s → FIN 7 s.
+ *   · Plantar: 4 s seguidos dentro de un site. Desactivar: 7 s; pasada la mitad (3,5 s) el progreso
+ *     se queda guardado en la Spike aunque se suelte la tecla.
+ *   · Economía en memoria por jugador: victoria +3000, derrota 1900/2400/2900 según la racha,
+ *     baja +200, plantar +300 a cada atacante, tope 9000.
+ *  Equipo 0 = el tuyo (tú y 4 bots aliados), equipo 1 = 5 bots rivales. El tick corre a 128 Hz
+ *  dentro de Game.tick, sin memoria nueva salvo en los cambios de fase (eventos, no por tick).
+ * ===================================================================================== */
+const ROUND = { buy: 30, active: 100, planted: 45, post: 7, end: 9, plant: 4, defuse: 7, defuseHalf: 3.5, toWin: 13, swapAfter: 12, maxRounds: 25, blast: 14, pickup: 1.3, defuseRange: 1.7 };
+const ROUND_ECON = { start: 800, win: 3000, loss: [1900, 2400, 2900], kill: 200, plant: 300, max: 9000, overtime: 5000 };
+const MatchPhase = Object.freeze({ BUY: 0, ACTIVE: 1, PLANTED: 2, POST: 3, END: 4 });
+const PHASE_NAMES = ['FASE DE COMPRA', 'RONDA EN CURSO', 'SPIKE PLANTADA', 'FIN DE RONDA', 'FIN DE LA PARTIDA'];
+const BOT_PATH_MAX = 192;
+const BOT_RUN_SPEED = 5.4;
+const BOT_NAMES = { ally: ['Nova', 'Brasa', 'Kilo', 'Vela'], enemy: ['Sombra', 'Ceniza', 'Óxido', 'Niebla', 'Cobre'] };
+// Lo que llevan los bots según lo que compran (el daño lo escala la dificultad de Ajustes).
+const BOT_ARMS = {
+  pistol: { name: 'Pica', price: 0, damage: 18, headMultiplier: 2.5, rpm: 330, burst: 2, spread: 2.0, moveSpread: 3.0, range: 50, tracerSpeed: 280 },
+  smg: { name: 'Lince', price: 1600, damage: 17, headMultiplier: 2.3, rpm: 620, burst: 5, spread: 2.0, moveSpread: 2.4, range: 45, tracerSpeed: 300 },
+  rifle: { name: 'Martillo', price: 2900, damage: 26, headMultiplier: 2.5, rpm: 560, burst: 3, spread: 1.4, moveSpread: 2.6, range: 80, tracerSpeed: 320 },
+};
+const SPAWN_SLOTS = [0, -1.6, 1.6, -3.2, 3.2];   // a lo ancho de la base (el centro es tuyo)
+
+class MatchController {
+  constructor(game, mapId) {
+    this.game = game;
+    this.mapId = mapId;
+    this.def = MAPS[mapId];
+    this.phase = MatchPhase.BUY; this.t = ROUND.buy;
+    this.round = 0; this.score = [0, 0]; this.lossStreak = [0, 0];
+    this.side = Math.random() < 0.5 ? ['atk', 'def'] : ['def', 'atk'];   // bando del equipo 0 y del 1
+    this.winner = -1; this.reason = ''; this.over = false;
+    this.botsFree = false;                       // los bots se mueven y disparan (no en la compra)
+    this.spike = { state: 'none', carrier: null, x: 0, y: 0, z: 0, site: '', keep: 0, defuser: null };
+    this.plantT = 0; this.defuseT = 0; this.moveLock = false;
+    this.spec = null;                            // bot aliado que observas tras morir
+    this.target = null;                          // site al que van los bots atacantes
+    this.beepT = 0; this.flashT = 0;
+    this.feed = []; this._feedDirty = true;
+    this._hud = {};                              // último valor pintado de cada campo
+    this._els = null;
+    this._buildSpike();
+  }
+
+  get atkTeam() { return this.side[0] === 'atk' ? 0 : 1; }
+  get defTeam() { return 1 - this.atkTeam; }
+  get playerTeam() { return 0; }
+  get canBuy() { return this.phase === MatchPhase.BUY; }
+  get weaponsLocked() { return this.phase === MatchPhase.BUY || this.moveLock; }
+
+  _buildSpike() {
+    const geo = coloredBoxGeometry([
+      { color: 0x22262c, w: 0.42, h: 0.2, d: 0.3, x: 0, y: 0.1, z: 0 },
+      { color: 0x3a3f47, w: 0.26, h: 0.22, d: 0.2, x: 0, y: 0.31, z: 0 },
+      { color: 0xff4655, w: 0.3, h: 0.04, d: 0.32, x: 0, y: 0.22, z: 0 },
+    ]);
+    this.spikeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.4, emissive: 0xff2030, emissiveIntensity: 0 });
+    this.spikeMesh = new THREE.Mesh(geo, this.spikeMat);
+    this.spikeMesh.visible = false;
+    this.game.scene.add(this.spikeMesh);
+  }
+
+  dispose() {
+    const g = this.game;
+    g.scene.remove(this.spikeMesh); this.spikeMesh.geometry.dispose(); this.spikeMat.dispose();
+    g.world.setBarriers(false);
+    g.bots.hidden = null;
+    document.body.classList.remove('round-mode', 'spectating');
+  }
+
+  /* ----------------------------------- Rondas ----------------------------------- */
+  start() {
+    document.body.classList.add('round-mode');
+    this._els = Object.fromEntries(['rh-ally', 'rh-enemy', 'rh-ally-side', 'rh-enemy-side', 'rh-ally-pips', 'rh-enemy-pips', 'rh-timer', 'rh-phase',
+      'rs-round', 'rs-credits', 'rs-side', 'rs-spike', 'rs-tip', 'rb', 'rb-label', 'rb-fill', 'rbn', 'rbn-title', 'rbn-sub', 'killfeed', 'spec-name'].map((id) => [id, document.getElementById(id)]));
+    this._nextRound();
+  }
+
+  _units(team) {
+    const out = [], bots = this.game.bots.bots;
+    for (let i = 0; i < bots.length; i++) if (bots[i].active && bots[i].team === team) out.push(bots[i]);
+    return out;
+  }
+
+  aliveCount(team) {
+    let n = team === 0 && this.game.player.health > 0 ? 1 : 0;
+    const bots = this.game.bots.bots;
+    for (let i = 0; i < bots.length; i++) { const b = bots[i]; if (b.active && b.team === team && b.state !== BotState.DEAD) n++; }
+    return n;
+  }
+
+  _nextRound() {
+    const g = this.game, p = g.player, bots = g.bots;
+    const prevRound = this.round;
+    this.round++;
+    const swap = this.round === ROUND.swapAfter + 1 || this.round === ROUND.maxRounds;
+    if (swap) this.side.reverse();
+    const pistol = this.round === 1 || this.round === ROUND.swapAfter + 1;
+    const overtime = this.round === ROUND.maxRounds;
+    const reset = pistol || overtime;
+    const survived = prevRound > 0 && p.health > 0;
+    // ---- Tu economía y tu equipo: si sobreviviste conservas armas y escudo (con la munición recargada).
+    if (reset) g.shop.credits = overtime ? ROUND_ECON.overtime : ROUND_ECON.start;
+    if (reset || !survived) { g.resetLoadout(); g.shop.shield = null; p.shield = 0; }
+    else for (const k of ['primary', 'secondary']) { const w = g.weapons.slots[k]; if (w) { w.ammo = w.def.capacity; w.reserve = w.def.reserve; } }
+    const keepShield = !reset && survived ? p.shield : 0;
+    // ---- Posiciones: tu equipo en su base, los rivales en la otra.
+    const sp = this.def.spawns, mine = sp[this.side[0]], theirs = sp[this.side[1]];
+    g.world.spawn.set(mine.x, 0, mine.z); g.world.spawnYaw = mine.yaw;
+    p.spawnOffset = 0; p.respawn(); p.shield = keepShield;
+    g.view.reset(mine.yaw);
+    const place = (list, base) => list.forEach((b, i) => {
+      const off = SPAWN_SLOTS[(i + (base === mine ? 1 : 0)) % 5], c = Math.cos(base.yaw), s = Math.sin(base.yaw);
+      bots.placeAt(b, base.x + off * c, base.z - off * s, base.yaw);
+    });
+    const allies = this._units(0), enemies = this._units(1);
+    for (const b of [...allies, ...enemies]) {
+      const lived = prevRound > 0 && b.health > 0 && b.state !== BotState.DEAD;
+      if (reset) b.credits = overtime ? ROUND_ECON.overtime : ROUND_ECON.start;
+      if (reset || !lived) { b.tier = 'pistol'; b.W = BOT_ARMS.pistol; b.shield = b.shieldMax = 0; }
+      b.keepShield = !reset && lived ? b.shield : 0;
+    }
+    place(allies, mine); place(enemies, theirs);
+    for (const b of [...allies, ...enemies]) { b.shield = b.keepShield; this._botBuy(b, pistol); }
+    bots.alive = allies.length + enemies.length;
+    // ---- Spike al bando atacante: si ataca tu equipo, la llevas tú.
+    const sk = this.spike;
+    sk.state = 'carried'; sk.keep = 0; sk.defuser = null; sk.site = '';
+    sk.carrier = this.atkTeam === 0 ? p : enemies[Math.random() * enemies.length | 0];
+    if (sk.carrier.isBot) sk.carrier.spike = true;
+    this.spikeMesh.visible = false;
+    this.plantT = this.defuseT = 0; this.moveLock = false;
+    this.spec = null; bots.hidden = null; document.body.classList.remove('spectating');
+    this.phase = MatchPhase.BUY; this.t = ROUND.buy; this.botsFree = false; this.winner = -1;
+    g.world.setBarriers(true);
+    g.impacts.clear();
+    this._planRound();
+    const sideTxt = this.side[0] === 'atk' ? 'ATACAS' : 'DEFIENDES';
+    const title = overtime ? 'MUERTE SÚBITA' : pistol ? (this.round === 1 ? 'RONDA DE PISTOLA' : 'CAMBIO DE BANDO') : `RONDA ${this.round}`;
+    this._banner(title, `${sideTxt} · FASE DE COMPRA (B)`, 3);
+    this._hud = {};
+  }
+
+  /** Compra de un bot: rondas de pistola = escudo ligero; luego fusil + escudo pesado si llega, SMG si fuerza. */
+  _botBuy(b, pistol) {
+    const buy = (price) => { if (b.credits < price) return false; b.credits -= price; return true; };
+    if (pistol) { if (buy(400)) b.shield = b.shieldMax = 25; return; }
+    if (b.tier !== 'rifle' && b.credits >= BOT_ARMS.rifle.price + 400) { buy(BOT_ARMS.rifle.price); b.tier = 'rifle'; }
+    else if (b.tier === 'pistol' && b.credits >= 2400) { buy(BOT_ARMS.smg.price); b.tier = 'smg'; }
+    if (b.shield < 50 && b.credits >= 1000 && b.tier !== 'pistol') { buy(1000); b.shield = b.shieldMax = 50; }
+    else if (b.shield < 25 && b.credits >= 400 && b.tier !== 'pistol') { buy(400); b.shield = b.shieldMax = 25; }
+    b.W = BOT_ARMS[b.tier];
+  }
+
+  /** Plan de los bots al empezar la ronda: los atacantes eligen site y ruta; los defensores, sus puestos. */
+  _planRound() {
+    const w = this.game.world, bots = this.game.bots, atk = this._units(this.atkTeam), def = this._units(this.defTeam);
+    const sites = w.sites.map((s) => s.id);
+    this.target = sites[Math.random() * sites.length | 0];
+    const site = w.sites.find((s) => s.id === this.target), defSpawn = this.def.spawns[this.side[this.defTeam]];
+    const routes = w.routes[this.target] ?? [null];
+    atk.forEach((b, i) => {
+      const a = Math.random() * Math.PI * 2, r = b.spike ? rand(0, 2) : rand(1.5, site.radius - 0.8);
+      const gx = site.center.x + Math.cos(a) * r, gz = site.center.z + Math.sin(a) * r;
+      const yaw = Math.atan2(-(defSpawn.x - gx), -(defSpawn.z - gz));
+      bots.goTo(b, gx, gz, yaw, b.spike ? rand(1, 3) : rand(0, 5) + i * 0.3, routes[(i + (Math.random() * 3 | 0)) % routes.length]);
+      b.job = b.spike ? 1 : 0;
+    });
+    // Defensores: al menos uno por site y el resto repartidos entre los demás puestos.
+    const posts = [...w.botPosts].sort(() => Math.random() - 0.5), chosen = [];
+    for (const id of sites) { const k = posts.findIndex((p) => p.site === id); if (k >= 0) chosen.push(...posts.splice(k, 1)); }
+    chosen.push(...posts);
+    def.forEach((b, i) => { const p = chosen[i % chosen.length]; bots.goTo(b, p.x, p.z, p.yaw, rand(0, 1.5)); b.job = 0; });
+  }
+
+  /* ----------------------------------- Tick ----------------------------------- */
+  tick(dt) {
+    const g = this.game, p = g.player, input = g.input;
+    this.t -= dt;
+    if (this.flashT > 0) this.flashT -= dt;
+    this.moveLock = false;
+    switch (this.phase) {
+      case MatchPhase.BUY:
+        if (this.t <= 0) {
+          this.phase = MatchPhase.ACTIVE; this.t = ROUND.active; this.botsFree = true;
+          g.world.setBarriers(false);
+          if (g.shop.isOpen) g.shop.close(true);
+          this._banner(this.side[0] === 'atk' ? 'A POR LA SPIKE' : 'DEFIENDE LOS SITES', this.side[0] === 'atk' && this.spike.carrier === p ? 'Llevas la Spike · mantén [4] en un site para plantar' : '', 2);
+        }
+        break;
+      case MatchPhase.ACTIVE:
+        this._spikeCarry(dt);
+        if (this.t <= 0) { this._endRound(this.defTeam, 'Se acabó el tiempo'); break; }
+        if (this.aliveCount(this.atkTeam) === 0) this._endRound(this.defTeam, 'Atacantes eliminados');
+        else if (this.aliveCount(this.defTeam) === 0) this._endRound(this.atkTeam, 'Defensores eliminados');
+        break;
+      case MatchPhase.PLANTED: {
+        const k = this.t / ROUND.planted, interval = 0.11 + 0.89 * Math.pow(Math.max(k, 0), 1.25);
+        if ((this.beepT -= dt) <= 0) { this.beepT = interval; g.audio.beep(k < 0.2 ? 1960 : 1640, 0.07, this._spikeVolume()); this.flashT = 0.08; }
+        this._playerDefuse(dt);
+        if (this.t <= 0) { this._detonate(); break; }
+        if (this.aliveCount(this.defTeam) === 0) this._endRound(this.atkTeam, 'Defensores eliminados');
+        break;
+      }
+      case MatchPhase.POST:
+        if (this.t <= 0) {
+          if (this.over) { this.phase = MatchPhase.END; this.t = ROUND.end; this._endBanner(); }
+          else this._nextRound();
+        }
+        break;
+      case MatchPhase.END:
+        if (this.t <= 0 && !this._left) { this._left = true; setTimeout(() => g.quitToMenu(), 0); }
+        break;
+    }
+    // Observar: clic = siguiente aliado vivo.
+    if (this.spec !== null && input.consumeFirePress()) this._nextSpec();
+    if (this.spec !== null && this.spec.state === BotState.DEAD) this._nextSpec();
+    // Tecla 4: plantar/desactivar. G: soltar la Spike.
+    if (input.wasPressed('KeyG') && this.spike.carrier === p && this.phase === MatchPhase.ACTIVE) this._dropSpike(p.pos.x, p.pos.y, p.pos.z);
+  }
+
+  /** Volumen del pitido según la distancia a la Spike (se oye por todo el mapa, más fuerte cerca). */
+  _spikeVolume() {
+    const p = this.game.player.pos, s = this.spike, d = Math.hypot(p.x - s.x, p.z - s.z);
+    return clamp(0.5 - d / 120, 0.12, 0.5);
+  }
+
+  _siteAt(x, z) {
+    const sites = this.game.world.sites;
+    for (let i = 0; i < sites.length; i++) { const s = sites[i]; const dx = x - s.center.x, dz = z - s.center.z; if (dx * dx + dz * dz <= s.radius * s.radius) return s; }
+    return null;
+  }
+
+  /** Spike sin plantar: la recoge el atacante que pase cerca, y tú la plantas manteniendo 4 dentro de un site. */
+  _spikeCarry(dt) {
+    const g = this.game, p = g.player, sk = this.spike;
+    if (sk.state === 'dropped') {
+      if (this.atkTeam === 0 && p.health > 0 && Math.hypot(p.pos.x - sk.x, p.pos.z - sk.z) < ROUND.pickup && Math.abs(p.pos.y - sk.y) < 1.5) this._pickup(p);
+      else {
+        const list = g.bots.bots;
+        for (let i = 0; i < list.length; i++) {
+          const b = list[i];
+          if (!b.active || b.team !== this.atkTeam || b.state === BotState.DEAD) continue;
+          if (Math.hypot(b.pos.x - sk.x, b.pos.z - sk.z) < ROUND.pickup && Math.abs(b.pos.y - sk.y) < 1.5) { this._pickup(b); break; }
+        }
+      }
+    }
+    if (sk.carrier === p && p.health > 0) {
+      const site = this._siteAt(p.pos.x, p.pos.z);
+      if (site && p.onGround && g.input.down('Digit4')) {
+        this.moveLock = true;
+        if ((this.plantT += dt) >= ROUND.plant) this._plant(p.pos.x, p.pos.y, p.pos.z, site.id, p);
+      } else this.plantT = 0;
+    } else this.plantT = 0;
+  }
+
+  _playerDefuse(dt) {
+    const g = this.game, p = g.player, sk = this.spike;
+    const can = this.defTeam === 0 && p.health > 0 && Math.hypot(p.pos.x - sk.x, p.pos.z - sk.z) < ROUND.defuseRange && Math.abs(p.pos.y - sk.y) < 1.6;
+    if (can && g.input.down('Digit4') && (sk.defuser === null || sk.defuser === p)) {
+      if (sk.defuser !== p) { sk.defuser = p; this.defuseT = sk.keep; }
+      this.moveLock = true;
+      this.defuseT += dt;
+      if (this.defuseT >= ROUND.defuseHalf) sk.keep = ROUND.defuseHalf;      // checkpoint: la mitad se queda guardada
+      if (this.defuseT >= ROUND.defuse) this._defused(p);
+    } else if (sk.defuser === p) { sk.defuser = null; this.defuseT = 0; }
+  }
+
+  /* -------------------------- Tareas de los bots (cada tick, por bot) -------------------------- */
+  botTick(b, dt) {
+    if (b.state === BotState.DEAD) return;
+    const sk = this.spike, bots = this.game.bots;
+    if (this.phase === MatchPhase.ACTIVE && b.spike && b.state === BotState.HOLD && bots.arrived(b) && b.delay <= 0) {
+      const site = this._siteAt(b.pos.x, b.pos.z);
+      if (!site) { b.actT = 0; if (!b.repath) this._sendCarrierToSite(b); return; }
+      b.moving = false;
+      if ((b.actT += dt) >= ROUND.plant) this._plant(b.pos.x, b.pos.y, b.pos.z, site.id, b);
+      return;
+    }
+    if (b.spike && b.state !== BotState.HOLD) b.actT = 0;
+    if (this.phase === MatchPhase.PLANTED && b.job === 2) {
+      const near = Math.hypot(b.pos.x - sk.x, b.pos.z - sk.z) < ROUND.defuseRange;
+      if (near && b.state === BotState.HOLD && b.lostT >= 0 && (sk.defuser === null || sk.defuser === b)) {
+        if (sk.defuser !== b) { sk.defuser = b; b.actT = sk.keep; }
+        b.moving = false; b.pathI = b.pathLen;
+        b.actT += dt;
+        if (b.actT >= ROUND.defuseHalf) sk.keep = ROUND.defuseHalf;
+        if (b.actT >= ROUND.defuse) this._defused(b);
+      } else if (sk.defuser === b) { sk.defuser = null; b.actT = 0; }
+    }
+  }
+
+  _sendCarrierToSite(b) {
+    const w = this.game.world, site = w.sites.find((s) => s.id === this.target) ?? w.sites[0];
+    const a = Math.random() * Math.PI * 2, r = rand(0, 2);
+    this.game.bots.goTo(b, site.center.x + Math.cos(a) * r, site.center.z + Math.sin(a) * r, b.goalYaw);
+  }
+
+  /* ----------------------------------- Eventos ----------------------------------- */
+  _pickup(u) {
+    const sk = this.spike;
+    sk.state = 'carried'; sk.carrier = u;
+    this.spikeMesh.visible = false;
+    if (u.isBot) { u.spike = true; u.job = 1; this._sendCarrierToSite(u); }
+    else this.game.hud.showNotice('HAS COGIDO LA SPIKE · [4] EN UN SITE PARA PLANTAR · [G] SOLTAR', 3);
+  }
+
+  _dropSpike(x, y, z) {
+    const sk = this.spike, c = sk.carrier;
+    if (c?.isBot) { c.spike = false; c.job = 0; c.actT = 0; }
+    sk.state = 'dropped'; sk.carrier = null; sk.x = x; sk.y = this.game.world.nav.heightAt(x, z); sk.z = z;
+    this.plantT = 0;
+    this.spikeMesh.position.set(x, sk.y, z); this.spikeMesh.visible = true; this.spikeMat.emissiveIntensity = 0.4;
+    // El atacante bot más cercano va a por ella.
+    let best = null, bd = Infinity;
+    for (const b of this._units(this.atkTeam)) {
+      if (b.state === BotState.DEAD) continue;
+      const d = Math.hypot(b.pos.x - x, b.pos.z - z);
+      if (d < bd) { bd = d; best = b; }
+    }
+    if (best) { this.game.bots.goTo(best, x, z, best.yaw); best.job = 3; }
+  }
+
+  _plant(x, y, z, siteId, who) {
+    const g = this.game, sk = this.spike;
+    if (who.isBot) { who.spike = false; who.job = 0; who.actT = 0; }
+    sk.state = 'planted'; sk.carrier = null; sk.site = siteId; sk.keep = 0; sk.defuser = null;
+    sk.x = x; sk.y = y; sk.z = z;
+    this.plantT = 0;
+    this.phase = MatchPhase.PLANTED; this.t = ROUND.planted; this.beepT = 0;
+    this.spikeMesh.position.set(x, y, z); this.spikeMesh.visible = true;
+    // +300 a cada atacante.
+    if (this.atkTeam === 0) { g.shop.addCredits(ROUND_ECON.plant); g.hud.reward(ROUND_ECON.plant, false); }
+    for (const b of this._units(this.atkTeam)) b.credits = Math.min(ROUND_ECON.max, b.credits + ROUND_ECON.plant);
+    this._feed(who === g.player ? 'Tú' : who.name, `plantó la Spike en ${siteId}`, null, who === g.player ? 0 : who.team);
+    this._banner('SPIKE PLANTADA', `Site ${siteId} · ${this.atkTeam === 0 ? 'defiéndela 45 s' : 'desactívala con [4]'}`, 2);
+    g.audio.metal(900, 0.12, 0.6);
+    // Atacantes: a cubrir la Spike. Defensores: todos al site; el más cercano, a desactivar.
+    for (const b of this._units(this.atkTeam)) {
+      if (b.state === BotState.DEAD) continue;
+      const a = Math.random() * Math.PI * 2, r = rand(3, 8);
+      const gx = x + Math.cos(a) * r, gz = z + Math.sin(a) * r;
+      g.bots.goTo(b, gx, gz, Math.atan2(-(gx - x), -(gz - z)) + Math.PI, rand(0, 1));
+    }
+    this._assignDefuser();
+  }
+
+  _assignDefuser() {
+    const g = this.game, sk = this.spike;
+    let best = null, bd = Infinity;
+    for (const b of this._units(this.defTeam)) {
+      if (b.state === BotState.DEAD) continue;
+      const d = Math.hypot(b.pos.x - sk.x, b.pos.z - sk.z);
+      if (d < bd) { bd = d; best = b; }
+      if (b.job !== 2) {
+        const a = Math.random() * Math.PI * 2, r = rand(4, 9), gx = sk.x + Math.cos(a) * r, gz = sk.z + Math.sin(a) * r;
+        g.bots.goTo(b, gx, gz, Math.atan2(-(sk.x - gx), -(sk.z - gz)), rand(0, 1.5));
+      }
+    }
+    if (best && best.job !== 2) {
+      best.job = 2;
+      g.bots.goTo(best, sk.x + rand(-0.5, 0.5), sk.z + rand(-0.5, 0.5), best.yaw, rand(0.5, 2));
+    }
+  }
+
+  _defused(who) {
+    const g = this.game, sk = this.spike;
+    sk.state = 'defused'; sk.defuser = null; this.defuseT = 0;
+    this.spikeMat.emissiveIntensity = 0;
+    if (who.isBot) { who.job = 0; who.actT = 0; }
+    this._feed(who === g.player ? 'Tú' : who.name, 'desactivó la Spike', null, who === g.player ? 0 : who.team);
+    g.audio.metal(2400, 0.2, 0.6);
+    this._endRound(this.defTeam, 'Spike desactivada');
+  }
+
+  _detonate() {
+    const g = this.game, sk = this.spike, r2 = ROUND.blast * ROUND.blast;
+    sk.state = 'exploded'; this.spikeMesh.visible = false;
+    g.audio.boom();
+    this._endRound(this.atkTeam, 'La Spike ha detonado');
+    // Todo lo que esté cerca muere (y pierde sus armas para la siguiente ronda).
+    const p = g.player;
+    if (p.health > 0 && (p.pos.x - sk.x) ** 2 + (p.pos.z - sk.z) ** 2 < r2) p.takeDamage(1e4, sk.x, sk.z);
+    for (const b of g.bots.bots) {
+      if (!b.active || b.state === BotState.DEAD) continue;
+      if ((b.pos.x - sk.x) ** 2 + (b.pos.z - sk.z) ** 2 < r2) g.bots.applyDamage(b, 'body', 1e4, b);
+    }
+  }
+
+  /** Una baja de bot (la hiciste tú, un compañero o un bot). */
+  onBotKilled(victim, shooter, head) {
+    const g = this.game;
+    if (shooter?.isBot && shooter !== victim) shooter.credits = Math.min(ROUND_ECON.max, shooter.credits + ROUND_ECON.kill);
+    if (shooter !== victim) this._feed(shooter === g.player ? 'Tú' : shooter.name ?? 'Aliado', victim.name, head, shooter === g.player ? 0 : shooter.team ?? 0, victim.team);
+    if (this.spike.carrier === victim) this._dropSpike(victim.pos.x, victim.pos.y, victim.pos.z);
+    if (this.spike.defuser === victim) this.spike.defuser = null;
+    if (victim.job === 2 && this.phase === MatchPhase.PLANTED) { victim.job = 0; this._assignDefuser(); }
+  }
+
+  /** Te ha matado un bot rival. */
+  onPlayerKilled(bot, head) { this._feed(bot.name, 'Tú', head, bot.team, 0); }
+
+  /** Has caído: la Spike cae contigo y pasas a observar a un aliado vivo. */
+  onPlayerDeath() {
+    const g = this.game, p = g.player;
+    if (this.spike.carrier === p) this._dropSpike(p.pos.x, p.pos.y, p.pos.z);
+    if (this.spike.defuser === p) { this.spike.defuser = null; this.defuseT = 0; }
+    this.plantT = 0;
+    g.weapons.ads = false;
+    this._nextSpec();
+  }
+
+  _nextSpec() {
+    const allies = this._units(0).filter((b) => b.state !== BotState.DEAD);
+    if (!allies.length) { this.spec = null; this.game.bots.hidden = null; document.body.classList.remove('spectating'); return; }
+    const i = allies.indexOf(this.spec);
+    this.spec = allies[(i + 1) % allies.length];
+    this.game.bots.hidden = this.spec;
+    document.body.classList.add('spectating');
+    this._hud.spec = null;
+  }
+
+  _endRound(team, reason) {
+    if (this.phase === MatchPhase.POST || this.phase === MatchPhase.END) return;
+    const g = this.game, lose = 1 - team;
+    this.phase = MatchPhase.POST; this.t = ROUND.post; this.winner = team; this.reason = reason;
+    this.botsFree = true;
+    this.moveLock = false; this.plantT = 0; this.defuseT = 0;
+    this.score[team]++;
+    const lossBonus = ROUND_ECON.loss[Math.min(this.lossStreak[lose], 2)];
+    this.lossStreak[lose]++; this.lossStreak[team] = 0;
+    // Créditos de fin de ronda (tope 9000).
+    const mine = team === 0 ? ROUND_ECON.win : lossBonus;
+    g.shop.addCredits(mine);
+    for (const b of g.bots.bots) if (b.active) b.credits = Math.min(ROUND_ECON.max, b.credits + (b.team === team ? ROUND_ECON.win : lossBonus));
+    if (team === 0) g.onWaveCleared();           // cuenta de jugador: una ronda ganada vale como una oleada
+    if (g.cur) g.cur.score = `${this.score[0]}-${this.score[1]}`;
+    this.over = this.score[team] >= ROUND.toWin || this.round >= ROUND.maxRounds;
+    this._banner(team === 0 ? 'RONDA GANADA' : 'RONDA PERDIDA', `${reason} · +¤ ${mine}`, ROUND.post - 0.5, team === 0 ? 'win' : 'loss');
+  }
+
+  _endBanner() {
+    const won = this.score[0] > this.score[1];
+    this._banner(won ? 'VICTORIA' : 'DERROTA', `${this.score[0]} – ${this.score[1]} · volviendo al lobby…`, ROUND.end, won ? 'win' : 'loss');
+  }
+
+  /* ----------------------------------- HUD ----------------------------------- */
+  _banner(title, sub, secs, kind = '') {
+    const e = this._els;
+    if (!e) return;
+    e['rbn-title'].textContent = title; e['rbn-sub'].textContent = sub;
+    e.rbn.className = 'hud show ' + kind;
+    clearTimeout(this._bannerTimer);
+    this._bannerTimer = setTimeout(() => { e.rbn.className = 'hud'; }, secs * 1000);
+  }
+
+  _feed(killer, victim, head, kTeam, vTeam) {
+    this.feed.unshift({ killer, victim, head, kTeam, vTeam, at: performance.now() });
+    if (this.feed.length > 5) this.feed.length = 5;
+    this._feedDirty = true;
+  }
+
+  /** Marcador, reloj, Spike, créditos y barra de plantar/desactivar. Solo toca el DOM si algo cambió. */
+  renderHud(dt) {
+    const e = this._els, c = this._hud, g = this.game;
+    if (!e) return;
+    // Spike: parpadeo del piloto con cada pitido.
+    if (this.spike.state === 'planted') this.spikeMat.emissiveIntensity = this.flashT > 0 ? 3 : 0.5;
+    const sAlly = this.side[0] === 'atk' ? 'ATK' : 'DEF', sEnemy = this.side[0] === 'atk' ? 'DEF' : 'ATK';
+    if (c.s0 !== this.score[0] || c.s1 !== this.score[1] || c.side !== sAlly) {
+      c.s0 = this.score[0]; c.s1 = this.score[1]; c.side = sAlly;
+      e['rh-ally'].textContent = this.score[0]; e['rh-enemy'].textContent = this.score[1];
+      e['rh-ally-side'].textContent = sAlly; e['rh-enemy-side'].textContent = sEnemy;
+    }
+    const a0 = this.aliveCount(0), a1 = this.aliveCount(1);
+    if (c.a0 !== a0) { c.a0 = a0; e['rh-ally-pips'].innerHTML = '<i class="on"></i>'.repeat(a0) + '<i></i>'.repeat(Math.max(0, 5 - a0)); }
+    if (c.a1 !== a1) { c.a1 = a1; e['rh-enemy-pips'].innerHTML = '<i class="on"></i>'.repeat(a1) + '<i></i>'.repeat(Math.max(0, 5 - a1)); }
+    const secs = Math.max(0, Math.ceil(this.t)), planted = this.phase === MatchPhase.PLANTED;
+    const timer = planted ? `${secs}` : `${secs / 60 | 0}:${String(secs % 60).padStart(2, '0')}`;
+    if (c.timer !== timer || c.planted !== planted) {
+      c.timer = timer; c.planted = planted;
+      e['rh-timer'].textContent = timer;
+      e['rh-timer'].parentElement.classList.toggle('planted', planted);
+    }
+    if (c.phase !== this.phase) { c.phase = this.phase; e['rh-phase'].textContent = planted ? `SPIKE · SITE ${this.spike.site}` : PHASE_NAMES[this.phase]; }
+    if (c.round !== this.round) { c.round = this.round; e['rs-round'].textContent = `${this.round}`; }
+    if (c.credits !== g.shop.credits) { c.credits = g.shop.credits; e['rs-credits'].textContent = g.shop.credits; }
+    if (c.sideTxt !== sAlly) { c.sideTxt = sAlly; e['rs-side'].textContent = sAlly === 'ATK' ? 'ATACANTE' : 'DEFENSOR'; }
+    const sk = this.spike, p = g.player;
+    const spk = sk.state === 'planted' ? `PLANTADA · ${sk.site}` : sk.state === 'dropped' ? 'EN EL SUELO' : sk.state === 'defused' ? 'DESACTIVADA'
+      : sk.state === 'exploded' ? 'DETONADA' : sk.carrier === p ? 'LA LLEVAS TÚ' : sk.carrier?.isBot && sk.carrier.team === 0 ? `LA LLEVA ${sk.carrier.name.toUpperCase()}` : 'EN MANOS RIVALES';
+    if (c.spk !== spk) { c.spk = spk; e['rs-spike'].textContent = spk; }
+    const tip = p.health <= 0 ? (this.spec ? 'Clic: siguiente aliado' : '') : this.phase === MatchPhase.BUY ? 'B: tienda · barreras activas'
+      : sk.carrier === p ? 'Llevas la Spike · [4] en un site · [G] soltar'
+      : planted && this.defTeam === 0 ? 'Mantén [4] junto a la Spike para desactivar' : sk.state === 'dropped' && this.atkTeam === 0 ? 'La Spike está en el suelo: recógela' : '';
+    if (c.tip !== tip) { c.tip = tip; e['rs-tip'].textContent = tip; }
+    // Barra de progreso (tú plantando o desactivando).
+    const prog = this.plantT > 0 ? this.plantT / ROUND.plant : sk.defuser === p ? this.defuseT / ROUND.defuse : 0;
+    const label = this.plantT > 0 ? 'PLANTANDO' : 'DESACTIVANDO';
+    const pk = Math.round(prog * 200);
+    if (c.prog !== pk) {
+      c.prog = pk;
+      e.rb.classList.toggle('show', prog > 0); e.rb.classList.toggle('defuse', label === 'DESACTIVANDO');
+      e['rb-label'].textContent = label; e['rb-fill'].style.transform = `scaleX(${clamp(prog, 0, 1)})`;
+    }
+    if (this.spec && c.spec !== this.spec) { c.spec = this.spec; e['spec-name'].textContent = this.spec.name; }
+    if (this._feedDirty || (this.feed.length && performance.now() - this.feed[this.feed.length - 1].at > 6000)) {
+      const now = performance.now();
+      while (this.feed.length && now - this.feed[this.feed.length - 1].at > 6000) this.feed.pop();
+      this._feedDirty = false;
+      const cls = (t) => (t === 0 ? 'al' : 'en');
+      e.killfeed.innerHTML = this.feed.map((f) => f.victim === null || typeof f.victim === 'string' && f.head === null
+        ? `<div><b class="${cls(f.kTeam)}">${f.killer}</b> <span>${f.victim}</span></div>`
+        : `<div><b class="${cls(f.kTeam)}">${f.killer}</b> <i>${f.head ? '◎' : '✕'}</i> <b class="${cls(f.vTeam)}">${f.victim}</b></div>`).join('');
+    }
+  }
+}
+
 class BotManager {
   constructor(game) {
     this.game = game;
@@ -2217,12 +3275,15 @@ class BotManager {
     this.pendingReset = false;
     this.diff = BOT_CFG.difficulty.normal;
     // Lo que cambia según el modo (configure): arma, alcance de visión, si disparan y la pausa entre oleadas.
-    this.W = BOT_CFG.weapon; this.viewRange = BOT_CFG.viewRange; this.passive = false; this.respawnDelay = BOT_CFG.respawnDelay; this.maxBots = 0;
+    this.W = BOT_CFG.weapon; this.viewRange = BOT_CFG.viewRange; this.passive = false; this.respawnDelay = BOT_CFG.respawnDelay; this.maxBots = 5;
     this.group = new THREE.Group();
     game.scene.add(this.group);
     // Scratch reutilizable (cero asignaciones en el bucle).
     this._dir = new THREE.Vector3(); this._o = new THREE.Vector3(); this._end = new THREE.Vector3(); this._muz = new THREE.Vector3();
-    this._targets = [];
+    this._targets = [];            // objetivos de los bots del equipo 1 (rivales): tú, tus compañeros y los bots aliados
+    this._targets0 = [];           // objetivos de los bots del equipo 0 (aliados en la partida por rondas): los rivales
+    this.friendlyTeam = -1;        // equipo de los humanos en la partida por rondas (sus balas atraviesan a sus aliados)
+    this.hidden = null;            // bot que estás observando (su cuerpo no se dibuja: la cámara está dentro)
     this._hit = { dist: 0, point: new THREE.Vector3(), normal: new THREE.Vector3(), bot: null, zone: null };
     this._m4 = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._s = new THREE.Vector3(1, 1, 1); this._p = new THREE.Vector3();
     this._buildAssets();
@@ -2280,7 +3341,12 @@ class BotManager {
     hinge.add(flash);
     this.group.add(root);
     const bot = {
-      id: i, active: false, root, hinge, mat, flash,
+      id: i, active: false, root, hinge, mat, flash, mesh, isBot: true, team: 1, name: '',
+      height: BOT_CFG.height, eyeHeight() { return BOT_CFG.eye; }, hitboxes() { return this.hb; },
+      W: BOT_CFG.weapon, tier: 'rifle', shield: 0, shieldMax: 0, maxHealth: BOT_CFG.health, credits: 0,
+      // Navegación (partida por rondas): camino en puntos (x, z), meta, retraso de salida y tarea.
+      path: new Float32Array(BOT_PATH_MAX * 2), pathLen: 0, pathI: 0, goalX: 0, goalZ: 0, goalYaw: 0,
+      delay: 0, repath: false, repathT: 0, job: 0, actT: 0, spike: false, doorT: 0, deadAt: 0,
       post: { x: 0, z: 0, yaw: 0 }, pos: new THREE.Vector3(), prev: new THREE.Vector3(), yaw: 0, prevYaw: 0, pitch: 0,
       state: BotState.HOLD, health: BOT_CFG.health, seen: false, react: 0, lostT: 0, alertT: 0, alertYaw: 0,
       phase: 0, phaseT: 0, burstLeft: 0, fireT: 0, strafeDir: 1, moving: false,
@@ -2300,21 +3366,116 @@ class BotManager {
     this.viewRange = m?.sniper ? 110 : BOT_CFG.viewRange;
     this.passive = !!m?.passive;
     this.respawnDelay = m?.passive ? 1.5 : BOT_CFG.respawnDelay;
-    this.maxBots = m?.bots ?? 0;
+    this.maxBots = m?.bots ?? 5;                   // oleadas: 5 defensores (los mapas tácticos tienen más puestos)
   }
 
   /** Coloca un bot en cada puesto del mapa (reutiliza los objetos: sin basura al cambiar de mapa). */
   setup(posts) {
     if (this.maxBots > 0 && posts.length > this.maxBots) posts = posts.slice(0, this.maxBots);
     while (this.bots.length < posts.length) this.bots.push(this._makeBot(this.bots.length));
+    this.friendlyTeam = -1; this.hidden = null;
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
       b.active = i < posts.length;
       b.root.visible = b.active;
+      this._setTeam(b, 1, '');
+      b.W = this.W; b.maxHealth = BOT_CFG.health; b.shield = b.shieldMax = 0;
       if (b.active) { b.post.x = posts[i].x; b.post.z = posts[i].z; b.post.yaw = posts[i].yaw; }
     }
     this.wave = 1;
     this.resetAll();
+  }
+
+  _setTeam(b, team, name) {
+    b.team = team; b.name = name;
+    b.mesh.geometry = team === 0 ? this.allyGeometry : this.geometry;
+  }
+
+  /**
+   * Partida por rondas: `enemies` rivales (equipo 1) y `allies` aliados (equipo 0). Los coloca el
+   * MatchController en cada ronda (placeAt) y les da tareas (goTo).
+   */
+  setupTeams(enemies, allies) {
+    const n = enemies + allies;
+    while (this.bots.length < n) this.bots.push(this._makeBot(this.bots.length));
+    this.friendlyTeam = 0; this.hidden = null; this.respawnT = 0; this.pendingReset = false;
+    for (let i = 0; i < this.bots.length; i++) {
+      const b = this.bots[i], ally = i >= enemies;
+      b.active = i < n;
+      b.root.visible = b.active;
+      if (!b.active) { this._disableCollider(b); continue; }
+      this._setTeam(b, ally ? 0 : 1, ally ? BOT_NAMES.ally[i - enemies] : BOT_NAMES.enemy[i]);
+      b.maxHealth = 100; b.credits = ROUND_ECON.start; b.tier = 'pistol'; b.W = BOT_ARMS.pistol; b.shield = b.shieldMax = 0;
+    }
+  }
+
+  /** Coloca un bot vivo en (x, z) mirando a yaw, sin camino ni tarea (inicio de ronda). */
+  placeAt(b, x, z, yaw) {
+    const nav = this.game.world.nav;
+    b.pos.set(x, nav.heightAt(x, z), z); b.prev.copy(b.pos);
+    b.yaw = b.prevYaw = yaw; b.pitch = 0;
+    b.post.x = x; b.post.z = z; b.post.yaw = yaw; b.goalX = x; b.goalZ = z; b.goalYaw = yaw;
+    b.state = BotState.HOLD; b.health = b.maxHealth; b.seen = false;
+    b.react = 0; b.lostT = 0; b.alertT = 0; b.phase = 0; b.phaseT = 0; b.burstLeft = 0; b.fireT = 0; b.moving = false;
+    b.fall = 0; b.flashT = 0; b.hitFlash = 0; b.target = null; b.nCount = 0;
+    b.pathLen = b.pathI = 0; b.delay = 0; b.repath = false; b.job = 0; b.actT = 0; b.spike = false;
+    b.mat.emissive.setRGB(0, 0, 0);
+    this._updateBoxes(b);
+  }
+
+  /**
+   * Manda a un bot a (x, z) pasando por los puntos de `via` (ruta de aproximación), y al llegar mira a yaw.
+   * Calcula el camino ahora (fuera del tick caliente: al empezar una tarea o al perder a su objetivo).
+   */
+  goTo(b, x, z, yaw, delay = 0, via = null) {
+    const nav = this.game.world.nav, out = b.path;
+    let n = 0, sx = b.pos.x, sz = b.pos.z;
+    const leg = (tx, tz) => {
+      if (n >= BOT_PATH_MAX - 1) return;
+      const k = nav.find(sx, sz, tx, tz, out, n * 2, BOT_PATH_MAX - n);
+      n += k;
+      if (k > 0) { sx = out[(n - 1) * 2]; sz = out[(n - 1) * 2 + 1]; }
+    };
+    if (via) for (const p of via) leg(p[0], p[1]);
+    leg(x, z);
+    b.pathLen = n; b.pathI = 0;
+    b.goalX = x; b.goalZ = z; b.goalYaw = yaw; b.post.x = x; b.post.z = z; b.post.yaw = yaw;
+    b.delay = delay; b.repath = false;
+  }
+
+  /** ¿Ha llegado el bot a su meta? */
+  arrived(b) { return b.pathI >= b.pathLen; }
+
+  /** Sigue su camino (partida por rondas). Corre a 5,4 m/s y mira hacia donde va. */
+  _follow(b, dt) {
+    if (b.delay > 0) { b.delay -= dt; b.moving = false; return; }
+    if (b.repath && (b.repathT -= dt) <= 0) {
+      b.repath = false;
+      const ox = b.goalX - b.pos.x, oz = b.goalZ - b.pos.z;
+      if (ox * ox + oz * oz > 1) this.goTo(b, b.goalX, b.goalZ, b.goalYaw);
+    }
+    if (b.pathI >= b.pathLen) {
+      b.moving = false;
+      if (b.alertT <= 0) b.yaw = wrapAngle(b.yaw + wrapAngle(b.goalYaw - b.yaw) * (1 - Math.exp(-4 * dt)));
+      return;
+    }
+    const tx = b.path[b.pathI * 2], tz = b.path[b.pathI * 2 + 1];
+    const dx = tx - b.pos.x, dz = tz - b.pos.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d < 0.2) { b.pathI++; return; }
+    const step = Math.min(d, BOT_RUN_SPEED * dt);
+    b.pos.x += dx / d * step; b.pos.z += dz / d * step; b.moving = true;
+    if (b.alertT <= 0) b.yaw = wrapAngle(b.yaw + wrapAngle(Math.atan2(-dx, -dz) - b.yaw) * (1 - Math.exp(-9 * dt)));
+  }
+
+  /** Los bots que pasan junto a una puerta cerrada la abren (como pulsar E). */
+  _openDoors(b) {
+    const doors = this.game.world.doors;
+    for (let i = 0; i < doors.length; i++) {
+      const d = doors[i];
+      if (d.open) continue;
+      const dx = d.cx - b.pos.x, dz = d.cz - b.pos.z;
+      if (dx * dx + dz * dz < 5) { d.open = true; this.game.net.sendDoor(i, true); }
+    }
   }
 
   /** Todos vivos en su puesto (inicio de partida, nueva oleada o muerte del jugador). */
@@ -2323,9 +3484,9 @@ class BotManager {
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
       if (!b.active) { this._disableCollider(b); continue; }
-      b.pos.set(b.post.x, 0, b.post.z); b.prev.copy(b.pos);
+      b.pos.set(b.post.x, this.game.world.nav.heightAt(b.post.x, b.post.z), b.post.z); b.prev.copy(b.pos);
       b.yaw = b.prevYaw = b.post.yaw; b.pitch = 0;
-      b.state = BotState.HOLD; b.health = BOT_CFG.health; b.seen = false;
+      b.state = BotState.HOLD; b.health = b.maxHealth; b.seen = false;
       b.react = 0; b.lostT = 0; b.alertT = 0; b.phase = 0; b.phaseT = 0; b.burstLeft = 0; b.fireT = 0; b.moving = false;
       b.fall = 0; b.flashT = 0; b.hitFlash = 0; b.target = null; b.nCount = 0;
       b.mat.emissive.setRGB(0, 0, 0);
@@ -2347,15 +3508,11 @@ class BotManager {
   }
   _disableCollider(b) { const c = b.collider; c.minX = c.maxX = c.minZ = c.maxZ = 1e6; c.minY = c.maxY = -1e6; }
 
-  /** ¿Choca un bot en (x, z) con el mapa o con el jugador? */
-  _blocked(x, z) {
-    const r = BOT_CFG.halfWidth, h = BOT_CFG.height, boxes = this.game.world.boxes;
-    for (let i = 0; i < boxes.length; i++) {
-      const bb = boxes[i];
-      if (x + r > bb.minX && x - r < bb.maxX && z + r > bb.minZ && z - r < bb.maxZ && h > bb.minY && 0 < bb.maxY) return true;
-    }
-    const p = this.game.player.pos, pr = CONFIG.player.halfWidth;
-    return Math.abs(x - p.x) < r + pr && Math.abs(z - p.z) < r + pr && p.y < h;
+  /** ¿Puede el bot dar un paso a (x, z)? Mismas reglas que su navegación (escalones, muros) y no pisa al jugador. */
+  _blocked(b, x, z) {
+    if (!this.game.world.nav.canMove(b.pos.x, b.pos.z, x, z)) return true;
+    const pl = this.game.player, p = pl.pos, r = BOT_CFG.halfWidth, pr = CONFIG.player.halfWidth;
+    return pl.health > 0 && Math.abs(x - p.x) < r + pr && Math.abs(z - p.z) < r + pr && p.y < b.pos.y + BOT_CFG.height && p.y + pl.height > b.pos.y;
   }
 
   /** Strafe lateral alrededor del puesto (correa de BOT_CFG.leash metros). */
@@ -2363,7 +3520,7 @@ class BotManager {
     const step = BOT_CFG.strafeSpeed * dt * b.strafeDir;
     const nx = b.pos.x + Math.cos(b.yaw) * step, nz = b.pos.z - Math.sin(b.yaw) * step;
     const ox = nx - b.post.x, oz = nz - b.post.z;
-    if (ox * ox + oz * oz > BOT_CFG.leash * BOT_CFG.leash || this._blocked(nx, nz)) { b.strafeDir = -b.strafeDir; return; }
+    if (ox * ox + oz * oz > BOT_CFG.leash * BOT_CFG.leash || this._blocked(b, nx, nz)) { b.strafeDir = -b.strafeDir; return; }
     b.pos.x = nx; b.pos.z = nz;
   }
 
@@ -2372,14 +3529,16 @@ class BotManager {
     if (d2 < 1e-4) { b.moving = false; return; }
     const d = Math.sqrt(d2), step = Math.min(d, BOT_CFG.strafeSpeed * 0.6 * dt);
     const nx = b.pos.x + (ox / d) * step, nz = b.pos.z + (oz / d) * step;
-    if (this._blocked(nx, nz)) { b.moving = false; return; }
+    if (this._blocked(b, nx, nz)) { b.moving = false; return; }
     b.pos.x = nx; b.pos.z = nz; b.moving = true;
   }
 
   _engage(b, reactMult) {
     b.state = BotState.ENGAGE;
     b.react = rand(this.diff.reaction[0], this.diff.reaction[1]) * reactMult;
-    b.lostT = 0; b.phase = 0; b.burstLeft = this.W.burst; b.fireT = 0; b.moving = false;
+    b.lostT = 0; b.phase = 0; b.burstLeft = b.W.burst; b.fireT = 0; b.moving = false;
+    // En ruta: se para a pelear donde está (la correa del strafe es este punto) y luego retoma el camino.
+    if (this.friendlyTeam >= 0) { b.post.x = b.pos.x; b.post.z = b.pos.z; }
   }
 
   /**
@@ -2387,10 +3546,17 @@ class BotManager {
    * El array se reutiliza (length = 0): ni una asignación por tick.
    */
   _collectTargets() {
-    const t = this._targets;
-    t.length = 0;
+    const t = this._targets, t0 = this._targets0;
+    t.length = 0; t0.length = 0;
     t.push(this.game.player);
     this.game.net.pushTargets(t);
+    if (this.friendlyTeam >= 0) {
+      for (let i = 0; i < this.bots.length; i++) {
+        const b = this.bots[i];
+        if (!b.active || b.state === BotState.DEAD) continue;
+        if (b.team === 0) t.push(b); else t0.push(b);
+      }
+    }
     return t;
   }
 
@@ -2415,8 +3581,9 @@ class BotManager {
 
   tick(dt) {
     this.tickCount++;
-    const diff = this.diff, targets = this._collectTargets();
-    if (this.respawnT > 0) {
+    const diff = this.diff, round = this.game.round, nav = this.game.world.nav;
+    this._collectTargets();
+    if (!round && this.respawnT > 0) {
       this.respawnT -= dt;
       if (this.respawnT <= 0) { this.wave++; this.resetAll(); this.game.hud.showNotice(`OLEADA ${this.wave} · DEFENSORES EN POSICIÓN`, 2.5); }
     }
@@ -2429,6 +3596,9 @@ class BotManager {
       if (b.hitFlash > 0) b.hitFlash = Math.max(0, b.hitFlash - dt * 6);
       if (b.flashT > 0) b.flashT -= dt;
       if (b.state === BotState.DEAD) { b.fall = approach(b.fall, 1, dt * 4); continue; }
+      const targets = b.team === 1 ? this._targets : this._targets0;
+      // Fase de compra: cada uno quieto en su base, mirando al frente.
+      if (round && !round.botsFree) { this._updateBoxes(b); continue; }
 
       const ey = b.pos.y + BOT_CFG.eye;
       // ---- Percepción (32 Hz por bot, escalonada entre bots) ----
@@ -2439,9 +3609,9 @@ class BotManager {
         if (b.seen && tAlive) this._engage(b, 1);
         else {
           const goal = b.alertT > 0 ? b.alertYaw : b.post.yaw;
-          b.yaw = wrapAngle(b.yaw + wrapAngle(goal - b.yaw) * (1 - Math.exp(-(b.alertT > 0 ? 7 : 2.5) * dt)));
+          if (!round || b.alertT > 0) b.yaw = wrapAngle(b.yaw + wrapAngle(goal - b.yaw) * (1 - Math.exp(-(b.alertT > 0 ? 7 : 2.5) * dt)));
           b.pitch = damp(b.pitch, 0, 3, dt);
-          this._walkHome(b, dt);
+          if (round) this._follow(b, dt); else this._walkHome(b, dt);
           if (b.alertT > 0) b.alertT -= dt;
         }
       }
@@ -2456,32 +3626,40 @@ class BotManager {
           b.pitch += (wantPitch - b.pitch) * k;
           b.lostT = 0;
           b.react -= dt;
-        } else if ((b.lostT += dt) > 3 || !tAlive) {
+        } else if ((b.lostT += dt) > (round ? 1.5 : 3) || !tAlive) {
           b.state = BotState.HOLD; b.moving = false; b.target = null;   // lo ha perdido: vuelve a su ángulo
+          if (round) { b.repath = true; b.repathT = rand(0.1, 0.5); b.post.x = b.goalX; b.post.z = b.goalZ; b.post.yaw = b.goalYaw; }
         }
         if (b.state === BotState.ENGAGE) {
           if (b.phase === 1) {                            // strafe corto entre ráfagas
             this._strafe(b, dt);
-            if ((b.phaseT -= dt) <= 0) { b.phase = 0; b.moving = false; b.burstLeft = this.W.burst; b.fireT = 0.1; }
+            if ((b.phaseT -= dt) <= 0) { b.phase = 0; b.moving = false; b.burstLeft = b.W.burst; b.fireT = 0.1; }
           } else if (b.seen && b.react <= 0 && tAlive) {  // ráfaga quieto (frena 100 ms antes, como un humano)
             b.fireT -= dt;
             if (b.fireT <= 0 && b.burstLeft > 0) {
               if (!this.passive) this._fire(b, t);         // PRÁCTICA: apuntan pero no disparan
-              b.fireT = 60 / this.W.rpm;
+              b.fireT = 60 / b.W.rpm;
               if (--b.burstLeft === 0) { b.phase = 1; b.phaseT = rand(0.3, 0.65); b.strafeDir = Math.random() < 0.5 ? -1 : 1; b.moving = true; }
             }
           }
         }
       }
+      // Altura del suelo bajo sus pies (escaleras, plataformas); de un salto baja rápido.
+      const gy = nav.heightAt(b.pos.x, b.pos.z);
+      b.pos.y = gy < b.pos.y - 0.6 ? approach(b.pos.y, gy, dt * 9) : damp(b.pos.y, gy, 22, dt);
+      if (round) {
+        if (b.moving && ((b.doorT += dt) > 0.15)) { b.doorT = 0; this._openDoors(b); }
+        round.botTick(b, dt);
+      }
       this._updateBoxes(b);
     }
-    if (this.pendingReset) this.resetAll();
+    if (!round && this.pendingReset) this.resetAll();
     this.game.net.sendBots(dt);
   }
 
   /** Disparo de un bot a su objetivo (tú o un compañero): sale de sus ojos hacia donde apunta + cono de dispersión. */
   _fire(b, target) {
-    const g = this.game, W = this.W;
+    const g = this.game, W = b.W;
     const cp = Math.cos(b.pitch), sy = Math.sin(b.yaw), cyw = Math.cos(b.yaw);
     const fx = -sy * cp, fy = Math.sin(b.pitch), fz = -cyw * cp;      // adelante
     const rx = cyw, rz = -sy;                                         // derecha (horizontal)
@@ -2503,7 +3681,8 @@ class BotManager {
     const wallHit = !zone && wall;
     if (zone) {
       const amount = W.damage * this.diff.damageMult * (zone === 1 ? W.headMultiplier : zone === 3 ? BOT_CFG.legMultiplier : 1);
-      if (target === g.player) g.player.takeDamage(amount, b.pos.x, b.pos.z);
+      if (target === g.player) { g.player.takeDamage(amount, b.pos.x, b.pos.z); if (g.player.health <= 0) g.round?.onPlayerKilled(b, zone === 1); }
+      else if (target.isBot) this.applyDamage(target, NET_ZONES[zone], amount, b);
       else g.net.sendDamage(target, amount, b.pos.x, b.pos.z);      // compañero: el daño viaja a su navegador
     }
     this.showShot(b, end, wallHit, hit.normal);
@@ -2513,7 +3692,7 @@ class BotManager {
   /** Lo que se ve y se oye de un disparo de bot: trazadora, impacto, fogonazo y sonido según dónde estés tú. */
   showShot(b, end, wallHit, normal) {
     const g = this.game, p = g.player.pos;
-    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, this.W.tracerSpeed, 3);
+    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, b.W.tracerSpeed, 3);
     if (wallHit) g.impacts.spawnImpact(end, normal, true);
     // Audio posicional: paneo según el ángulo respecto a tu vista, volumen y agudos según distancia.
     const dx = b.pos.x - p.x, dz = b.pos.z - p.z;
@@ -2597,14 +3776,16 @@ class BotManager {
    */
   applyDamage(b, zone, amount, shooter = this.game.player) {
     if (b.state === BotState.DEAD) return null;
+    if (b.shield > 0) { const s = Math.min(b.shield, amount); b.shield -= s; amount -= s; }   // el escudo recibe antes
     b.health -= amount; b.hitFlash = 1;
     if (b.health <= 0) {
-      const kill = zone === 'head' ? 'head' : 'body';
+      const kill = zone === 'head' ? 'head' : 'body', round = this.game.round;
       b.state = BotState.DEAD; b.health = 0; b.moving = false; b.flashT = 0; b.target = null;
       this._disableCollider(b);
       this.alive--;
       if (shooter === this.game.player) this.game.onBotKilled(zone === 'head');
-      else this.game.net.sendKill(shooter, kill);
+      else if (!shooter.isBot) this.game.net.sendKill(shooter, kill);
+      if (round) { round.onBotKilled(b, shooter, kill === 'head'); return kill; }
       if (this.alive === 0) {
         this.game.onWaveCleared();
         this.game.net.sendCleared();
@@ -2621,11 +3802,11 @@ class BotManager {
   }
 
   /** Oyen tus disparos: los que estén cerca se giran hacia el ruido (menos alcance si es silenciada). */
-  hear(x, z, quiet) {
+  hear(x, z, quiet, team = this.friendlyTeam < 0 ? 0 : this.friendlyTeam) {
     const r = quiet ? BOT_CFG.quietHearRange : BOT_CFG.hearRange, r2 = r * r;
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
-      if (!b.active || b.state !== BotState.HOLD) continue;
+      if (!b.active || b.state !== BotState.HOLD || b.team === team) continue;
       const dx = x - b.pos.x, dz = z - b.pos.z;
       if (dx * dx + dz * dz < r2) { b.alertT = 2.5; b.alertYaw = Math.atan2(-dx, -dz); }
     }
@@ -2637,7 +3818,7 @@ class BotManager {
     let hitBot = null, zone = null, axis = 0;
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
-      if (!b.active || b.state === BotState.DEAD) continue;
+      if (!b.active || b.state === BotState.DEAD || b.team === this.friendlyTeam) continue;
       let ax = rayBox(b.hb.head);
       if (ax) { RAY[6] = RAY[7]; hitBot = b; zone = 'head'; axis = ax - 1; }
       ax = rayBox(b.hb.body);
@@ -2658,14 +3839,15 @@ class BotManager {
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
       if (!b.active) continue;
-      const x = lerp(b.prev.x, b.pos.x, alpha), z = lerp(b.prev.z, b.pos.z, alpha);
-      b.root.position.set(x, b.pos.y, z);
+      b.root.visible = b !== this.hidden;
+      const x = lerp(b.prev.x, b.pos.x, alpha), z = lerp(b.prev.z, b.pos.z, alpha), y = lerp(b.prev.y, b.pos.y, alpha);
+      b.root.position.set(x, y, z);
       b.root.rotation.y = b.prevYaw + wrapAngle(b.yaw - b.prevYaw) * alpha;
       b.hinge.rotation.x = smoothstep(b.fall) * Math.PI * 0.49;    // cae de espaldas
       if (b.hitFlash > 0 || b.mat.emissive.r !== 0) b.mat.emissive.setRGB(b.hitFlash * 0.9, b.hitFlash * 0.15, 0);
       b.flash.visible = b.flashT > 0;
       if (b.flash.visible) b.flash.material.rotation = Math.random() * Math.PI;
-      this._p.set(x, 0.012, z);
+      this._p.set(x, y + 0.012, z);
       this._m4.compose(this._p, this._q, this._s);
       this.blobs.setMatrixAt(n++, this._m4);
     }
@@ -2673,6 +3855,7 @@ class BotManager {
     this.blobs.instanceMatrix.needsUpdate = true;
   }
 }
+
 
 /* =====================================================================================
  *  ViewmodelFactory · modelos provisionales generados por parámetros (def.model).
@@ -3433,7 +4616,9 @@ class WeaponSystem {
     // ---- Disparo ----
     const pressed = input.consumeFirePress();
     if (pressed && cur.mode === 'burst' && this.burstLeft === 0 && this.state === 'ready') this._startBurst(def.burst, 1);
-    const wantsFire = this.burstLeft > 0 || (cur.mode === 'auto' ? (input.fireHeld || pressed) : cur.mode === 'semi' ? pressed : false);
+    const locked = this.game.round?.weaponsLocked;   // fase de compra o plantando/desactivando: no se dispara
+    if (locked) this.burstLeft = 0;
+    const wantsFire = !locked && (this.burstLeft > 0 || (cur.mode === 'auto' ? (input.fireHeld || pressed) : cur.mode === 'semi' ? pressed : false));
     if (!input.fireHeld && !pressed && this.burstLeft === 0) this.shotsFired = 0;
 
     // Cualquier acción de combate corta la inspección en este mismo tick (el arma vuelve en 0,1 s).
@@ -3501,7 +4686,7 @@ class WeaponSystem {
   /** Baja al cuerpo +200, headshot letal +300. */
   _reward(kill) {
     if (!kill) return;
-    const amount = kill === 'head' ? ECONOMY.headshotKillReward : ECONOMY.killReward;
+    const amount = kill === 'head' && !this.game.round ? ECONOMY.headshotKillReward : ECONOMY.killReward;
     this.game.shop.addCredits(amount);
     this.game.hud.reward(amount, kill === 'head');
   }
@@ -3727,12 +4912,22 @@ class ViewController {
   /** Render: interpola estado físico + aplica animaciones procedurales con el dt real del frame. */
   render(alpha, dt, player, weapons) {
     const cam = this.camera, vm = CONFIG.viewmodel;
+    const round = this.game.round;
+    if (round && player.health <= 0) {           // caído en la partida por rondas: ves por los ojos de un aliado
+      const b = round.spec;
+      if (b) { cam.position.set(b.root.position.x, b.root.position.y + 1.6, b.root.position.z); cam.rotation.set(-0.05, b.root.rotation.y, 0); }
+      else cam.rotation.set(clamp(this.pitch, -89 * DEG, 89 * DEG), this.yaw, 0);
+      if (cam.fov !== CONFIG.camera.vFov) { cam.fov = CONFIG.camera.vFov; cam.updateProjectionMatrix(); }
+      this.zoom = 1; this.scoped = false; this.vmPivot.visible = false;
+      cam.updateMatrixWorld();
+      return;
+    }
 
     // Posición de los ojos interpolada → cero jitter a 144/240 Hz.
     const eye = lerp(player.prevEye, player.eyeHeight(), alpha);
     cam.position.set(
       lerp(player.prevPos.x, player.pos.x, alpha),
-      lerp(player.prevPos.y, player.pos.y, alpha) + eye,
+      lerp(player.prevPos.y + player.prevStep, player.pos.y + player.stepOffset, alpha) + eye,
       lerp(player.prevPos.z, player.pos.z, alpha));
 
     // Cámara = ángulos del ratón + retroceso. Nada más: sin lerp, sin damping y sin temblor, así el
@@ -3952,7 +5147,8 @@ class HUD {
     // Radio en píxeles exactamente equivalente al cono de dispersión real.
     const spreadDeg = lerp(g.weapons.prevSpread, g.weapons.spread, alpha);
     const px = Math.tan(spreadDeg * DEG) / Math.tan(g.view.camera.fov * DEG / 2) * (h / 2);
-    if (g.view.scoped) {
+    if (g.round && g.player.health <= 0) { /* caído: sin mira */ }
+    else if (g.view.scoped) {
       ctx.drawImage(this.scopeMask, 0, 0, w, h);
       if (px > 3) { ctx.strokeStyle = 'rgba(255,80,60,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, px, 0, Math.PI * 2); ctx.stroke(); }
     } else {
@@ -4159,6 +5355,7 @@ class Shop {
 
   open() {
     if (this.isOpen) return;
+    if (this.game.round && !this.game.round.canBuy) { this.game.hud.showNotice('LA TIENDA SOLO ABRE EN LA FASE DE COMPRA', 1.5); this.game.audio.deny(); return; }
     this.isOpen = true;
     this.el.style.display = 'flex';
     this.game.ui.hidePause();
@@ -4257,6 +5454,7 @@ const PLUS_SVG = '<svg class="plus" viewBox="0 0 64 64" fill="none" stroke="curr
  *  fijo en Páramo con un único francotirador · passive = los bots no disparan · noStats = no suma a la carrera.
  */
 const MODES = {
+  normal: { name: 'NO CLASIFICATORIA', title: '5 VS 5 · NO CLASIFICATORIA', desc: 'Por rondas con Spike: al primero que gane 13, cambio de bando en la 13 y economía de ronda. Tú y 4 aliados bot contra 5.', credits: ROUND_ECON.start, rounds: true, maps: ['santuario', 'acropolis', 'codice'], solo: true },
   competitivo: { name: 'COMPETITIVO', title: '5 VS 5 · COMPETITIVO', desc: 'Contra 5 bots, economía desde ¤ 800 y la dificultad de Ajustes.', credits: ECONOMY.startCredits },
   casual: { name: 'CASUAL', title: '5 VS 5 · CASUAL', desc: 'Bots en Fácil y ¤ 9000 cada ronda para probar cualquier arma.', credits: ECONOMY.maxCredits, difficulty: 'facil' },
   duelo: { name: 'DUELO 1V1', title: 'DUELO 1V1 · FRANCOTIRADOR', desc: 'Páramo, tu Titán contra un francotirador a 80 m. Individual.', credits: 0, map: 'paramo', bots: 1, weapon: 'titan', sniper: true, solo: true },
@@ -4728,6 +5926,9 @@ const SOCIAL = {
   mapsRulesVersion: 'maps-1',
   // Tarjeta de jugador y LISTO en el perfil público, modo del grupo y chat: solo con las reglas lobby-1 publicadas.
   lobbyRulesVersion: 'lobby-1',
+  // Acrópolis y Códice en grupo: solo con las reglas match-1 publicadas.
+  matchMaps: ['acropolis', 'codice'],
+  matchRulesVersion: 'match-1',
   chatMax: 40,               // mensajes que se cargan de cada canal
   chatGapMs: 1000,           // como mucho un mensaje por segundo
 };
@@ -4914,12 +6115,14 @@ class Social {
     // Sin la marca de mapas el panel funciona igual; solo los mapas nuevos quedan fuera del grupo.
     try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.mapsRulesVersion)); this.newMapsOk = true; }
     catch (err) { this.newMapsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de mapas', err); }
+    try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.matchRulesVersion)); this.matchMapsOk = true; }
+    catch (err) { this.matchMapsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de mapas por rondas', err); }
     try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.lobbyRulesVersion)); this.lobbyOk = true; }
     catch (err) { this.lobbyOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca del lobby', err); }
   }
 
   /** ¿Aceptan las reglas publicadas este mapa en un grupo? */
-  partyMapOk(map) { return SOCIAL.legacyMaps.includes(map) || this.newMapsOk === true; }
+  partyMapOk(map) { return SOCIAL.legacyMaps.includes(map) || (SOCIAL.matchMaps.includes(map) ? this.matchMapsOk === true : this.newMapsOk === true); }
   _partyMapDenied(map) {
     this._toast(`${MAPS[map]?.name ?? map} aún no se puede jugar en grupo: publica las reglas nuevas de Firestore.`, true);
   }
@@ -6031,7 +7234,8 @@ class LobbyUI {
   constructor(game) {
     this.game = game;
     this.selectedMap = DEFAULT_MAP;
-    this.selectedMode = MODES[store.load('vertice.lobby', {}).mode] && !MODES[store.load('vertice.lobby', {}).mode].hidden ? store.load('vertice.lobby', {}).mode : DEFAULT_MODE;
+    const savedMode = store.load('vertice.lobby', {}).mode;
+    this.selectedMode = MODES[savedMode] && !MODES[savedMode].hidden ? savedMode : 'normal';   // por defecto, NO CLASIFICATORIA
     this.invTab = 'collection';                  // última subpestaña de INVENTARIO
     this.root = document.getElementById('screen-lobby');
     this.settingsEl = document.getElementById('settings');
@@ -6175,8 +7379,9 @@ class LobbyUI {
       this._sfx('click');
       const s = this.game.social;
       if (s.ready && s.inParty && !s.isLeader) { this.toast('El mapa lo elige el líder del grupo.'); return; }
-      const fixed = MODES[this.selectedMode].map;
+      const fixed = MODES[this.selectedMode].map, allowed = MODES[this.selectedMode].maps;
       if (fixed && card.dataset.map !== fixed) { this.toast(`${MODES[this.selectedMode].name} se juega siempre en ${MAPS[fixed].name}.`); return; }
+      if (allowed && !allowed.includes(card.dataset.map)) { this.toast(`${MODES[this.selectedMode].name} se juega en ${allowed.map((m) => MAPS[m].name).join(', ')}.`); return; }
       this.selectMap(card.dataset.map, true);
       s.syncPartySettings();                     // en grupo, los miembros lo ven al momento
     });
@@ -6204,15 +7409,19 @@ class LobbyUI {
     this.selectedMode = mode;
     store.save('vertice.lobby', { mode });
     document.querySelectorAll('#mode-list .mode').forEach((b) => b.classList.toggle('sel', b.dataset.mode === mode));
-    const fixed = MODES[mode].map;
+    const fixed = MODES[mode].map, allowed = MODES[mode].maps;
     document.getElementById('map-list').classList.toggle('locked', !!fixed);
+    // Modos con lista de mapas (NO CLASIFICATORIA): el resto de tarjetas se atenúan.
+    document.querySelectorAll('#map-list .map').forEach((c) => c.classList.toggle('off', !!allowed && !allowed.includes(c.dataset.map)));
     if (fixed) this.selectMap(fixed, reload);
+    else if (allowed && !allowed.includes(this.selectedMap)) this.selectMap(allowed[0], reload);
     this._renderModeLabel();
   }
 
   _renderModeLabel() {
     const m = MODES[this.selectedMode];
-    document.getElementById('mode-label').textContent = `${m.name} · ${MAPS[this.selectedMap].name.toUpperCase()}`;
+    document.getElementById('mode-label').textContent = m.name;
+    document.getElementById('mode-sub').textContent = `MODO · ${MAPS[this.selectedMap].name.toUpperCase()}`;
   }
 
   openModePop() {
@@ -6257,11 +7466,11 @@ class LobbyUI {
     document.getElementById('hist-note').textContent = 'Se guardan en este navegador (las 30 últimas).';
     const fmt = (ms) => new Date(ms).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     const dur = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-    document.getElementById('history').innerHTML = rows.length ? `<table class="hist"><tr><th>RESULTADO</th><th>MODO</th><th>MAPA</th><th>BAJAS / MUERTES</th><th>CABEZA</th><th>OLEADAS</th><th>DURACIÓN</th><th>FECHA</th></tr>${
+    document.getElementById('history').innerHTML = rows.length ? `<table class="hist"><tr><th>RESULTADO</th><th>MODO</th><th>MAPA</th><th>BAJAS / MUERTES</th><th>CABEZA</th><th>OLEADAS / RONDAS</th><th>DURACIÓN</th><th>FECHA</th></tr>${
       rows.map((r) => {
-        const good = r.kills >= r.deaths;
-        return `<tr class="${good ? 'good' : 'bad'}"><td class="res">${r.mode === 'practica' ? 'PRÁCTICA' : good ? 'POSITIVA' : 'NEGATIVA'}</td><td>${escapeHTML(MODES[r.mode]?.name ?? r.mode)}</td>`
-          + `<td>${escapeHTML(MAPS[r.map]?.name ?? r.map)}</td><td>${r.kills} / ${r.deaths}</td><td>${r.hs}</td><td>${r.waves}</td><td>${dur(r.secs)}</td><td>${fmt(r.at)}</td></tr>`;
+        const sc = r.score ? r.score.split('-').map(Number) : null, good = sc ? sc[0] > sc[1] : r.kills >= r.deaths;
+        return `<tr class="${good ? 'good' : 'bad'}"><td class="res">${r.mode === 'practica' ? 'PRÁCTICA' : sc ? (good ? 'VICTORIA' : sc[0] === sc[1] ? 'EMPATE' : 'DERROTA') : good ? 'POSITIVA' : 'NEGATIVA'}</td><td>${escapeHTML(MODES[r.mode]?.name ?? r.mode)}</td>`
+          + `<td>${escapeHTML(MAPS[r.map]?.name ?? r.map)}</td><td>${r.kills} / ${r.deaths}</td><td>${r.hs}</td><td>${r.score ? escapeHTML(r.score) : r.waves}</td><td>${dur(r.secs)}</td><td>${fmt(r.at)}</td></tr>`;
       }).join('')}</table>` : '<div class="hist-empty">Aún no hay partidas. Pulsa BUSCAR PARTIDA o PRÁCTICA en JUGAR.</div>';
   }
 
@@ -7282,7 +8491,7 @@ class FrameScheduler {
 }
 
 /** Teclas que captura el Keyboard Lock en pantalla completa: Esc llega al juego (pausa) y Ctrl+W no cierra la pestaña. */
-const FULLSCREEN_KEYS = ['Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'KeyB', 'KeyE', 'KeyX', 'KeyC', 'KeyK', 'KeyY', 'KeyF',
+const FULLSCREEN_KEYS = ['Digit4', 'KeyG', 'Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'KeyB', 'KeyE', 'KeyX', 'KeyC', 'KeyK', 'KeyY', 'KeyF',
   'Digit1', 'Digit2', 'Digit3', 'ControlLeft', 'ShiftLeft', 'Space', 'BracketLeft', 'BracketRight'];
 
 /* =====================================================================================
@@ -7325,6 +8534,7 @@ class Game {
     this.match = emptyStats();                     // progreso de cuenta aún no sumado (se suma al volver al menú)
     this.matchMode = null;                         // modo de la partida en curso (MODES) o null en el menú
     this.cur = null;                               // partida en curso para el HISTORIAL { map, mode, at, hs, waves }
+    this.round = null;                             // MatchController de la partida NO CLASIFICATORIA (o null)
 
     this.scene = new THREE.Scene();
     this.input = new InputController(canvas);
@@ -7350,6 +8560,11 @@ class Game {
     };
     this.player.onDeath = () => {
       this.deaths++; if (!this._noStats) this.match.deaths++;
+      if (this.round) {                            // por rondas no se reaparece: a observar hasta la siguiente
+        this.weapons.isInspecting = false; this.shop.shield = null;
+        this.round.onPlayerDeath();
+        return;
+      }
       this.player.respawn(); this.view.reset(this.world.spawnYaw); this.shop.shield = null;
       this.weapons.isInspecting = false;
       if (this.net.active) {                       // en grupo la partida sigue para los demás: solo reapareces tú
@@ -7425,11 +8640,12 @@ class Game {
     body.toggle('state-menu', next === GameState.MENU);
     body.toggle('state-ingame', next === GameState.INGAME);
     if (next !== GameState.INGAME) {
+      if (this.round) { this.round.dispose(); this.round = null; }
       if (this.shop.isOpen) this.shop.close(false);
       this.ui.hidePause();
       if (document.pointerLockElement) document.exitPointerLock();
       this.ui.updateWallet();
-      const special = this.matchMode !== null && (MODES[this.matchMode].bots || MODES[this.matchMode].passive);
+      const special = this.matchMode !== null && (MODES[this.matchMode].bots || MODES[this.matchMode].passive || MODES[this.matchMode].rounds);
       this.matchMode = null;                       // el diorama del lobby lleva los bots normales
       if (this.world.mapId !== this.ui.selectedMap || special) this.loadMap(this.ui.selectedMap);
       else this.bots.resetAll();
@@ -7518,8 +8734,14 @@ class Game {
     this.cur = { map: mapId, mode: this.matchMode, at: Date.now(), hs: 0, waves: 0 };
     this.social.setReady(false);                   // el LISTO es para la partida que empieza: se reinicia
     this.ui.fade();
+    if (this.round) { this.round.dispose(); this.round = null; }
     this.loadMap(mapId);
     this.resetMatch();
+    if (M.rounds) {                                // NO CLASIFICATORIA: tú + 4 aliados contra 5, por rondas
+      this.bots.setupTeams(5, 4);
+      this.round = new MatchController(this, mapId);
+      this.round.start();
+    }
     this.setState(GameState.INGAME);
     // El clic del botón es el gesto de usuario que permite el Pointer Lock. Si el navegador lo rechaza
     // (o la partida la lanzó el líder y no hiciste clic en la cuenta atrás), la pausa pide ese clic
@@ -7545,6 +8767,12 @@ class Game {
     this.accumulator = 0;
   }
 
+  /** Vuelta al equipo de serie (pistola y cuchillo): rondas de pistola o tras caer en una ronda. */
+  resetLoadout() {
+    this.weapons = new WeaponSystem(this);
+    this.view.onWeaponChanged(this.weapons.current.def);
+  }
+
   /** Llamado por BotManager. Solo suma contadores: nada de memoria nueva ni red en mitad del tick. */
   onBotKilled(head) {
     this.kills++;
@@ -7565,7 +8793,7 @@ class Game {
     if (secs < 5) return;
     const key = 'vertice.history.' + (this.account.user?.uid ?? 'guest');
     const list = store.load(key, { rows: [] }).rows.slice(0, 29);
-    list.unshift({ at: c.at, map: c.map, mode: c.mode, kills: this.kills, deaths: this.deaths, hs: c.hs, waves: c.waves, secs });
+    list.unshift({ at: c.at, map: c.map, mode: c.mode, kills: this.kills, deaths: this.deaths, hs: c.hs, waves: c.waves, secs, ...(c.score ? { score: c.score } : {}) });
     store.save(key, { rows: list });
   }
 
@@ -7698,8 +8926,10 @@ class Game {
    * grupo: tu jugador se queda quieto, pero los bots y la red siguen (la partida no se para para los demás).
    */
   tick(dt, frozen = false) {
-    if (!frozen) {
-      this.player.tick(dt, this.input, this.view.yaw, this.weapons.moveMultiplier());
+    const round = this.round;
+    if (round) round.tick(dt);                     // fases, Spike y economía de la partida por rondas
+    if (!frozen && !(round && this.player.health <= 0)) {
+      this.player.tick(dt, this.input, this.view.yaw, round?.moveLock ? 0 : this.weapons.moveMultiplier());
       this.view.tick(dt);        // recupera el retroceso ANTES de disparar: la bala sale donde se veía la mira
       this.weapons.tick(dt, this.input, this.player);
     }
@@ -7790,6 +9020,7 @@ class Game {
     this.renderer.clearDepth();
     this.renderer.render(this.view.vmScene, this.view.vmCamera);
     this.hud.render(alpha, rdt);
+    if (this.round) this.round.renderHud(rdt);
     this._markGpuFrame();
     this.hud.recordFrame(rdt, performance.now() - cpuStart, info.render.calls, info.render.triangles, this.pendingTicks, false);
     this.pendingTicks = 0;

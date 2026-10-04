@@ -23,3 +23,14 @@ Al iniciar la partida, los navegadores del grupo se conectan entre sí con WebRT
 Cada jugador mueve a su personaje en su propio navegador y ve a sus compañeros en turquesa, con su ID encima. Los impactos a los bots se calculan sobre lo que ve quien dispara y los confirma el anfitrión, que avisa de cada baja a quien la hizo. Si el anfitrión sale, los demás siguen jugando solos contra los bots.
 
 Solo se usan servidores STUN públicos, sin TURN: si dos redes no permiten la conexión directa (algunas redes de empresa o de datos móviles), ese jugador juega por su cuenta.
+
+## Partida no clasificatoria (por rondas)
+Modo por defecto del lobby. Tú y 4 aliados bot contra 5 bots, con las reglas de rondas de un shooter táctico:
+
+- Gana quien llegue antes a 13 rondas (como mucho 25). Cambio de bando al acabar la ronda 12.
+- Rondas de pistola en la 1 y en la 13: todos vuelven a ¤ 800 y a la pistola de serie. A 12-12, la ronda 25 decide con ¤ 5000 para todos.
+- Fases: compra 30 s (barreras en las bases y tienda abierta), ronda 100 s, Spike plantada 45 s (pitido cada vez más rápido) y 7 s de fin de ronda.
+- Spike: mantén **4** dentro de un site 4 s para plantar y 7 s junto a ella para desactivar. Pasados 3,5 s, la mitad del progreso queda guardada. **G** la suelta.
+- Economía: victoria +3000, derrota 1900 / 2400 / 2900 según la racha, baja +200, plantar +300 a cada atacante, tope ¤ 9000.
+
+Se juega en Santuario, Acrópolis y Códice (cada mapa se dibuja en 3 draw calls). Por ahora es individual; Acrópolis y Códice se pueden usar en grupo en los otros modos cuando estén publicadas las reglas `match-1`.
