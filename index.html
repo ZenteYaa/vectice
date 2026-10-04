@@ -4003,6 +4003,25 @@ function cloudErrorText(err) {
   }
 }
 
+/** Errores del panel de amigos y grupos → texto del panel, con el paso y la ruta exactos que fallaron. */
+function socialErrorText(err) {
+  const where = err?.path ? ` (${err.step}: ${err.path})` : err?.step ? ` (${err.step})` : '';
+  switch (err?.code) {
+    case 'rules-outdated':
+      return 'Las reglas activas en Firebase no son las de esta versión del juego. Copia firestore.rules ENTERO en la consola de Firebase, '
+        + 'proyecto vertice-7f000 › Firestore Database › pestaña Reglas (no Realtime Database ni Storage), y pulsa Publicar. '
+        + 'Tardan hasta 1 minuto en aplicarse; el panel se reintenta solo cada 30 s.';
+    case 'permission-denied':
+      return `Firestore rechazó una operación${where}. Las reglas publicadas sí son las nuevas, así que es un fallo del juego: abre la consola (F12), copia la línea [FIRESTORE SOCIAL ERROR] y envíamela.`;
+    case 'unauthenticated':
+      return 'Tu sesión de Google aún no está lista. Se reintenta sola en 30 s; si sigue igual, cierra sesión y vuelve a entrar.';
+    case 'deadline-exceeded':
+      return `La conexión con amigos y grupos no respondió a tiempo${where}. Se reintenta sola en 30 s.`;
+    default:
+      return cloudErrorText(err) + where;
+  }
+}
+
 class CloudAccount {
   constructor(game) {
     this.game = game;
@@ -4292,6 +4311,11 @@ const SOCIAL = {
   invitedMs: 15000,          // el botón muestra "INVITADO" este tiempo tras invitar
   countdown: 3,              // segundos de cuenta atrás al iniciar en grupo
   launchWindowMs: 20000,     // un arranque más antiguo que esto (al recargar o reconectar) ya no lanza la partida
+  startTimeoutMs: 20000,     // conectar el panel (sesión, reglas, perfil y grupo) no puede tardar más que esto
+  autoRetryMs: 30000,        // con el panel en error se reintenta solo cada 30 s (p. ej. justo después de publicar las reglas)
+  // Documento rulesVersion/{versión} que firestore.rules deja leer a cualquiera (aunque no exista). Si la
+  // lectura se deniega, las reglas activas en Firebase no son las de este index.html. Cámbialo a la vez en los dos.
+  rulesVersion: 'social-2',
 };
 
 const DIFFICULTY_NAMES = { facil: 'Fácil', normal: 'Normal', dificil: 'Difícil' };
@@ -4375,6 +4399,8 @@ class Social {
     this._warmAt = 0;
     this._hb = 0;
     this._tick = 0;
+    this._retryTimer = 0;                // reintento automático con el panel en error
+    this._step = '';                     // paso en curso al conectar (aparece en el error si falla)
     this._emitQueued = false;
     addEventListener('pagehide', () => this._goodbye());
     addEventListener('pageshow', (e) => { if (e.persisted && this.ready) this._beat(); });
@@ -4400,7 +4426,7 @@ class Social {
 
   /* ----------------------------- Sesión ----------------------------- */
   /** Cuenta de Google lista: perfil público, escuchas en tiempo real, grupo y latido de presencia. */
-  async start(user) {
+  async start(user, forceToken = false) {
     if (this.uid === user.uid && (this.status === 'loading' || this.status === 'ready')) return;
     this._teardown();
     const gen = this._gen;
@@ -4409,7 +4435,15 @@ class Social {
     this.uid = user.uid;
     this.status = 'loading';
     this._emit();
+    // Si algo se queda colgado (red, SDK), el panel pasa a error a los 20 s y lo que llegue tarde se descarta (gen).
+    const timer = setTimeout(() => {
+      if (gen === this._gen && this.status === 'loading') this._fail(Object.assign(new Error('La conexión con amigos y grupos no respondió a tiempo.'), { code: 'deadline-exceeded', step: this._step }));
+    }, SOCIAL.startTimeoutMs);
     try {
+      await this._authReady(user, forceToken);
+      if (gen !== this._gen) return;
+      await this._checkRules();
+      if (gen !== this._gen) return;
       const partyId = await this._ensureProfile(user, gen);
       if (gen !== this._gen) return;
       this._listen(gen);
@@ -4422,13 +4456,62 @@ class Social {
       this._emit();
     } catch (err) {
       if (gen === this._gen) this._fail(err);
+    } finally {
+      clearTimeout(timer);
     }
   }
 
-  /** Reintento manual desde el panel (p. ej. después de publicar las reglas nuevas). */
+  /** REINTENTAR (y el reintento automático): token nuevo, todo desmontado y conexión desde cero. */
   retry() {
     const u = this.game.account.user;
-    if (u) { this.status = 'off'; this.start(u); }
+    if (!u || this.status === 'loading') return;
+    this.status = 'off';
+    this.start(u, true);
+  }
+
+  /**
+   * Nada toca Firestore hasta que Firebase Auth confirma la sesión de ESTE jugador y tiene su ID token:
+   * así ninguna lectura sale sin credenciales y vuelve como permission-denied.
+   */
+  async _authReady(user, forceToken) {
+    const auth = this.fb.auth;
+    this._step = 'esperar la sesión de Google';
+    if (auth.authStateReady) await auth.authStateReady();
+    const cu = auth.currentUser;
+    if (!cu || cu.uid !== user.uid) throw Object.assign(new Error('Firebase Auth aún no tiene tu sesión.'), { code: 'unauthenticated', step: this._step });
+    this._step = 'obtener el token de la sesión';
+    this._token = await cu.getIdToken(forceToken);
+  }
+
+  /** ¿Están publicadas en Firebase las reglas de esta versión? Su marca rulesVersion/… se puede leer siempre. */
+  async _checkRules() {
+    try {
+      await this._get('comprobar la versión de las reglas', this._ref('rulesVersion', SOCIAL.rulesVersion));
+    } catch (err) {
+      if (err?.code === 'permission-denied') err.code = 'rules-outdated';
+      throw err;
+    }
+  }
+
+  /** Lectura con el paso y la ruta apuntados: si falla, el error dice exactamente qué se rechazó. */
+  async _get(step, ref) {
+    this._step = step;
+    try { return await this.fb.getDoc(ref); } catch (err) { throw this._tag(err, step, ref.path); }
+  }
+
+  async _commit(step, b, paths) {
+    this._step = step;
+    try { return await b.commit(); } catch (err) { throw this._tag(err, step, paths.join(' + ')); }
+  }
+
+  _tag(err, step, path) {
+    if (err && typeof err === 'object' && !err.step) { err.step = step; err.path = path; }
+    return err;
+  }
+
+  /** Registro detallado en la consola (F12) de cualquier fallo de Firestore del panel social. */
+  _log(err, step = err?.step, path = err?.path) {
+    console.error('[FIRESTORE SOCIAL ERROR]', err?.code, err?.message, { paso: step ?? '?', ruta: path ?? '?', uid: this.uid, reglas: SOCIAL.rulesVersion }, err);
   }
 
   /** Cierre de sesión: sale del grupo y queda "desconectado" mientras la sesión aún puede escribir. */
@@ -4443,7 +4526,7 @@ class Social {
         if (this.party) this._leaveOps(b, this.party);
         b.update(this._ref('users', this.uid), { status: 'offline', lastSeen: this._ts(), partyId: null, partySize: 1 });
         await Promise.race([b.commit(), new Promise((r) => setTimeout(r, 3000))]);
-      } catch (err) { console.warn('[VÉRTICE] social:', err); }
+      } catch (err) { this._log(err, 'cerrar sesión (salir del grupo)'); }
     }
     this._teardown();
     this.user = null;
@@ -4452,7 +4535,7 @@ class Social {
 
   _teardown() {
     this._gen++;
-    clearInterval(this._hb); clearInterval(this._tick);
+    clearInterval(this._hb); clearInterval(this._tick); clearTimeout(this._retryTimer);
     for (const unsub of this._subs) unsub();
     this._subs = [];
     for (const unsub of this._peopleSubs.values()) unsub();
@@ -4466,14 +4549,14 @@ class Social {
   }
 
   _fail(err) {
-    console.warn('[VÉRTICE] social:', err);
+    this._log(err);
     const user = this.user;
     this._teardown();
     this.user = user;
     this.status = 'error';
-    this.error = err?.code === 'permission-denied'
-      ? 'Firestore ha denegado el acceso a amigos y grupos. Publica las reglas nuevas de firestore.rules en la consola de Firebase (Firestore Database › Reglas).'
-      : cloudErrorText(err);
+    this.error = socialErrorText(err);
+    // Reintento automático: en cuanto las reglas se publiquen (o vuelva la red) el panel se conecta solo.
+    if (user) this._retryTimer = setTimeout(() => { if (this.status === 'error') this.retry(); }, SOCIAL.autoRetryMs);
     this._emit();
   }
 
@@ -4483,10 +4566,11 @@ class Social {
    */
   async _ensureProfile(user, gen) {
     const fb = this.fb, ref = this._ref('users', this.uid);
-    const snap = await fb.getDoc(ref);
+    const snap = await this._get('leer tu perfil público', ref);
     if (gen !== this._gen) return null;
     if (snap.exists()) {
-      await this._presence();
+      this._step = 'actualizar tu presencia';
+      await this._presence().catch((err) => { throw this._tag(err, this._step, ref.path); });
       return typeof snap.get('partyId') === 'string' ? snap.get('partyId') : null;
     }
     const name = cleanPlayerName(user.name), key = nameKeyOf(name);
@@ -4497,7 +4581,7 @@ class Social {
       b.set(this._ref('handles', handle), { uid: this.uid });
       b.set(ref, { displayName: name, nameKey: key, tag, handle, photo, status: this._activity, lastSeen: this._ts(), partyId: null, partySize: 1, createdAt: this._ts() });
       try {
-        await b.commit();
+        await this._commit('crear tu perfil e ID de jugador', b, [`handles/${handle}`, ref.path]);
         return null;
       } catch (err) {
         // Denegado porque ese nombre#tag ya es de otro → otro tag. Si el handle está libre, el motivo
@@ -4562,7 +4646,7 @@ class Social {
   _listen(gen) {
     const fb = this.fb;
     const on = (ref, fn, opts = {}) => this._subs.push(fb.onSnapshot(ref, opts,
-      (s) => { if (gen === this._gen) fn(s); }, (err) => { if (gen === this._gen) this._fail(err); }));
+      (s) => { if (gen === this._gen) fn(s); }, (err) => { if (gen === this._gen) this._fail(this._tag(err, 'escuchar en tiempo real', ref.path)); }));
     on(this._ref('users', this.uid), (s) => this._onMe(s), { includeMetadataChanges: true });
     on(this._col('users', this.uid, 'friends'), (s) => this._onList(s, this.friends, 'friends'));
     on(this._col('users', this.uid, 'requests'), (s) => this._onList(s, this.incoming, 'incoming'));
@@ -4664,7 +4748,7 @@ class Social {
         if (gen !== this._gen) return;
         if (s.exists()) this.people.set(uid, this._person(s)); else this.people.delete(uid);
         this._emit();
-      }, () => { /* perfil ilegible: queda sin datos */ }));
+      }, (err) => this._log(err, 'escuchar el perfil de otro jugador', `users/${uid}`)));   // perfil ilegible: queda sin datos
     }
   }
 
@@ -4672,7 +4756,7 @@ class Social {
   /** Al entrar: se retoma el grupo guardado si sigo en él (recargar no te saca); si no, uno propio. */
   async _ensureParty(partyId, gen) {
     if (partyId) {
-      const s = await this.fb.getDoc(this._ref('parties', partyId)).catch(() => null);
+      const s = await this._get('retomar tu grupo', this._ref('parties', partyId)).catch((err) => { this._log(err); return null; });
       if (gen !== this._gen) return;
       const members = s?.exists() ? s.get('members') : null;
       if (Array.isArray(members) && members.includes(this.uid)) { this._watchParty(partyId); return; }
@@ -4694,7 +4778,7 @@ class Social {
   async _newParty() {
     const b = this.fb.writeBatch(this.fb.db), id = this._partyOps(b);
     this._watchParty(id);
-    await b.commit();
+    await this._commit('crear tu grupo', b, [`parties/${id}`, `users/${this.uid}`]);
   }
 
   /** Salir de un grupo dentro de un lote: si era el último se borra; si era el líder, el mando pasa al siguiente conectado. */
@@ -4714,7 +4798,7 @@ class Social {
     const gen = this._gen;
     this._partySub = this.fb.onSnapshot(this._ref('parties', pid), { includeMetadataChanges: true },
       (s) => { if (gen === this._gen && this._partyId === pid) this._onParty(s); },
-      (err) => { if (gen === this._gen && this._partyId === pid) { console.warn('[VÉRTICE] grupo:', err); this._partyLost(null); } });
+      (err) => { if (gen === this._gen && this._partyId === pid) { this._log(err, 'escuchar tu grupo', `parties/${pid}`); this._partyLost(null); } });
   }
 
   _unwatchParty() {
@@ -4764,7 +4848,7 @@ class Social {
     else if (reason === 'gone') this._toast('El grupo se ha disuelto.');
     this.game.ui.onPartyChanged();
     this._emit();
-    try { await this._newParty(); } catch (err) { console.warn('[VÉRTICE] grupo:', err); }
+    try { await this._newParty(); } catch (err) { this._log(err); }
   }
 
   /* ----------------------------- Acciones del jugador ----------------------------- */
@@ -4778,7 +4862,7 @@ class Social {
       if (r !== false && okText) this._toast(typeof okText === 'function' ? okText() : okText);
       return r !== false;
     } catch (err) {
-      console.warn('[VÉRTICE] social:', err);
+      this._log(err, err?.step ?? 'acción del jugador');
       this._toast(failText && (err?.code === 'permission-denied' || err?.code === 'not-found') ? failText : cloudErrorText(err), true);
       return false;
     } finally {
@@ -4792,7 +4876,7 @@ class Social {
     const id = parsePlayerId(text);
     if (!id) { this._toast('Escribe el ID completo: Nombre#1234 (el número tiene 4 cifras).', true); return Promise.resolve(false); }
     return this._run(async () => {
-      const h = await this.fb.getDoc(this._ref('handles', id.key)), uid = h.exists() ? h.get('uid') : null;
+      const h = await this._get('buscar el ID de jugador', this._ref('handles', id.key)), uid = h.exists() ? h.get('uid') : null;
       if (!uid) { this._toast(`No existe ningún jugador ${id.label}.`, true); return false; }
       if (uid === this.uid) { this._toast('Ese es tu propio ID: compártelo para que te añadan.', true); return false; }
       if (this.friends.has(uid)) { this._toast(`${this.label(uid)} ya está en tu lista de amigos.`); return false; }
@@ -4801,7 +4885,7 @@ class Social {
       const b = this.fb.writeBatch(this.fb.db);
       b.set(this._ref('users', uid, 'requests', this.uid), { createdAt: this._ts() });
       b.set(this._ref('users', this.uid, 'sent', uid), { createdAt: this._ts() });
-      await b.commit();
+      await this._commit('enviar la solicitud de amistad', b, [`users/${uid}/requests/${this.uid}`, `users/${this.uid}/sent/${uid}`]);
       const p = await this.fb.getDoc(this._ref('users', uid)).catch(() => null);
       this._toast(`Solicitud enviada a ${p?.exists() ? `${p.get('displayName')}#${p.get('tag')}` : id.label}.`);
       return true;
@@ -4816,13 +4900,13 @@ class Social {
     b.delete(this._ref('users', this.uid, 'requests', uid));
     b.delete(this._ref('users', uid, 'sent', this.uid));
     this._accepted.add(uid);
-    await b.commit();
+    await this._commit('aceptar la solicitud de amistad', b, [`users/${this.uid}/friends/${uid}`, `users/${uid}/friends/${this.uid}`]);
   }
 
   _deletePair(a, b) {
     const w = this.fb.writeBatch(this.fb.db);
     w.delete(a); w.delete(b);
-    return w.commit();
+    return this._commit('borrar', w, [a.path, b.path]);
   }
 
   accept(uid) { return this._run(() => this._acceptOps(uid), () => `Ahora eres amigo de ${this.label(uid)}.`, 'Esa solicitud ya no existe.'); }
@@ -4841,7 +4925,9 @@ class Social {
       if (!this.party) await this._newParty();
       if (this.partyFull) { this._toast(`El grupo está completo (${SOCIAL.partyMax}/${SOCIAL.partyMax}).`, true); return false; }
       if (this.party.members.includes(uid)) return false;
-      await this.fb.setDoc(this._ref('users', uid, 'partyInvites', this.party.id), { from: this.uid, createdAt: this._ts() });
+      const ref = this._ref('users', uid, 'partyInvites', this.party.id);
+      this._step = 'invitar al grupo';
+      await this.fb.setDoc(ref, { from: this.uid, createdAt: this._ts() }).catch((err) => { throw this._tag(err, this._step, ref.path); });
       this.invited.set(uid, Date.now());
       return true;
     }, () => `Invitación enviada a ${this.label(uid)}.`, 'No se pudo invitar: el grupo está completo o ya no sois amigos.');
@@ -4860,7 +4946,7 @@ class Social {
       b.delete(this._ref('users', this.uid, 'partyInvites', pid));
       this._watchParty(pid);
       try {
-        await b.commit();
+        await this._commit('unirse al grupo', b, [`parties/${pid}`, `users/${this.uid}`]);
       } catch (err) {
         this._unwatchParty();
         if (old) this._watchParty(old.id); else await this._newParty().catch(() => {});
@@ -4883,7 +4969,7 @@ class Social {
       this.party = null;
       this._watchParty(id);
       try {
-        await b.commit();
+        await this._commit('salir del grupo', b, [`parties/${old.id}`, `parties/${id}`]);
       } catch (err) {
         this._watchParty(old.id);
         throw err;

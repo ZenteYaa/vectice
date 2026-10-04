@@ -11,6 +11,8 @@ rules_version = '2';
 // users/{uid}/sent/{destinatario}   Solicitudes enviadas (para verlas y cancelarlas).
 // users/{uid}/partyInvites/{grupo}  Invitaciones a un grupo.
 // parties/{grupo}                   Grupo: líder, miembros (máx. 5), mapa, dificultad y arranque de partida.
+// rulesVersion/social-2             Marca de versión (no existe; solo se puede leer). El juego la lee al conectar:
+//                                   si se deniega, las reglas publicadas en Firebase son antiguas.
 //
 // Cuentas (players):
 //  · Una cuenta nueva empieza con 5000 créditos, sin skins y con estadísticas a cero.
@@ -313,6 +315,12 @@ service cloud.firestore {
           || claim(resource.data, request.resource.data));
 
       allow delete: if signedIn() && resource.data.members == [me()];
+    }
+
+    // Marca de versión: leerla siempre está permitido (el documento no existe). Si el juego no puede leerla,
+    // las reglas activas en Firebase no son estas. Debe coincidir con SOCIAL.rulesVersion de index.html.
+    match /rulesVersion/{version} {
+      allow get: if version == 'social-2';
     }
 
     // Todo lo demás, cerrado.
