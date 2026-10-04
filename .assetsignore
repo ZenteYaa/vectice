@@ -1,8 +1,0 @@
-.git
-.wrangler
-.assetsignore
-wrangler.jsonc
-firestore.rules
-README.md
-CNAME
-.nojekyll
