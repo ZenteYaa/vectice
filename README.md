@@ -35,6 +35,11 @@ Modo por defecto del lobby. Tú y 4 aliados bot contra 5 bots, con las reglas de
 
 Se juega en Santuario, Acrópolis y Códice (cada mapa se dibuja en 3 draw calls). Por ahora es individual; Acrópolis y Códice se pueden usar en grupo en los otros modos cuando estén publicadas las reglas `match-1`.
 
+Códice sigue el mapa táctico de referencia: Inicio Defensor al norte, Inicio Atacante al sur, Sitio B al oeste (Arco B, Torre B, Esquina B, Enlace B, Principal B, Vestíbulo B) y Sitio A al este (Grúa A, Esquina A, Rincón A, Patio A, Principal A, Vestíbulo A), con un Mid en dos alturas (Ventana, Superior, Escaleras e Inferior Mid). El plano está en `MAPS.codice.plan` como rectángulos de suelo en píxeles de la imagen (1 px = 9 cm), y `floorplanWalls` levanta los muros a su alrededor.
+
+### Minimapa
+Arriba a la izquierda, en todos los mapas. Muestra el plano del mapa con los sites, tu posición y hacia dónde miras, tus aliados y la Spike (en el suelo si atacas, o plantada). Los enemigos solo aparecen cuando tú o un aliado los tenéis a la vista, y se desvanecen 1,5 s después de perderlos.
+
 ## Modelos 3D (Blender)
 Los modelos de arma con versión de Blender se generan por script. `blender/titan.py` construye el Titán en sus dos versiones y las exporta a `assets/weapons/`. Cada una lleva un solo material PBR con paleta y un `Muzzle_Point`:
 - Estándar: `titan_default.glb`, 1.400 triángulos.
