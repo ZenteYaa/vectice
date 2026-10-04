@@ -615,7 +615,7 @@
 </style>
 <!-- Three.js por CDN como ES Module. Cambia la versión aquí si lo necesitas. -->
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }
 </script>
 </head>
 <body>
@@ -960,7 +960,8 @@ const CONFIG = {
     bobFrequency: 1.55,       // Ciclos por metro recorrido (ligado a velocidad real, no a tiempo).
     bobAmplitudeX: 0.012,
     bobAmplitudeY: 0.009,
-    kickReturn: 15,           // 1/s
+    kickReturn: 15,           // 1/s (los .glb usan el suyo: BASE_SKINS.kick.recover)
+    adsSpeed: 16,             // 1/s: transición cadera ↔ ADS de los modelos .glb
   },
   inspect: {
     duration: 2.5,            // s: inspección completa (tecla Y o F)
@@ -1167,6 +1168,77 @@ const WEAPON_LIST = [
     model: { kind: 'long', recv: 0.36, hand: 0.22, barrel: 0.2, stock: 0.2, mag: 'drum', optic: 'red', bipod: true, accent: 0x44403a } },
 ];
 const WEAPON_DEFS = Object.fromEntries(WEAPON_LIST.map((w) => [w.id, deepMerge(CATEGORY_TEMPLATES[w.category], w)]));
+
+/**
+ * Skins base (Estándar) con modelo 3D propio en .glb, hecho en Blender (blender/<id>.py lo genera y exporta).
+ * Son gratis y van equipadas por defecto: si no tienes otra skin del arma, el viewmodel usa este modelo.
+ * La ficha de combate del arma sale de aquí (cadencia, daño por zona, cargador), así no hay dos fuentes.
+ *  · hip / ads: posición del modelo en el espacio de la cámara del arma (m). En ADS el eje de la mira
+ *    queda en el centro exacto de la pantalla (y = -altura de la mira sobre la empuñadura).
+ *  · hipTilt: inclinación táctica en cadera (grados: cabeceo, giro, alabeo).
+ *  · kick: retroceso del modelo al disparar (Z hacia atrás, cabeceo) y tiempo de vuelta al reposo.
+ * Si el .glb no carga (sin red o abriendo el archivo en local), se usa el modelo procedural de siempre.
+ */
+const BASE_SKINS = {
+  'titan_default': {
+    id: 'titan_default',
+    weapon: 'titan',
+    weaponType: 'sniper',
+    displayName: 'Titán',
+    skinName: 'Estándar',
+    price: 0, // Skin base gratuita
+    fireRate: 0.85, // Segundos entre disparos (cerrojo)
+    damage: { head: 255, body: 150, leg: 120 }, // One-shot al cuerpo
+    magSize: 5,
+    reserveAmmo: 10,
+    modelPath: 'assets/weapons/titan_default.glb',
+    hip: [0.18, -0.22, -0.42], hipTilt: [1.5, 2, -4],
+    ads: [0.0, -0.14, -0.28],
+    kick: { back: 0.08, pitch: 4, recover: 0.25 },
+  },
+};
+for (const s of Object.values(BASE_SKINS)) {
+  const d = WEAPON_DEFS[s.weapon];
+  d.defaultSkin = s.id;
+  d.rpm = 60 / s.fireRate;
+  d.damage = s.damage.body; d.headMultiplier = s.damage.head / s.damage.body; d.legMultiplier = s.damage.leg / s.damage.body;
+  d.capacity = s.magSize; d.reserve = s.reserveAmmo;
+  d.viewKick = { ...d.viewKick, back: s.kick.back, rotUp: s.kick.pitch };
+}
+
+/**
+ * Modelos .glb de las skins base: se cargan en segundo plano al arrancar (GLTFLoader se importa aquí
+ * mismo, así un fallo de red no rompe el juego) y avisan al viewmodel cuando están listos.
+ */
+const WeaponAssets = {
+  scenes: {},                       // id de skin → THREE.Group del .glb
+  onReady: null,
+  envMap: null,                     // reflejos PBR (metal satinado, vidrio de la lente) de los .glb
+  async load(renderer) {
+    let GLTFLoader, RoomEnvironment;
+    try {
+      ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+      ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
+    }
+    catch (err) { console.warn('[VIEWMODEL] GLTFLoader no disponible: modelos procedurales', err); return; }
+    const pm = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
+    this.envMap = pm.fromScene(room, 0.04).texture;   // una sola vez: un cubemap prefiltrado pequeño
+    room.dispose?.(); pm.dispose();
+    const loader = new GLTFLoader();
+    await Promise.all(Object.values(BASE_SKINS).map(async (s) => {
+      try {
+        const gltf = await loader.loadAsync(s.modelPath);
+        gltf.scene.traverse((o) => {
+          if (!o.isMesh) return;
+          o.material.envMap = this.envMap; o.material.envMapIntensity = 0.35;
+          o.material.emissiveIntensity = 0.45;          // la lente solo brilla un poco (reflejo cian/esmeralda)
+        });
+        this.scenes[s.id] = gltf.scene;
+        this.onReady?.(s);
+      } catch (err) { console.warn(`[VIEWMODEL] ${s.modelPath} no se pudo cargar: modelo procedural`, err?.message ?? err); }
+    }));
+  },
+};
 const STARTER_WEAPON = 'pica';
 const MELEE_WEAPON = 'cuchillo';
 
@@ -4271,17 +4343,10 @@ const ViewmodelFactory = {
     const muzzle = new THREE.Object3D();
     muzzle.position.set(mz[0], mz[1], mz[2]);
     root.add(muzzle);
-    // Fogonazo: tres planos cruzados aditivos fusionados en una sola geometría, ocultos hasta disparar.
-    const p1 = new THREE.PlaneGeometry(0.16, 0.16);
-    const p2 = new THREE.PlaneGeometry(0.1, 0.24); p2.rotateY(Math.PI / 2); p2.translate(0, 0, -0.06);
-    const p3 = new THREE.PlaneGeometry(0.1, 0.24); p3.rotateZ(Math.PI / 2); p3.rotateY(Math.PI / 2); p3.translate(0, 0, -0.06);
-    const flash = new THREE.Mesh(mergeGeometries([p1, p2, p3]), this._flashMat);
-    p1.dispose(); p2.dispose(); p3.dispose();
-    flash.scale.setScalar(flashScale);
-    flash.visible = false;
+    const flash = this.flash(flashScale);
     muzzle.add(flash);
     const base = spec.kind === 'knife' ? new THREE.Vector3(0.16, -0.16, -0.36) : spec.kind === 'pistol' ? new THREE.Vector3(0.15, -0.15, -0.42) : new THREE.Vector3(0.17, -0.175, -0.37);
-    // La inspección gira el arma sobre su centro (sin contar los guantes) y la aleja según su largo total
+        // La inspección gira el arma sobre su centro (sin contar los guantes) y la aleja según su largo total
     // (guantes incluidos, para que las manos no tapen la pantalla con las armas cortas).
     let minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity, backZ = -Infinity;
     for (const p of parts) {
@@ -4292,6 +4357,37 @@ const ViewmodelFactory = {
     }
     const center = new THREE.Vector3(0, (minY + maxY) / 2, (minZ + maxZ) / 2), length = backZ - minZ;
     return { root, muzzle, flash, base, center, length };
+  },
+
+  /** Fogonazo: tres planos cruzados aditivos fusionados en una sola geometría, ocultos hasta disparar. */
+  flash(scale = 1) {
+    this._flashMat ??= new THREE.MeshBasicMaterial({ map: this.flashTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
+    const p1 = new THREE.PlaneGeometry(0.16, 0.16);
+    const p2 = new THREE.PlaneGeometry(0.1, 0.24); p2.rotateY(Math.PI / 2); p2.translate(0, 0, -0.06);
+    const p3 = new THREE.PlaneGeometry(0.1, 0.24); p3.rotateZ(Math.PI / 2); p3.rotateY(Math.PI / 2); p3.translate(0, 0, -0.06);
+    const flash = new THREE.Mesh(mergeGeometries([p1, p2, p3]), this._flashMat);
+    p1.dispose(); p2.dispose(); p3.dispose();
+    flash.scale.setScalar(scale);
+    flash.visible = false;
+    return flash;
+  },
+
+  /**
+   * Viewmodel a partir del .glb de una skin base: la escena del glTF tal cual (1 malla, 1 material),
+   * su `Muzzle_Point` como boca del cañón y las poses de cadera / ADS / retroceso de BASE_SKINS.
+   */
+  fromGltf(skin, scene) {
+    const root = new THREE.Group(), model = scene.clone(true);
+    root.add(model);
+    model.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+    const muzzle = model.getObjectByName('Muzzle_Point') ?? new THREE.Object3D();
+    muzzle.add(this.flash(1.4));
+    const box = new THREE.Box3().setFromObject(model), center = box.getCenter(new THREE.Vector3());
+    const base = new THREE.Vector3().fromArray(skin.hip), ads = new THREE.Vector3().fromArray(skin.ads);
+    const tilt = skin.hipTilt.map((d) => d * DEG);
+    // Vuelta al reposo en `recover` s: exponencial que se queda en el 5 % (e^-3) en ese tiempo.
+    return { root, muzzle, flash: muzzle.children[muzzle.children.length - 1], base, ads, tilt, center, length: box.max.z - box.min.z,
+      kickReturn: 3 / skin.kick.recover, skin: skin.id };
   },
 };
 
@@ -4681,7 +4777,7 @@ class WeaponSystem {
   }
 
   /** Multiplicador por zona: cabeza = el del arma, cuerpo ×1, piernas ×0,75. */
-  _zoneMult(def, zone) { return zone === 'head' ? def.headMultiplier : zone === 'legs' ? BOT_CFG.legMultiplier : 1; }
+  _zoneMult(def, zone) { return zone === 'head' ? def.headMultiplier : zone === 'legs' ? (def.legMultiplier ?? BOT_CFG.legMultiplier) : 1; }
 
   /** Baja al cuerpo +200, headshot letal +300. */
   _reward(kill) {
@@ -4797,6 +4893,7 @@ class ViewController {
     this.sway = new THREE.Vector2(); this.swayRot = new THREE.Vector2();
     this.kickBack = 0; this.kickRot = 0; this.kickRoll = 0;
     this.bobPhase = 0; this.bobWeight = 0; this.landDip = 0;
+    this.adsW = 0;                   // 0 = cadera, 1 = ADS (modelos .glb)
     this.flashTimer = 0;
     // Inspección: peso de la pose (1 = completa) y la pose actual en números sueltos (cero objetos por frame).
     this.inspW = 0;
@@ -4806,25 +4903,30 @@ class ViewController {
   }
 
   onWeaponChanged(def) {
-    // Un modelo por arma, construido una sola vez: la skin solo cambia las texturas del material.
-    if (!this.models[def.id]) {
-      const m = ViewmodelFactory.build(def.model, def.category === 'shotgun' || def.category === 'sniper' ? 1.4 : 1);
-      this.vmPivot.add(m.root);
-      this.models[def.id] = m;
-    }
-    for (const id in this.models) this.models[id].root.visible = id === def.id;
-    this.model = this.models[def.id];
     this.inspW = 0;                  // arma nueva: sin pose de inspección
+    this.adsW = 0;
     this.applySkin(def);
   }
 
   /**
-   * Skin equipada del arma en mano → .map y .emissiveMap del material del viewmodel. Se llama al cambiar
-   * de arma, al empezar partida y cuando cambia el perfil (equipar en el menú, otra pestaña o dispositivo).
+   * Skin equipada del arma en mano → modelo y texturas. Sin skin comprada, un arma con skin base en .glb
+   * (BASE_SKINS) usa ese modelo; si no, el procedural, cuyo material compartido recibe la textura de la
+   * skin (.map y .emissiveMap). Se llama al cambiar de arma, al empezar partida y cuando cambia el perfil.
+   * Cada modelo se construye una sola vez y se guarda: cambiar de arma o de skin solo cambia cuál se ve.
    */
   applySkin(def = this.game.weapons.current.def) {
     const skin = this.game.profile.skinFor(def.id);
-    WeaponTextureFactory.applyTo(ViewmodelFactory.material(), skin ? skin.tex : 'carbon');
+    const glb = !skin && def.defaultSkin && WeaponAssets.scenes[def.defaultSkin];
+    const key = glb ? def.defaultSkin : def.id;
+    if (!this.models[key]) {
+      const m = glb ? ViewmodelFactory.fromGltf(BASE_SKINS[def.defaultSkin], glb)
+        : ViewmodelFactory.build(def.model, def.category === 'shotgun' || def.category === 'sniper' ? 1.4 : 1);
+      this.vmPivot.add(m.root);
+      this.models[key] = m;
+    }
+    for (const id in this.models) this.models[id].root.visible = id === key;
+    if (this.model !== this.models[key]) { this.model = this.models[key]; this.adsW = 0; }
+    if (!glb) WeaponTextureFactory.applyTo(ViewmodelFactory.material(), skin ? skin.tex : 'carbon');
   }
 
   /** Pose de inspección en el instante t (0..1): reposo → pose1 → pose2 → reposo, con smoothstep. */
@@ -4844,7 +4946,7 @@ class ViewController {
     this.recoilPitch = this.recoilYaw = 0; this.lastShotTime = -10;
     this.shake = 0; this.zoom = 1; this.scoped = false;
     this.sway.set(0, 0); this.swayRot.set(0, 0); this.kickBack = this.kickRot = this.kickRoll = 0;
-    this.inspW = 0;
+    this.inspW = 0; this.adsW = 0;
   }
 
   /**
@@ -4959,8 +5061,10 @@ class ViewController {
 
     const sk = Math.exp(-vm.swayReturn * dt);
     this.sway.multiplyScalar(sk); this.swayRot.multiplyScalar(sk);
-    const kk = Math.exp(-vm.kickReturn * dt);
+    const kk = Math.exp(-(this.model.kickReturn ?? vm.kickReturn) * dt);
     this.kickBack *= kk; this.kickRot *= kk; this.kickRoll *= kk;
+    // Cadera ↔ ADS (modelos .glb): interpolación exponencial mientras se mantiene el clic derecho.
+    this.adsW = damp(this.adsW, weapons.ads ? 1 : 0, CONFIG.viewmodel.adsSpeed, dt);
 
     // Bobbing ligado a la distancia recorrida: misma cadencia a cualquier fps.
     const speed = player.horizontalSpeed();
@@ -4989,8 +5093,15 @@ class ViewController {
     const iw = smoothstep(this.inspW);
 
     const m = this.model, r = m.root;
-    r.position.set(m.base.x + this.sway.x + bx, m.base.y + this.sway.y + by + dip + this.landDip, m.base.z + this.kickBack);
-    r.rotation.set(this.kickRot + this.swayRot.x + dipRot + shP + this.ipRX * iw, this.swayRot.y + shY + this.ipRY * iw, this.kickRoll + roll + bx * 2 + shY * 0.5 + this.ipRZ * iw);
+    // Pose de reposo: la de cadera o, en los .glb, mezclada con la de ADS (sin inclinación ni balanceo al apuntar).
+    let px = m.base.x, py = m.base.y, pz = m.base.z, tx = 0, ty = 0, tz = 0, free = 1;
+    if (m.ads) {
+      const a = this.adsW, h = 1 - a;
+      px = m.base.x * h + m.ads.x * a; py = m.base.y * h + m.ads.y * a; pz = m.base.z * h + m.ads.z * a;
+      tx = m.tilt[0] * h; ty = m.tilt[1] * h; tz = m.tilt[2] * h; free = 1 - a * 0.85;
+    }
+    r.position.set(px + (this.sway.x + bx) * free, py + (this.sway.y + by) * free + dip + this.landDip, pz + this.kickBack);
+    r.rotation.set(tx + this.kickRot + (this.swayRot.x + shP) * free + dipRot + this.ipRX * iw, ty + (this.swayRot.y + shY) * free + this.ipRY * iw, tz + this.kickRoll + roll + (bx * 2 + shY * 0.5) * free + this.ipRZ * iw);
     if (iw > 0) {
       // Gira sobre su centro (no sobre la empuñadura) y ese centro se acerca al punto de inspección.
       // La inercia y el balanceo se mantienen encima. applyEuler usa un cuaternión interno de Three: sin basura.
@@ -8629,6 +8740,9 @@ class Game {
     if (remembered) setTimeout(() => { if (this.state === GameState.LANDING && this.landing.mode === 'boot') this.landing.setMode('ready'); }, 8000);
     this.scheduler.start();
     this.account.init();                           // Firebase carga en segundo plano: el juego ya está en marcha
+    // Modelos .glb de las skins base: al llegar sustituyen al procedural si esa arma no lleva otra skin.
+    WeaponAssets.onReady = () => this.view.applySkin();
+    WeaponAssets.load(this.renderer);
   }
 
   /* ----------------------------- Máquina de estados ----------------------------- */

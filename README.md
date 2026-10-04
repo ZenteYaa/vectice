@@ -34,3 +34,10 @@ Modo por defecto del lobby. Tú y 4 aliados bot contra 5 bots, con las reglas de
 - Economía: victoria +3000, derrota 1900 / 2400 / 2900 según la racha, baja +200, plantar +300 a cada atacante, tope ¤ 9000.
 
 Se juega en Santuario, Acrópolis y Códice (cada mapa se dibuja en 3 draw calls). Por ahora es individual; Acrópolis y Códice se pueden usar en grupo en los otros modos cuando estén publicadas las reglas `match-1`.
+
+## Modelos 3D (Blender)
+Las skins base con modelo propio se generan con Blender por script. `blender/titan_default.py` construye el Titán (skin Estándar), con 1.400 triángulos, un solo material PBR y el `Muzzle_Point`, y lo exporta a `assets/weapons/titan_default.glb`:
+
+    blender --background --python blender/titan_default.py
+
+(o `pip install bpy` y `python blender/titan_default.py`). El juego carga el .glb al arrancar; si no puede (por ejemplo, abriendo `index.html` como archivo local), usa el modelo procedural. Las poses de cadera y ADS, el retroceso y la ficha del arma están en `BASE_SKINS` de `index.html`.
