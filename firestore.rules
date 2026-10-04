@@ -11,7 +11,8 @@ rules_version = '2';
 // users/{uid}/sent/{destinatario}   Solicitudes enviadas (para verlas y cancelarlas).
 // users/{uid}/partyInvites/{grupo}  Invitaciones a un grupo.
 // parties/{grupo}                   Grupo: líder, miembros (máx. 5), mapa, dificultad y arranque de partida.
-// rulesVersion/social-2             Marca de versión (no existe; solo se puede leer). El juego la lee al conectar:
+// parties/{grupo}/rtc/{miembro}     Conexión WebRTC de la partida en grupo: oferta del líder (anfitrión) y respuesta del miembro.
+// rulesVersion/social-2, net-1      Marcas de versión (no existen; solo se pueden leer). El juego lee social-2 al conectar:
 //                                   si se deniega, las reglas publicadas en Firebase son antiguas.
 //
 // Cuentas (players):
@@ -315,12 +316,45 @@ service cloud.firestore {
           || claim(resource.data, request.resource.data));
 
       allow delete: if signedIn() && resource.data.members == [me()];
+
+      // Señalización WebRTC de cada partida (launchSeq). Solo la leen los miembros del grupo.
+      // El líder escribe la oferta SDP para un miembro; ese miembro solo puede añadir su respuesta.
+      match /rtc/{uid} {
+
+        function partyData() {
+          return get(partyDoc(pid)).data;
+        }
+
+        function validOffer(d, p) {
+          return d.keys().hasOnly(['seq', 'host', 'offer', 'answer', 'createdAt'])
+            && d.keys().hasAll(['seq', 'host', 'offer', 'answer', 'createdAt'])
+            && d.seq == p.launchSeq
+            && d.host == me()
+            && d.offer is string && d.offer.size() <= 20000
+            && d.answer == null
+            && d.createdAt == request.time;
+        }
+
+        allow read: if signedIn() && me() in partyData().members;
+
+        allow create, update: if signedIn() && uid != me()
+          && me() == partyData().leader && uid in partyData().members
+          && validOffer(request.resource.data, partyData());
+
+        allow update: if signedIn() && me() == uid && me() in partyData().members
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'answeredAt'])
+          && request.resource.data.answer is string && request.resource.data.answer.size() <= 20000
+          && request.resource.data.answeredAt == request.time;
+
+        allow delete: if false;
+      }
     }
 
-    // Marca de versión: leerla siempre está permitido (el documento no existe). Si el juego no puede leerla,
-    // las reglas activas en Firebase no son estas. Debe coincidir con SOCIAL.rulesVersion de index.html.
+    // Marcas de versión: leerlas siempre está permitido (los documentos no existen). Si el juego no puede leer
+    // social-2, las reglas activas en Firebase no son estas (SOCIAL.rulesVersion de index.html). net-1 marca
+    // que incluyen la señalización de la partida en grupo (parties/{grupo}/rtc).
     match /rulesVersion/{version} {
-      allow get: if version == 'social-2';
+      allow get: if version in ['social-2', 'net-1'];
     }
 
     // Todo lo demás, cerrado.

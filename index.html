@@ -1535,6 +1535,7 @@ class World {
     this.dynamicBoxes = [];   // Colisionadores móviles (bots vivos): frenan al jugador, no a las balas.
     this.sites = [];          // { id, center: Vector3, radius } → futuro modo plantar/desactivar
     this.doors = [];
+    this.lastDoor = -1;       // índice de la última puerta usada con E (se envía al grupo)
     this.botPosts = [];       // { x, z, yaw } que rellena cada mapa con b.bot(...)
     this.spawn = new THREE.Vector3(0, 0, 3);
     this.spawnYaw = 0;
@@ -1775,9 +1776,9 @@ class World {
   /** E: abre/cierra la puerta más cercana (≤ 3 m). No se cierra sobre el jugador. */
   interact(player) {
     let best = null, bestD = 3;
-    for (const d of this.doors) {
-      const dist = Math.hypot(player.pos.x - d.cx, player.pos.z - d.cz);
-      if (dist < bestD) { best = d; bestD = dist; }
+    for (let i = 0; i < this.doors.length; i++) {
+      const d = this.doors[i], dist = Math.hypot(player.pos.x - d.cx, player.pos.z - d.cz);
+      if (dist < bestD) { best = d; bestD = dist; this.lastDoor = i; }
     }
     if (!best) return false;
     if (best.open) {
@@ -1839,6 +1840,7 @@ class PlayerController {
     this.shield = 0;              // Puntos de escudo actuales (los compra la tienda).
     this.onDamaged = null;        // Callback(cantidad, origenX, origenZ) para HUD/audio.
     this.onDeath = null;
+    this.spawnOffset = 0;         // en grupo cada jugador aparece desplazado a un lado de la base (m, eje X)
   }
 
   /** Daño entrante: el escudo recibe el daño antes que la vida; lo que sobra pasa a la vida. */
@@ -1852,7 +1854,12 @@ class PlayerController {
   }
 
   respawn() {
-    this.pos.copy(this.world.spawn); this.prevPos.copy(this.pos);
+    this.pos.copy(this.world.spawn);
+    if (this.spawnOffset !== 0) {
+      this.pos.x += this.spawnOffset;
+      if (this.overlapsAt(this.pos.x, 0, this.pos.z, this.cfg.standHeight)) this.pos.x = this.world.spawn.x;
+    }
+    this.prevPos.copy(this.pos);
     this.vel.set(0, 0, 0);
     this.crouchT = 0; this.height = this.cfg.standHeight; this.prevEye = this.eyeHeight();
     this.health = this.maxHealth; this.shield = 0;
@@ -2016,30 +2023,37 @@ class BotManager {
     game.scene.add(this.group);
     // Scratch reutilizable (cero asignaciones en el bucle).
     this._dir = new THREE.Vector3(); this._o = new THREE.Vector3(); this._end = new THREE.Vector3(); this._muz = new THREE.Vector3();
+    this._targets = [];
     this._hit = { dist: 0, point: new THREE.Vector3(), normal: new THREE.Vector3(), bot: null, zone: null };
     this._m4 = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._s = new THREE.Vector3(1, 1, 1); this._p = new THREE.Vector3();
     this._buildAssets();
   }
 
-  _buildAssets() {
+  /** Soldado de cajas con colores por vértice: el mismo cuerpo para los defensores y para tus compañeros. */
+  static soldierGeometry(torso, vest, visor) {
     const P = [];
     const add = (color, w, h, d, x, y, z, rx = 0) => P.push({ color, w, h, d, x, y, z, rx });
     // Piernas y botas
     add(0x262a31, 0.17, 0.86, 0.19, -0.1, 0.47, 0); add(0x262a31, 0.17, 0.86, 0.19, 0.1, 0.47, 0);
     add(0x14161a, 0.18, 0.08, 0.26, -0.1, 0.04, -0.03); add(0x14161a, 0.18, 0.08, 0.26, 0.1, 0.04, -0.03);
-    // Torso, chaleco con el color del bando rival y cinturón
-    add(0x3a2a30, 0.48, 0.6, 0.28, 0, 1.2, 0);
-    add(0xff5a6e, 0.42, 0.34, 0.06, 0, 1.24, -0.16);
+    // Torso, chaleco con el color del bando y cinturón
+    add(torso, 0.48, 0.6, 0.28, 0, 1.2, 0);
+    add(vest, 0.42, 0.34, 0.06, 0, 1.24, -0.16);
     add(0x2c2f36, 0.5, 0.08, 0.3, 0, 0.94, 0);
     // Cabeza, casco y visor
     add(0xb98a6a, 0.22, 0.24, 0.22, 0, 1.6, 0);
     add(0x30353d, 0.27, 0.12, 0.27, 0, 1.74, 0.01);
-    add(0xff3b30, 0.2, 0.05, 0.02, 0, 1.63, -0.115);
+    add(visor, 0.2, 0.05, 0.02, 0, 1.63, -0.115);
     // Brazos y fusil (apuntan a -Z, igual que la cámara)
-    add(0x3a2a30, 0.13, 0.13, 0.42, -0.2, 1.32, -0.2); add(0x3a2a30, 0.13, 0.13, 0.42, 0.22, 1.3, -0.16);
+    add(torso, 0.13, 0.13, 0.42, -0.2, 1.32, -0.2); add(torso, 0.13, 0.13, 0.42, 0.22, 1.3, -0.16);
     add(0x1d2025, 0.07, 0.1, 0.72, 0.06, 1.34, -0.46);
     add(0x1d2025, 0.05, 0.14, 0.06, 0.06, 1.24, -0.38);
-    this.geometry = coloredBoxGeometry(P);
+    return coloredBoxGeometry(P);
+  }
+
+  _buildAssets() {
+    this.geometry = BotManager.soldierGeometry(0x3a2a30, 0xff5a6e, 0xff3b30);      // defensores: rojo
+    this.allyGeometry = BotManager.soldierGeometry(0x283840, 0x3fd6c4, 0x3fd6c4);  // compañeros de grupo: turquesa
     this.muzzleLocal = new THREE.Vector3(0.06, 1.35, -0.84);
     // Fogonazo: sprite aditivo compartido (solo cuesta un draw call el frame en que se ve).
     this.flashMat = new THREE.SpriteMaterial({ map: ViewmodelFactory.flashTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
@@ -2071,8 +2085,10 @@ class BotManager {
       post: { x: 0, z: 0, yaw: 0 }, pos: new THREE.Vector3(), prev: new THREE.Vector3(), yaw: 0, prevYaw: 0, pitch: 0,
       state: BotState.HOLD, health: BOT_CFG.health, seen: false, react: 0, lostT: 0, alertT: 0, alertYaw: 0,
       phase: 0, phaseT: 0, burstLeft: 0, fireT: 0, strafeDir: 1, moving: false,
-      fall: 0, flashT: 0, hitFlash: 0,
+      fall: 0, flashT: 0, hitFlash: 0, target: null,
       hb: { head: newBox(), body: newBox(), legs: newBox() }, collider: newBox(),
+      // Partida en grupo, en los miembros: las dos últimas fotos del anfitrión (posición, giro, mira, hora).
+      nx0: 0, nz0: 0, ny0: 0, np0: 0, nt0: 0, nx1: 0, nz1: 0, ny1: 0, np1: 0, nt1: 0, nState: 0, nCount: 0,
     };
     this.game.world.dynamicBoxes.push(bot.collider);
     return bot;
@@ -2101,7 +2117,7 @@ class BotManager {
       b.yaw = b.prevYaw = b.post.yaw; b.pitch = 0;
       b.state = BotState.HOLD; b.health = BOT_CFG.health; b.seen = false;
       b.react = 0; b.lostT = 0; b.alertT = 0; b.phase = 0; b.phaseT = 0; b.burstLeft = 0; b.fireT = 0; b.moving = false;
-      b.fall = 0; b.flashT = 0; b.hitFlash = 0;
+      b.fall = 0; b.flashT = 0; b.hitFlash = 0; b.target = null; b.nCount = 0;
       b.mat.emissive.setRGB(0, 0, 0);
       this._updateBoxes(b);
       this.alive++;
@@ -2156,15 +2172,44 @@ class BotManager {
     b.lostT = 0; b.phase = 0; b.burstLeft = BOT_CFG.weapon.burst; b.fireT = 0; b.moving = false;
   }
 
+  /**
+   * Objetivos posibles: tú y, en una partida en grupo, tus compañeros conectados (en el anfitrión).
+   * El array se reutiliza (length = 0): ni una asignación por tick.
+   */
+  _collectTargets() {
+    const t = this._targets;
+    t.length = 0;
+    t.push(this.game.player);
+    this.game.net.pushTargets(t);
+    return t;
+  }
+
+  /** ¿Ve el bot a alguno de los objetivos? Elige el visible más cercano (o mantiene al que ya combate). */
+  _perceive(b, ey, halfFov, targets) {
+    const world = this.game.world;
+    let best = null, bestD = BOT_CFG.viewRange;
+    for (let k = 0; k < targets.length; k++) {
+      const t = targets[k];
+      if (t.health <= 0) continue;
+      const dx = t.pos.x - b.pos.x, dz = t.pos.z - b.pos.z, d = Math.sqrt(dx * dx + dz * dz);
+      if (d >= bestD) continue;
+      if (!(b.state === BotState.ENGAGE || b.alertT > 0 || Math.abs(wrapAngle(Math.atan2(-dx, -dz) - b.yaw)) < halfFov)) continue;
+      // Ver los ojos o el pecho basta (asomar solo la cabeza también te delata).
+      const eyeY = t.pos.y + t.eyeHeight(), chestY = t.pos.y + t.height * 0.55;
+      if (world.segmentBlocked(b.pos.x, ey, b.pos.z, t.pos.x, eyeY, t.pos.z) && world.segmentBlocked(b.pos.x, ey, b.pos.z, t.pos.x, chestY, t.pos.z)) continue;
+      best = t; bestD = d;
+    }
+    if (best !== null) b.target = best;
+    return best !== null;
+  }
+
   tick(dt) {
     this.tickCount++;
-    const player = this.game.player, world = this.game.world, diff = this.diff;
+    const diff = this.diff, targets = this._collectTargets();
     if (this.respawnT > 0) {
       this.respawnT -= dt;
       if (this.respawnT <= 0) { this.wave++; this.resetAll(); this.game.hud.showNotice(`OLEADA ${this.wave} · DEFENSORES EN POSICIÓN`, 2.5); }
     }
-    const pAlive = player.health > 0;
-    const px = player.pos.x, pz = player.pos.z, pEyeY = player.pos.y + player.eyeHeight(), pChestY = player.pos.y + player.height * 0.55;
     const halfFov = BOT_CFG.fov * DEG / 2;
 
     for (let i = 0; i < this.bots.length; i++) {
@@ -2176,22 +2221,12 @@ class BotManager {
       if (b.state === BotState.DEAD) { b.fall = approach(b.fall, 1, dt * 4); continue; }
 
       const ey = b.pos.y + BOT_CFG.eye;
-      const dx = px - b.pos.x, dz = pz - b.pos.z, distH = Math.sqrt(dx * dx + dz * dz);
-      const wantYaw = Math.atan2(-dx, -dz);
-
       // ---- Percepción (32 Hz por bot, escalonada entre bots) ----
-      if ((this.tickCount + i) % 4 === 0) {
-        let vis = false;
-        if (pAlive && distH < BOT_CFG.viewRange &&
-            (b.state === BotState.ENGAGE || b.alertT > 0 || Math.abs(wrapAngle(wantYaw - b.yaw)) < halfFov)) {
-          // Ver los ojos o el pecho basta (asomar solo la cabeza también te delata).
-          vis = !world.segmentBlocked(b.pos.x, ey, b.pos.z, px, pEyeY, pz) || !world.segmentBlocked(b.pos.x, ey, b.pos.z, px, pChestY, pz);
-        }
-        b.seen = vis;
-      }
+      if ((this.tickCount + i) % 4 === 0) b.seen = this._perceive(b, ey, halfFov, targets);
+      const t = b.target, tAlive = t !== null && t.health > 0;
 
       if (b.state === BotState.HOLD) {
-        if (b.seen) this._engage(b, 1);
+        if (b.seen && tAlive) this._engage(b, 1);
         else {
           const goal = b.alertT > 0 ? b.alertYaw : b.post.yaw;
           b.yaw = wrapAngle(b.yaw + wrapAngle(goal - b.yaw) * (1 - Math.exp(-(b.alertT > 0 ? 7 : 2.5) * dt)));
@@ -2202,25 +2237,26 @@ class BotManager {
       }
 
       if (b.state === BotState.ENGAGE) {
-        if (b.seen) {
+        const dx = t.pos.x - b.pos.x, dz = t.pos.z - b.pos.z, distH = Math.sqrt(dx * dx + dz * dz);
+        if (b.seen && tAlive) {
           // Mira con retraso exponencial: el error crece con tu velocidad angular respecto al bot.
           const k = 1 - Math.exp(-diff.tracking * dt);
-          const wantPitch = Math.atan2(player.pos.y + player.height * diff.aimHeight - ey, Math.max(distH, 0.1));
-          b.yaw = wrapAngle(b.yaw + wrapAngle(wantYaw - b.yaw) * k);
+          const wantPitch = Math.atan2(t.pos.y + t.height * diff.aimHeight - ey, Math.max(distH, 0.1));
+          b.yaw = wrapAngle(b.yaw + wrapAngle(Math.atan2(-dx, -dz) - b.yaw) * k);
           b.pitch += (wantPitch - b.pitch) * k;
           b.lostT = 0;
           b.react -= dt;
-        } else if ((b.lostT += dt) > 3 || !pAlive) {
-          b.state = BotState.HOLD; b.moving = false;     // te ha perdido: vuelve a su ángulo
+        } else if ((b.lostT += dt) > 3 || !tAlive) {
+          b.state = BotState.HOLD; b.moving = false; b.target = null;   // lo ha perdido: vuelve a su ángulo
         }
         if (b.state === BotState.ENGAGE) {
           if (b.phase === 1) {                            // strafe corto entre ráfagas
             this._strafe(b, dt);
             if ((b.phaseT -= dt) <= 0) { b.phase = 0; b.moving = false; b.burstLeft = BOT_CFG.weapon.burst; b.fireT = 0.1; }
-          } else if (b.seen && b.react <= 0 && pAlive) {  // ráfaga quieto (frena 100 ms antes, como un humano)
+          } else if (b.seen && b.react <= 0 && tAlive) {  // ráfaga quieto (frena 100 ms antes, como un humano)
             b.fireT -= dt;
             if (b.fireT <= 0 && b.burstLeft > 0) {
-              this._fire(b, player, distH);
+              this._fire(b, t);
               b.fireT = 60 / BOT_CFG.weapon.rpm;
               if (--b.burstLeft === 0) { b.phase = 1; b.phaseT = rand(0.3, 0.65); b.strafeDir = Math.random() < 0.5 ? -1 : 1; b.moving = true; }
             }
@@ -2230,10 +2266,11 @@ class BotManager {
       this._updateBoxes(b);
     }
     if (this.pendingReset) this.resetAll();
+    this.game.net.sendBots(dt);
   }
 
-  /** Disparo de un bot: sale de sus ojos hacia donde apunta (con retraso) + cono de dispersión. */
-  _fire(b, player, distH) {
+  /** Disparo de un bot a su objetivo (tú o un compañero): sale de sus ojos hacia donde apunta + cono de dispersión. */
+  _fire(b, target) {
     const g = this.game, W = BOT_CFG.weapon;
     const cp = Math.cos(b.pitch), sy = Math.sin(b.yaw), cyw = Math.cos(b.yaw);
     const fx = -sy * cp, fy = Math.sin(b.pitch), fz = -cyw * cp;      // adelante
@@ -2245,21 +2282,97 @@ class BotManager {
     const o = this._o.set(b.pos.x, b.pos.y + BOT_CFG.eye, b.pos.z);
     const hit = this._hit;
     const wall = g.world.raycast(o, dir, W.range, hit);
-    // ¿Alcanza antes al jugador? (cabeza / cuerpo / piernas)
-    const hb = player.hitboxes();
+    // ¿Alcanza antes a su objetivo? (cabeza / cuerpo / piernas)
+    const hb = target.hitboxes();
     let zone = 0;
     setRay(o, dir, wall ? hit.dist : W.range);
     if (rayBox(hb.head)) { RAY[6] = RAY[7]; zone = 1; }
     if (rayBox(hb.body)) { RAY[6] = RAY[7]; zone = 2; }
     if (rayBox(hb.legs)) { RAY[6] = RAY[7]; zone = 3; }
     const end = this._end.copy(o).addScaledVector(dir, RAY[6]);
-    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, W.tracerSpeed, 3);
-    if (zone) player.takeDamage(W.damage * this.diff.damageMult * (zone === 1 ? W.headMultiplier : zone === 3 ? BOT_CFG.legMultiplier : 1), b.pos.x, b.pos.z);
-    else if (wall) g.impacts.spawnImpact(hit.point, hit.normal, true);
+    const wallHit = !zone && wall;
+    if (zone) {
+      const amount = W.damage * this.diff.damageMult * (zone === 1 ? W.headMultiplier : zone === 3 ? BOT_CFG.legMultiplier : 1);
+      if (target === g.player) g.player.takeDamage(amount, b.pos.x, b.pos.z);
+      else g.net.sendDamage(target, amount, b.pos.x, b.pos.z);      // compañero: el daño viaja a su navegador
+    }
+    this.showShot(b, end, wallHit, hit.normal);
+    g.net.sendBotShot(b.id, end, wallHit);
+  }
+
+  /** Lo que se ve y se oye de un disparo de bot: trazadora, impacto, fogonazo y sonido según dónde estés tú. */
+  showShot(b, end, wallHit, normal) {
+    const g = this.game, p = g.player.pos;
+    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, BOT_CFG.weapon.tracerSpeed, 3);
+    if (wallHit) g.impacts.spawnImpact(end, normal, true);
     // Audio posicional: paneo según el ángulo respecto a tu vista, volumen y agudos según distancia.
-    const rel = wrapAngle(Math.atan2(-(b.pos.x - player.pos.x), -(b.pos.z - player.pos.z)) - g.view.yaw);
-    g.audio.shot(BOT_SHOT_SOUND, -Math.sin(rel), Math.max(distH, 1));
+    const dx = b.pos.x - p.x, dz = b.pos.z - p.z;
+    const rel = wrapAngle(Math.atan2(-dx, -dz) - g.view.yaw);
+    g.audio.shot(BOT_SHOT_SOUND, -Math.sin(rel), Math.max(Math.sqrt(dx * dx + dz * dz), 1));
     b.flashT = 0.05;
+  }
+
+  /**
+   * Partida en grupo, en los miembros: los bots los mueve el anfitrión. Cada tick se colocan entre sus
+   * dos últimas fotos (interpolación con un pequeño retraso), con sus hitboxes al día para tus disparos.
+   */
+  tickPuppets(dt, now) {
+    const rt = now - NET.interpDelayMs;
+    let alive = 0;
+    for (let i = 0; i < this.bots.length; i++) {
+      const b = this.bots[i];
+      if (!b.active) continue;
+      b.prev.copy(b.pos); b.prevYaw = b.yaw;
+      if (b.hitFlash > 0) b.hitFlash = Math.max(0, b.hitFlash - dt * 6);
+      if (b.flashT > 0) b.flashT -= dt;
+      if (b.nCount === 0) { if (b.state !== BotState.DEAD) alive++; continue; }   // aún sin datos: en su puesto
+      if (b.nState === BotState.DEAD) {
+        if (b.state !== BotState.DEAD) { b.state = BotState.DEAD; b.moving = false; this._disableCollider(b); }
+        b.fall = approach(b.fall, 1, dt * 4);
+        continue;
+      }
+      if (b.state === BotState.DEAD) {             // nueva oleada: vuelve a su puesto sin deslizarse desde donde cayó
+        b.state = BotState.HOLD; b.fall = 0; b.hitFlash = 0;
+        b.nx0 = b.nx1; b.nz0 = b.nz1; b.ny0 = b.ny1; b.np0 = b.np1;
+        b.pos.set(b.nx1, 0, b.nz1); b.prev.copy(b.pos); b.yaw = b.prevYaw = b.ny1;
+      }
+      b.state = b.nState;
+      const span = b.nt1 - b.nt0, a = span > 0 ? clamp((rt - b.nt0) / span, 0, 1.25) : 1;
+      b.pos.x = lerp(b.nx0, b.nx1, a); b.pos.z = lerp(b.nz0, b.nz1, a);
+      b.yaw = wrapAngle(b.ny0 + wrapAngle(b.ny1 - b.ny0) * a);
+      b.pitch = lerp(b.np0, b.np1, a);
+      this._updateBoxes(b);
+      alive++;
+    }
+    this.alive = alive;
+  }
+
+  /** Foto de un bot que llega del anfitrión (solo en los miembros). */
+  netPush(i, x, z, yaw, pitch, state, now) {
+    const b = this.bots[i];
+    if (!b || !b.active) return;
+    if (b.nCount === 0 || (state === BotState.DEAD) !== (b.nState === BotState.DEAD)) {
+      b.nx0 = x; b.nz0 = z; b.ny0 = yaw; b.np0 = pitch; b.nt0 = now - 1;   // primer dato o cambio vivo/muerto: sin interpolar
+    } else {
+      b.nx0 = b.nx1; b.nz0 = b.nz1; b.ny0 = b.ny1; b.np0 = b.np1; b.nt0 = b.nt1;
+    }
+    b.nx1 = x; b.nz1 = z; b.ny1 = yaw; b.np1 = pitch; b.nt1 = now; b.nState = state;
+    b.nCount++;
+  }
+
+  /** El anfitrión se fue: los bots vuelven a pensar aquí, desde donde estaban. */
+  takeOver() {
+    this.alive = 0;
+    for (let i = 0; i < this.bots.length; i++) {
+      const b = this.bots[i];
+      if (!b.active) continue;
+      b.nCount = 0; b.target = null;
+      if (b.state === BotState.DEAD) continue;
+      b.state = BotState.HOLD; b.health = BOT_CFG.health; b.react = 0; b.lostT = 0; b.alertT = 0; b.phase = 0; b.burstLeft = 0; b.moving = false;
+      this._updateBoxes(b);
+      this.alive++;
+    }
+    if (this.alive === 0) this.respawnT = BOT_CFG.respawnDelay;
   }
 
   /** Posición en mundo del cañón del bot (rotación Y de Three aplicada a mano, sin matrices). */
@@ -2268,25 +2381,31 @@ class BotManager {
     return out.set(b.pos.x + m.x * c + m.z * s, b.pos.y + m.y, b.pos.z - m.x * s + m.z * c);
   }
 
-  /** Daño del jugador a un bot. Devuelve 'head' | 'body' si lo elimina, o null. */
-  applyDamage(b, zone, amount) {
+  /**
+   * Daño a un bot. `shooter` = quien disparó (tu jugador, o el compañero de un mensaje HIT en el
+   * anfitrión). Devuelve 'head' | 'body' si lo elimina, o null. La baja se apunta a quien disparó.
+   */
+  applyDamage(b, zone, amount, shooter = this.game.player) {
     if (b.state === BotState.DEAD) return null;
     b.health -= amount; b.hitFlash = 1;
     if (b.health <= 0) {
-      b.state = BotState.DEAD; b.health = 0; b.moving = false; b.flashT = 0;
+      const kill = zone === 'head' ? 'head' : 'body';
+      b.state = BotState.DEAD; b.health = 0; b.moving = false; b.flashT = 0; b.target = null;
       this._disableCollider(b);
       this.alive--;
-      this.game.onBotKilled(zone === 'head');
+      if (shooter === this.game.player) this.game.onBotKilled(zone === 'head');
+      else this.game.net.sendKill(shooter, kill);
       if (this.alive === 0) {
         this.game.onWaveCleared();
+        this.game.net.sendCleared();
         this.respawnT = BOT_CFG.respawnDelay;
         this.game.hud.showNotice(`ZONA DESPEJADA · NUEVA OLEADA EN ${BOT_CFG.respawnDelay} s`, BOT_CFG.respawnDelay);
       }
-      return zone === 'head' ? 'head' : 'body';
+      return kill;
     }
-    // Reacción al daño: entra en combate al instante y reacciona más rápido.
-    if (b.state === BotState.HOLD) this._engage(b, 0.6);
-    const p = this.game.player.pos;
+    // Reacción al daño: entra en combate al instante (contra quien le ha disparado) y reacciona más rápido.
+    if (b.state === BotState.HOLD) { b.target = shooter; this._engage(b, 0.6); }
+    const p = shooter.pos;
     b.alertT = 3; b.alertYaw = Math.atan2(-(p.x - b.pos.x), -(p.z - b.pos.z));
     return null;
   }
@@ -2964,6 +3083,7 @@ class WeaponSystem {
     this._origin = new THREE.Vector3(); this._dir = new THREE.Vector3();
     this._fwd = new THREE.Vector3(); this._right = new THREE.Vector3(); this._up = new THREE.Vector3();
     this._end = new THREE.Vector3(); this._normal = new THREE.Vector3(); this._muzzle = new THREE.Vector3();
+    this._netEnd = new THREE.Vector3();
 
     // Las definiciones nunca se modifican; cada arma comprada es una instancia con estado propio.
     this.slots = {
@@ -3154,8 +3274,14 @@ class WeaponSystem {
     return hit.dist < far ? hit : null;
   }
 
-  /** Aplica daño a un bot y devuelve 'head' | 'body' si lo ha eliminado, o null. */
+  /**
+   * Aplica daño a un bot y devuelve 'head' | 'body' si lo ha eliminado, o null. En una partida en grupo
+   * los bots son del anfitrión: el impacto (calculado aquí, sobre lo que ves) viaja a él y la baja
+   * vuelve en un mensaje (Net._onKill), con su recompensa.
+   */
   _damageTarget(bot, zone, amount) {
+    const net = this.game.net;
+    if (net.isPuppet) { net.sendHit(bot, zone, amount); bot.hitFlash = 1; return null; }
     return this.game.bots.applyDamage(bot, zone, amount);
   }
 
@@ -3179,7 +3305,7 @@ class WeaponSystem {
     const fwd = this._fwd, right = this._right, up = this._up, origin = this._origin;
     g.view.getMuzzleWorld(this._muzzle);
 
-    let hitAny = false, hitHead = false, kill = null;
+    let hitAny = false, hitHead = false, kill = null, firstWall = false;
     for (let p = 0; p < def.pellets; p++) {
       // Dispersión: cono uniforme para perdigones, ligeramente sesgado al centro para balas.
       const spreadTan = Math.tan(this.spread * DEG) * (def.pellets > 1 ? Math.sqrt(Math.random()) : Math.random());
@@ -3203,7 +3329,9 @@ class WeaponSystem {
 
       // Trazadora desde el cañón visible hasta el impacto (máx. 4 por disparo).
       if (p < 4) g.impacts.spawnTracer(this._muzzle, end, def.tracer.speed, def.tracer.length);
+      if (p === 0) { this._netEnd.copy(end); firstWall = !!hit && !hit.bot; }
     }
+    g.net.sendShot(origin, this._netEnd, def, firstWall);      // tus compañeros ven la trazadora y oyen el disparo
     if (hitAny) { g.hud.hitMarker(hitHead || !!kill); if (hitHead) g.audio.dink(); else g.audio.hit(false); }
     if (kill) g.audio.kill();
     this._reward(kill);
@@ -5921,6 +6049,568 @@ class LobbyUI {
 }
 
 /* =====================================================================================
+ *  Net · partida en grupo P2P con WebRTC.
+ *
+ *  Topología en estrella: el líder del grupo es el ANFITRIÓN. Él mueve los bots (IA, daño, oleadas)
+ *  y cada miembro se conecta solo con él; el anfitrión reenvía a los demás lo que le llega.
+ *  Cada jugador mueve a su propio personaje en su navegador (física a 128 Hz, sin esperar a la red)
+ *  y envía su posición 30 veces por segundo. Los demás lo ven interpolado entre sus dos últimos datos.
+ *
+ *  Señalización (cómo se encuentran los navegadores): por Firestore, una sola vez al iniciar la partida.
+ *    parties/{grupo}/rtc/{miembro} = { seq, host, offer, answer }
+ *    1. El anfitrión crea la oferta SDP con todos sus candidatos ICE y la escribe en el documento del miembro.
+ *    2. El miembro escribe su respuesta en el mismo documento. Desde ahí todo va directo entre navegadores.
+ *  STUN público para atravesar el router. Sin servidor TURN: si dos redes no se dejan conectar
+ *  directamente (algunas redes de empresa o de móvil), ese miembro sigue en solitario contra sus bots.
+ *
+ *  Dos canales por conexión: 'st' sin garantías (posiciones, bots, trazadoras: si se pierde uno, el
+ *  siguiente lo sustituye) y 'ev' fiable y en orden (impactos, daño, bajas, puertas).
+ *  Mensajes frecuentes en binario (Float32Array reutilizados: nada de memoria nueva al enviar).
+ *
+ *  Mensajes binarios (el primer número es el tipo, ver MSG):
+ *    STATE   [1, plaza, x, y, z, yaw, pitch, altura, vida, 0]            jugador → todos (30 Hz)
+ *    BOTS    [2, oleada, n, (x, z, yaw, pitch, estado) × n]               anfitrión → miembros (20 Hz)
+ *    SHOT    [3, plaza, ox, oy, oz, ex, ey, ez, arma, pared]               disparo de un jugador
+ *    BOTSHOT [4, bot, ex, ey, ez, pared]                                   disparo de un bot
+ *    HIT     [5, plaza, bot, zona, daño]                                   miembro → anfitrión
+ *    DAMAGE  [6, daño, desdeX, desdeZ]                                     anfitrión → miembro
+ *  Eventos poco frecuentes en JSON por 'ev': kill, cleared, door, down.
+ * ===================================================================================== */
+const NET = {
+  sendHz: 30,                // estado de tu jugador
+  botHz: 20,                 // foto de los bots (anfitrión)
+  interpDelayMs: 80,         // los demás se dibujan un poco en el pasado: siempre entre dos datos reales
+  gatherMs: 2500,            // espera máxima para reunir candidatos ICE antes de escribir la oferta o la respuesta
+  connectTimeoutMs: 20000,   // si en 20 s no hay conexión, ese jugador sigue por su cuenta
+  maxBots: 16,
+  iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, { urls: 'stun:stun.cloudflare.com:3478' }],
+};
+const MSG = Object.freeze({ STATE: 1, BOTS: 2, SHOT: 3, BOTSHOT: 4, HIT: 5, DAMAGE: 6 });
+const NET_ZONES = ['', 'head', 'body', 'legs'];
+const WEAPON_BY_NET_ID = Object.values(WEAPON_DEFS);
+const WEAPON_NET_ID = new Map(WEAPON_BY_NET_ID.map((def, i) => [def, i]));
+
+/** Normal aproximada de un impacto visto desde lejos: el eje dominante de la dirección contraria al disparo. */
+function axisNormal(out, fromX, fromY, fromZ, toX, toY, toZ) {
+  const dx = fromX - toX, dy = fromY - toY, dz = fromZ - toZ, ax = Math.abs(dx), ay = Math.abs(dy), az = Math.abs(dz);
+  if (ax >= ay && ax >= az) return out.set(Math.sign(dx) || 1, 0, 0);
+  if (ay >= az) return out.set(0, Math.sign(dy) || 1, 0);
+  return out.set(0, 0, Math.sign(dz) || 1);
+}
+
+/**
+ * Un compañero de grupo: su soldado (turquesa) con su ID encima, visible a través de las paredes.
+ * Tiene la misma forma que tu jugador para los bots del anfitrión: pos, height, health, eyeHeight(), hitboxes().
+ */
+class RemotePlayer {
+  constructor(game, slot, uid, label) {
+    this.game = game;
+    this.slot = slot;
+    this.uid = uid;
+    this.label = label;
+    this.peer = null;
+    this.pos = new THREE.Vector3();
+    this.height = CONFIG.player.standHeight;
+    this.health = 0;
+    this.live = false;                        // ya llegó su primer estado
+    this.snap = new Float64Array(14);         // dos datos: [hora, x, y, z, yaw, pitch, altura] × 2
+    this.fall = 0;
+    this.flashT = 0;
+    this._hb = { head: newBox(), body: newBox(), legs: newBox() };
+    const bots = game.bots;
+    this.root = new THREE.Group();
+    this.hinge = new THREE.Group();
+    this.root.add(this.hinge);
+    this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.1 });
+    const mesh = new THREE.Mesh(bots.allyGeometry, this.mat);
+    mesh.receiveShadow = true;
+    this.hinge.add(mesh);
+    this.flash = new THREE.Sprite(bots.flashMat);
+    this.flash.scale.set(0.45, 0.45, 1); this.flash.position.copy(bots.muzzleLocal); this.flash.visible = false;
+    this.hinge.add(this.flash);
+    // Nombre#tag encima de la cabeza (textura pintada una vez al empezar la partida).
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const g = c.getContext('2d');
+    g.font = '700 46px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 9; g.strokeStyle = 'rgba(6,14,18,0.85)'; g.strokeText(label, 256, 50);
+    g.fillStyle = '#3fd6c4'; g.fillText(label, 256, 50);
+    this.tex = new THREE.CanvasTexture(c);
+    this.tex.colorSpace = THREE.SRGBColorSpace;
+    this.labelMat = new THREE.SpriteMaterial({ map: this.tex, depthTest: false, depthWrite: false, transparent: true });
+    this.tag = new THREE.Sprite(this.labelMat);
+    this.tag.scale.set(1.9, 0.36, 1);
+    this.tag.renderOrder = 20;
+    this.root.add(this.tag);
+    this.root.visible = false;
+    game.scene.add(this.root);
+  }
+
+  eyeHeight() { return this.height - CONFIG.player.eyeOffset; }
+
+  hitboxes() {
+    const p = this.pos, h = this.height, hb = this._hb;
+    setBoxXZ(hb.head, p.x, p.z, 0.16, p.y + h - 0.3, p.y + h);
+    setBoxXZ(hb.body, p.x, p.z, 0.3, p.y + h * 0.48, p.y + h - 0.3);
+    setBoxXZ(hb.legs, p.x, p.z, 0.24, p.y, p.y + h * 0.48);
+    return hb;
+  }
+
+  /** Nuevo estado recibido. Al reaparecer (o con el primer dato) no se interpola desde donde cayó. */
+  push(now, x, y, z, yaw, pitch, h, health) {
+    const s = this.snap, snap = !this.live || (health > 0) !== (this.health > 0);
+    if (snap) { s[0] = now - 1; s[1] = x; s[2] = y; s[3] = z; s[4] = yaw; s[5] = pitch; s[6] = h; }
+    else for (let i = 0; i < 7; i++) s[i] = s[i + 7];
+    s[7] = now; s[8] = x; s[9] = y; s[10] = z; s[11] = yaw; s[12] = pitch; s[13] = h;
+    this.pos.set(x, y, z);
+    this.height = h;
+    this.health = health;
+    this.live = true;
+  }
+
+  render(now, dt) {
+    if (!this.live) { this.root.visible = false; return; }
+    const s = this.snap, span = s[7] - s[0], a = span > 0 ? clamp((now - NET.interpDelayMs - s[0]) / span, 0, 1.25) : 1;
+    const h = lerp(s[6], s[13], a);
+    this.root.visible = true;
+    this.root.position.set(lerp(s[1], s[8], a), lerp(s[2], s[9], a), lerp(s[3], s[10], a));
+    this.root.rotation.y = s[4] + wrapAngle(s[11] - s[4]) * a;
+    this.hinge.scale.y = h / CONFIG.player.standHeight;            // agachado
+    this.fall = approach(this.fall, this.health > 0 ? 0 : 1, dt * 4);
+    this.hinge.rotation.x = smoothstep(this.fall) * Math.PI * 0.49;
+    this.tag.position.y = h + 0.38;
+    if (this.flashT > 0) this.flashT -= dt;
+    this.flash.visible = this.flashT > 0;
+  }
+
+  /** Cañón de su fusil en el mundo (lo que se dibuja ahora), para sus trazadoras. */
+  muzzle(out) {
+    const m = this.game.bots.muzzleLocal, yaw = this.root.rotation.y, s = Math.sin(yaw), c = Math.cos(yaw), p = this.root.position;
+    return out.set(p.x + m.x * c + m.z * s, p.y + m.y * this.hinge.scale.y, p.z - m.x * s + m.z * c);
+  }
+
+  dispose() {
+    this.game.scene.remove(this.root);
+    this.mat.dispose(); this.labelMat.dispose(); this.tex.dispose();
+  }
+}
+
+class Net {
+  constructor(game) {
+    this.game = game;
+    this.role = 'off';                 // off | host | client
+    this.gen = 0;                      // sesión actual: lo asíncrono de una sesión anterior se descarta
+    this.peers = new Map();            // uid → { uid, slot, pc, st, ev, open, answered, remote }
+    this.remotes = [];                 // RemotePlayer por plaza del grupo (null en tu propia plaza)
+    this.slot = -1;
+    this.fb = null;
+    this._unsubs = [];
+    this._timer = 0;
+    this._sendT = 0;
+    this._botT = 0;
+    this._targets = [];
+    // Mensajes binarios reutilizables.
+    this._mState = new Float32Array(10);
+    this._mBots = new Float32Array(3 + NET.maxBots * 5);
+    this._mShot = new Float32Array(10);
+    this._mBotShot = new Float32Array(6);
+    this._mHit = new Float32Array(5);
+    this._mDamage = new Float32Array(4);
+    this._v = new THREE.Vector3(); this._v2 = new THREE.Vector3(); this._n = new THREE.Vector3();
+  }
+
+  get active() { return this.role !== 'off'; }
+  /** En los miembros los bots los mueve el anfitrión: aquí solo se dibujan. */
+  get isPuppet() { return this.role === 'client'; }
+  get connected() { let n = 0; for (const p of this.peers.values()) if (p.open) n++; return n; }
+
+  /* ----------------------------- Sesión ----------------------------- */
+  /** El líder inició la partida del grupo: conexión con los demás (en todos los navegadores del grupo). */
+  begin(party) {
+    this.stop();
+    const social = this.game.social, me = social.uid, members = party.members;
+    if (!social.ready || members.length < 2 || !members.includes(me)) return;
+    if (typeof RTCPeerConnection === 'undefined') { this._notice('TU NAVEGADOR NO ADMITE WEBRTC · JUEGAS EN SOLITARIO', true); return; }
+    const gen = ++this.gen;
+    this.fb = social.fb;
+    this.me = me;
+    this.pid = party.id;
+    this.seq = party.launchSeq;
+    this.hostUid = party.leader;
+    this.slot = members.indexOf(me);
+    this.role = me === party.leader ? 'host' : 'client';
+    for (let i = 0; i < members.length; i++) this.remotes.push(members[i] === me ? null : new RemotePlayer(this.game, i, members[i], social.label(members[i])));
+    // Cada uno aparece en su sitio junto a la base (no todos encima del mismo punto).
+    this.game.player.spawnOffset = (this.slot - (members.length - 1) / 2) * 1.1;
+    this._sendT = this._botT = 0;
+    if (this.role === 'host') {
+      for (const r of this.remotes) if (r) this._offer(r, gen).catch((err) => this._signalError(err, gen, r));
+    } else {
+      this._awaitOffer(gen);
+    }
+    this._timer = setTimeout(() => this._checkConnected(gen), NET.connectTimeoutMs);
+  }
+
+  /** Fin de la partida en grupo (volver al menú, cerrar sesión): se cierran las conexiones. */
+  stop() {
+    if (this.role === 'off' && this.peers.size === 0 && this.remotes.length === 0) return;
+    this.gen++;
+    clearTimeout(this._timer);
+    for (const u of this._unsubs) u();
+    this._unsubs.length = 0;
+    for (const p of this.peers.values()) { try { p.pc?.close(); } catch { /* ya cerrada */ } }
+    this.peers.clear();
+    for (const r of this.remotes) if (r) { r.health = 0; r.dispose(); }
+    this.remotes.length = 0;
+    this.role = 'off';
+    this.slot = -1;
+    this.game.player.spawnOffset = 0;
+  }
+
+  _rtcRef(uid) { return this.fb.doc(this.fb.db, 'parties', this.pid, 'rtc', uid); }
+  _newPc() { return new RTCPeerConnection({ iceServers: NET.iceServers }); }
+
+  /** Sin "trickle ICE": se espera a reunir los candidatos (máx. 2,5 s) y van todos dentro del SDP. */
+  _gathered(pc) {
+    if (pc.iceGatheringState === 'complete') return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => { clearTimeout(t); pc.removeEventListener('icegatheringstatechange', check); resolve(); };
+      const check = () => { if (pc.iceGatheringState === 'complete') done(); };
+      const t = setTimeout(done, NET.gatherMs);
+      pc.addEventListener('icegatheringstatechange', check);
+    });
+  }
+
+  _newPeer(r) {
+    const peer = { uid: r.uid, slot: r.slot, pc: null, st: null, ev: null, open: false, answered: false, remote: r };
+    this.peers.set(r.uid, peer);
+    r.peer = peer;
+    return peer;
+  }
+
+  /** Anfitrión: oferta para un miembro y espera de su respuesta. */
+  async _offer(r, gen) {
+    const peer = this._newPeer(r), pc = peer.pc = this._newPc();
+    this._attach(peer, pc.createDataChannel('st', { ordered: false, maxRetransmits: 0 }), gen);
+    this._attach(peer, pc.createDataChannel('ev', { ordered: true }), gen);
+    this._watch(peer, gen);
+    await pc.setLocalDescription(await pc.createOffer());
+    await this._gathered(pc);
+    if (gen !== this.gen) return;
+    const ref = this._rtcRef(r.uid);
+    await this.fb.setDoc(ref, { seq: this.seq, host: this.me, offer: pc.localDescription.sdp, answer: null, createdAt: this.fb.serverTimestamp() });
+    if (gen !== this.gen) return;
+    this._unsubs.push(this.fb.onSnapshot(ref, (s) => {
+      const d = s.data();
+      if (gen !== this.gen || peer.answered || !d || d.seq !== this.seq || typeof d.answer !== 'string') return;
+      peer.answered = true;
+      pc.setRemoteDescription({ type: 'answer', sdp: d.answer }).catch((err) => this._signalError(err, gen, r));
+    }, (err) => this._signalError(err, gen, r)));
+  }
+
+  /** Miembro: espera la oferta del anfitrión para ESTA partida (seq) y la contesta. */
+  _awaitOffer(gen) {
+    const host = this.remotes.find((r) => r && r.uid === this.hostUid), peer = this._newPeer(host), ref = this._rtcRef(this.me);
+    this._unsubs.push(this.fb.onSnapshot(ref, (s) => {
+      const d = s.data();
+      if (gen !== this.gen || peer.answered || !d || d.seq !== this.seq || d.host !== this.hostUid || typeof d.offer !== 'string') return;
+      peer.answered = true;
+      this._answer(peer, ref, d.offer, gen).catch((err) => this._signalError(err, gen, host));
+    }, (err) => this._signalError(err, gen, host)));
+  }
+
+  async _answer(peer, ref, offer, gen) {
+    const pc = peer.pc = this._newPc();
+    pc.ondatachannel = (e) => this._attach(peer, e.channel, gen);
+    this._watch(peer, gen);
+    await pc.setRemoteDescription({ type: 'offer', sdp: offer });
+    await pc.setLocalDescription(await pc.createAnswer());
+    await this._gathered(pc);
+    if (gen !== this.gen) return;
+    await this.fb.updateDoc(ref, { answer: pc.localDescription.sdp, answeredAt: this.fb.serverTimestamp() });
+  }
+
+  _attach(peer, ch, gen) {
+    ch.binaryType = 'arraybuffer';
+    if (ch.label === 'st') peer.st = ch; else peer.ev = ch;
+    ch.onopen = () => { if (gen === this.gen) this._checkOpen(peer); };
+    ch.onmessage = (e) => { if (gen === this.gen) this._onMessage(peer, e.data); };
+    ch.onclose = () => { if (gen === this.gen) this._lost(peer, 'left'); };
+  }
+
+  _watch(peer, gen) {
+    peer.pc.onconnectionstatechange = () => { if (gen === this.gen && peer.pc.connectionState === 'failed') this._lost(peer, 'failed'); };
+  }
+
+  _checkOpen(peer) {
+    if (peer.open || peer.st?.readyState !== 'open' || peer.ev?.readyState !== 'open') return;
+    peer.open = true;
+    if (this.role === 'client') this._notice('CONECTADO CON TU GRUPO');
+    else this._notice(`${peer.remote.label.toUpperCase()} SE HA UNIDO A LA PARTIDA`);
+  }
+
+  /** Pasados 20 s: quien no conectó juega por su cuenta (y el anfitrión deja de esperarle). */
+  _checkConnected(gen) {
+    if (gen !== this.gen) return;
+    if (this.game.state !== GameState.INGAME) { this.stop(); return; }   // la cuenta atrás se canceló
+    for (const p of [...this.peers.values()]) if (!p.open) this._lost(p, 'timeout');
+  }
+
+  /** Una conexión se cerró o no llegó a abrirse. */
+  _lost(peer, why) {
+    if (this.peers.get(peer.uid) !== peer) return;
+    this.peers.delete(peer.uid);
+    try { peer.pc?.close(); } catch { /* ya cerrada */ }
+    const r = peer.remote;
+    r.health = 0; r.live = false; r.root.visible = false;      // los bots dejan de apuntarle
+    if (this.role === 'client') {
+      this._toSolo(why === 'timeout' || !peer.open ? 'NO SE PUDO CONECTAR CON EL ANFITRIÓN · JUEGAS EN SOLITARIO' : 'EL ANFITRIÓN HA SALIDO · SIGUES CONTRA LOS BOTS');
+    } else {
+      this._notice(peer.open ? `${r.label.toUpperCase()} HA SALIDO DE LA PARTIDA` : `${r.label.toUpperCase()} NO PUDO CONECTARSE`);
+      this._event({ t: 'left', slot: r.slot, open: peer.open });     // los demás miembros dejan de verle
+    }
+  }
+
+  /** Miembro sin anfitrión: los bots vuelven a moverse en este navegador. */
+  _toSolo(text) {
+    const puppet = this.isPuppet;
+    this.stop();
+    if (puppet) this.game.bots.takeOver();
+    this._notice(text, true);
+  }
+
+  _signalError(err, gen, r) {
+    if (gen !== this.gen) return;
+    console.error('[VÉRTICE RED]', err?.code ?? err?.name, err?.message, { partida: this.pid, jugador: r?.uid }, err);
+    if (err?.code === 'permission-denied') {
+      // Las reglas publicadas aún no tienen parties/{grupo}/rtc: sin señalización no hay partida conjunta.
+      const text = 'FIRESTORE RECHAZA LA CONEXIÓN DEL GRUPO · PUBLICA LAS REGLAS NUEVAS · JUEGAS EN SOLITARIO';
+      if (this.role === 'client') this._toSolo(text); else { this.stop(); this._notice(text, true); }
+      return;
+    }
+    const peer = r && this.peers.get(r.uid);
+    if (peer) this._lost(peer, 'failed');
+  }
+
+  _notice(text, bad = false) {
+    if (this.game.state === GameState.INGAME) this.game.hud.showNotice(text, 3.5);
+    else this.game.ui.toast(text.charAt(0) + text.slice(1).toLowerCase(), bad);
+  }
+
+  /* ----------------------------- Envío ----------------------------- */
+  _send(peer, data, reliable) {
+    const ch = reliable ? peer.ev : peer.st;
+    if (peer.open && ch.readyState === 'open') ch.send(data);
+  }
+
+  /** A todos (anfitrión) o al anfitrión (miembro), salvo a `except` (reenvíos). */
+  _broadcast(data, reliable, except = null) {
+    for (const p of this.peers.values()) if (p !== except) this._send(p, data, reliable);
+  }
+
+  _event(obj, except = null) {
+    if (this.peers.size) this._broadcast(JSON.stringify(obj), true, except);
+  }
+
+  /** Cada tick de física: tu estado, 30 veces por segundo. */
+  tick(dt) {
+    if (this.role === 'off' || (this._sendT -= dt) > 0) return;
+    this._sendT = Math.max(0, this._sendT + 1 / NET.sendHz);
+    const p = this.game.player, v = this.game.view, m = this._mState;
+    m[0] = MSG.STATE; m[1] = this.slot; m[2] = p.pos.x; m[3] = p.pos.y; m[4] = p.pos.z;
+    m[5] = v.yaw; m[6] = v.pitch; m[7] = p.height; m[8] = p.health; m[9] = 0;
+    this._broadcast(m, false);
+  }
+
+  /** Anfitrión: compañeros conectados y vivos como objetivos de los bots. */
+  pushTargets(out) {
+    if (this.role !== 'host') return;
+    for (let i = 0; i < this.remotes.length; i++) {
+      const r = this.remotes[i];
+      if (r !== null && r.live && r.health > 0 && r.peer !== null && r.peer.open) out.push(r);
+    }
+  }
+
+  /** Anfitrión: foto de los bots (20 por segundo). */
+  sendBots(dt) {
+    if (this.role !== 'host' || this.peers.size === 0 || (this._botT -= dt) > 0) return;
+    this._botT = Math.max(0, this._botT + 1 / NET.botHz);
+    const bots = this.game.bots.bots, m = this._mBots;
+    let n = 0;
+    for (let i = 0; i < bots.length && n < NET.maxBots; i++) {
+      const b = bots[i];
+      if (!b.active) break;                       // los activos son siempre los primeros (BotManager.setup)
+      const o = 3 + n * 5;
+      m[o] = b.pos.x; m[o + 1] = b.pos.z; m[o + 2] = b.yaw; m[o + 3] = b.pitch; m[o + 4] = b.state;
+      n++;
+    }
+    m[0] = MSG.BOTS; m[1] = this.game.bots.wave; m[2] = n;
+    this._broadcast(m, false);
+  }
+
+  sendBotShot(id, end, wallHit) {
+    if (this.role !== 'host' || this.peers.size === 0) return;
+    const m = this._mBotShot;
+    m[0] = MSG.BOTSHOT; m[1] = id; m[2] = end.x; m[3] = end.y; m[4] = end.z; m[5] = wallHit ? 1 : 0;
+    this._broadcast(m, false);
+  }
+
+  sendShot(origin, end, def, wallHit) {
+    if (this.role === 'off' || this.peers.size === 0) return;
+    const m = this._mShot;
+    m[0] = MSG.SHOT; m[1] = this.slot; m[2] = origin.x; m[3] = origin.y; m[4] = origin.z;
+    m[5] = end.x; m[6] = end.y; m[7] = end.z; m[8] = WEAPON_NET_ID.get(def) ?? 0; m[9] = wallHit ? 1 : 0;
+    this._broadcast(m, false);
+  }
+
+  /** Miembro → anfitrión: has acertado a un bot (zona y daño ya calculados aquí, con lo que ves). */
+  sendHit(bot, zone, amount) {
+    const m = this._mHit;
+    m[0] = MSG.HIT; m[1] = this.slot; m[2] = bot.id; m[3] = zone === 'head' ? 1 : zone === 'legs' ? 3 : 2; m[4] = amount;
+    this._broadcast(m, true);
+  }
+
+  /** Anfitrión → miembro: un bot le ha dado. */
+  sendDamage(remote, amount, fromX, fromZ) {
+    const m = this._mDamage;
+    m[0] = MSG.DAMAGE; m[1] = amount; m[2] = fromX; m[3] = fromZ;
+    if (remote.peer) this._send(remote.peer, m, true);
+  }
+
+  sendKill(remote, kill) { if (remote.peer) this._send(remote.peer, JSON.stringify({ t: 'kill', head: kill === 'head' }), true); }
+  sendCleared() { if (this.role === 'host') this._event({ t: 'cleared' }); }
+  sendDoor(i, open) { if (this.active && i >= 0) this._event({ t: 'door', slot: this.slot, i, open }); }
+  sendDown() { if (this.active) this._event({ t: 'down', slot: this.slot }); }
+
+  /* ----------------------------- Recepción ----------------------------- */
+  /** ¿Viene de verdad de esa plaza? (el anfitrión solo acepta de cada conexión su propia plaza) */
+  _from(peer, slot) {
+    const r = this.remotes[slot];
+    if (!r) return null;
+    return this.role === 'host' && r.peer !== peer ? null : r;
+  }
+
+  _onMessage(peer, data) {
+    if (typeof data === 'string') {
+      let m;
+      try { m = JSON.parse(data); } catch { return; }
+      this._onEvent(peer, m);
+      return;
+    }
+    const f = new Float32Array(data), g = this.game, now = performance.now();
+    switch (f[0]) {
+      case MSG.STATE: {
+        const r = this._from(peer, f[1] | 0);
+        if (!r) return;
+        r.push(now, f[2], f[3], f[4], f[5], f[6], f[7], f[8]);
+        if (this.role === 'host') this._broadcast(data, false, peer);      // reenvío a los demás miembros
+        return;
+      }
+      case MSG.BOTS: {
+        if (this.role !== 'client') return;
+        const bots = g.bots, wave = f[1] | 0, n = Math.min(f[2] | 0, NET.maxBots);
+        for (let i = 0; i < n; i++) { const o = 3 + i * 5; bots.netPush(i, f[o], f[o + 1], f[o + 2], f[o + 3], f[o + 4] | 0, now); }
+        if (wave !== bots.wave) {
+          bots.wave = wave;
+          if (wave > 1) g.hud.showNotice(`OLEADA ${wave} · DEFENSORES EN POSICIÓN`, 2.5);
+        }
+        return;
+      }
+      case MSG.SHOT: {
+        const r = this._from(peer, f[1] | 0);
+        if (!r) return;
+        this._showShot(r, f);
+        if (this.role === 'host') {
+          this._broadcast(data, false, peer);
+          const def = WEAPON_BY_NET_ID[f[8] | 0];
+          g.bots.hear(f[2], f[4], (def?.sound.volume ?? 1) < 0.7);   // los bots oyen sus disparos como los tuyos
+        }
+        return;
+      }
+      case MSG.BOTSHOT: {
+        if (this.role !== 'client') return;
+        const b = g.bots.bots[f[1] | 0];
+        if (!b || !b.active) return;
+        const end = this._v.set(f[2], f[3], f[4]);
+        g.bots.showShot(b, end, f[5] > 0, axisNormal(this._n, b.pos.x, b.pos.y + BOT_CFG.eye, b.pos.z, f[2], f[3], f[4]));
+        return;
+      }
+      case MSG.HIT: {
+        if (this.role !== 'host') return;
+        const r = this._from(peer, f[1] | 0), b = g.bots.bots[f[2] | 0];
+        if (!r || !b || !b.active || g.state !== GameState.INGAME) return;
+        const zone = NET_ZONES[f[3] | 0] || 'body';
+        g.bots.applyDamage(b, zone, clamp(f[4], 0, 500), r);
+        return;
+      }
+      case MSG.DAMAGE: {
+        if (this.role !== 'client' || peer.uid !== this.hostUid || g.state !== GameState.INGAME) return;
+        g.player.takeDamage(clamp(f[1], 0, 500), f[2], f[3]);
+        return;
+      }
+    }
+  }
+
+  _onEvent(peer, m) {
+    const g = this.game, fromHost = peer.uid === this.hostUid;
+    switch (m?.t) {
+      case 'kill':                                   // tu disparo remató a un bot del anfitrión
+        if (!fromHost || g.state !== GameState.INGAME) return;
+        g.onBotKilled(!!m.head);
+        g.weapons._reward(m.head ? 'head' : 'body');
+        g.hud.hitMarker(true);
+        g.audio.kill();
+        return;
+      case 'cleared':
+        if (!fromHost) return;
+        g.onWaveCleared();
+        g.hud.showNotice(`ZONA DESPEJADA · NUEVA OLEADA EN ${BOT_CFG.respawnDelay} s`, BOT_CFG.respawnDelay);
+        return;
+      case 'door': {
+        const r = this._from(peer, m.slot | 0), d = g.world.doors[m.i | 0];
+        if (!r || !d) return;
+        d.open = !!m.open;
+        g.audio.metal(600, 0.12, 0.25);
+        if (this.role === 'host') this._event(m, peer);
+        return;
+      }
+      case 'left': {                                 // el anfitrión avisa: otro miembro se ha ido
+        const r = this.remotes[m.slot | 0];
+        if (!fromHost || !r) return;
+        r.health = 0; r.live = false; r.root.visible = false;
+        if (m.open) this._notice(`${r.label.toUpperCase()} HA SALIDO DE LA PARTIDA`);
+        return;
+      }
+      case 'down': {
+        const r = this._from(peer, m.slot | 0);
+        if (!r) return;
+        this._notice(`${r.label.toUpperCase()} HA CAÍDO`);
+        if (this.role === 'host') this._event(m, peer);
+        return;
+      }
+    }
+  }
+
+  /** Disparo de un compañero: trazadora desde su fusil, impacto en la pared y sonido según dónde estés. */
+  _showShot(r, f) {
+    const g = this.game, end = this._v.set(f[5], f[6], f[7]), def = WEAPON_BY_NET_ID[f[8] | 0];
+    if (!def) return;
+    g.impacts.spawnTracer(r.muzzle(this._v2), end, def.tracer.speed, def.tracer.length);
+    if (f[9] > 0) g.impacts.spawnImpact(end, axisNormal(this._n, f[2], f[3], f[4], f[5], f[6], f[7]), true);
+    r.flashT = 0.05;
+    const p = g.player.pos, dx = r.pos.x - p.x, dz = r.pos.z - p.z;
+    const rel = wrapAngle(Math.atan2(-dx, -dz) - g.view.yaw);
+    g.audio.shot(def.sound, -Math.sin(rel), Math.max(Math.sqrt(dx * dx + dz * dz), 1));
+  }
+
+  /** Cada frame dibujado: compañeros interpolados. */
+  render(dt) {
+    if (this.remotes.length === 0) return;
+    const now = performance.now();
+    for (let i = 0; i < this.remotes.length; i++) { const r = this.remotes[i]; if (r !== null) r.render(now, dt); }
+  }
+}
+
+/* =====================================================================================
  *  FrameScheduler · bucle principal SIN V-Sync.
  *  requestAnimationFrame solo da un frame por refresco del monitor: es el V-Sync del navegador.
  *  Aquí los frames se lanzan con tareas propias, a 60 / 144 / 240 FPS o sin límite:
@@ -6045,6 +6735,7 @@ class Game {
     this.shop = new Shop(this);
     this.account = new CloudAccount(this);
     this.social = new Social(this);
+    this.net = new Net(this);                      // partida en grupo P2P (WebRTC)
     this.ui = new LobbyUI(this);
     this.landing = new LandingScreen(this);
     this.player.onDamaged = (amount, fromX, fromZ) => {
@@ -6055,6 +6746,11 @@ class Game {
       this.deaths++; this.match.deaths++;
       this.player.respawn(); this.view.reset(this.world.spawnYaw); this.shop.shield = null;
       this.weapons.isInspecting = false;
+      if (this.net.active) {                       // en grupo la partida sigue para los demás: solo reapareces tú
+        this.net.sendDown();
+        this.hud.showNotice('HAS CAÍDO · REAPARECES EN LA BASE', 2.5);
+        return;
+      }
       this.bots.requestReset();                    // se aplica al final del tick de los bots
       this.hud.showNotice('HAS CAÍDO · LOS DEFENSORES VUELVEN A SUS PUESTOS', 2.5);
     };
@@ -6097,7 +6793,10 @@ class Game {
       // Esc o X cierran la tienda y vuelven a capturar el puntero (X no cambia el modo de fuego en ese caso).
       if ((e.code === 'Escape' || e.code === 'KeyX') && this.shop.isOpen) { this.input.pressed.delete('KeyX'); this.shop.close(true); }
       if (e.code === 'KeyK' && this.input.locked) this.player.takeDamage(30);
-      if (e.code === 'KeyE' && this.input.locked && this.world.interact(this.player)) this.audio.metal(600, 0.12, 0.45);
+      if (e.code === 'KeyE' && this.input.locked && this.world.interact(this.player)) {
+        this.audio.metal(600, 0.12, 0.45);
+        this.net.sendDoor(this.world.lastDoor, this.world.doors[this.world.lastDoor].open);   // la puerta se mueve para todo el grupo
+      }
     });
     addEventListener('resize', () => this.resize());
     this.applySettings(false);
@@ -6113,6 +6812,7 @@ class Game {
 
   /* ----------------------------- Máquina de estados ----------------------------- */
   setState(next) {
+    if (next !== GameState.INGAME && this.state === GameState.INGAME) this.net.stop();   // fuera de la partida se cierra la conexión del grupo
     this.state = next;
     const body = document.body.classList;
     body.toggle('state-landing', next === GameState.LANDING);
@@ -6182,6 +6882,7 @@ class Game {
       return;
     }
     if (this.state !== GameState.MENU) return;
+    this.net.begin(p);                             // la conexión entre navegadores se abre durante la cuenta atrás
     this.ui.social.countdown(p, () => {
       if (this.state === GameState.MENU) this.startMatch(p.map, { difficulty: p.difficulty, gesture: false });
     });
@@ -6356,13 +7057,21 @@ class Game {
   }
 
   /** Un paso de simulación determinista de duración fija. */
-  tick(dt) {
-    this.player.tick(dt, this.input, this.view.yaw, this.weapons.moveMultiplier());
-    this.view.tick(dt);          // recupera el retroceso ANTES de disparar: la bala sale donde se veía la mira
-    this.weapons.tick(dt, this.input, this.player);
-    this.bots.tick(dt);
+  /**
+   * Un paso de simulación determinista de duración fija. `frozen` = en pausa durante una partida en
+   * grupo: tu jugador se queda quieto, pero los bots y la red siguen (la partida no se para para los demás).
+   */
+  tick(dt, frozen = false) {
+    if (!frozen) {
+      this.player.tick(dt, this.input, this.view.yaw, this.weapons.moveMultiplier());
+      this.view.tick(dt);        // recupera el retroceso ANTES de disparar: la bala sale donde se veía la mira
+      this.weapons.tick(dt, this.input, this.player);
+    }
+    if (this.net.isPuppet) this.bots.tickPuppets(dt, performance.now());   // en grupo los bots los mueve el anfitrión
+    else this.bots.tick(dt);
     this.world.tick(dt);
-    this.input.endTick();
+    this.net.tick(dt);
+    if (!frozen) this.input.endTick();
   }
 
   /**
@@ -6414,11 +7123,12 @@ class Game {
 
     // 2) Física a paso fijo con acumulador y tope de iteraciones (congelada en pausa).
     let n = 0;
-    if (this.paused) this.accumulator = 0;
+    const frozen = this.paused;
+    if (frozen && !this.net.active) this.accumulator = 0;
     else {
       this.accumulator += dt;
       while (this.accumulator >= this.tickDt && n < CONFIG.loop.maxUpdatesPerFrame) {
-        this.tick(this.tickDt);
+        this.tick(this.tickDt, frozen);
         this.accumulator -= this.tickDt;
         n++;
       }
@@ -6436,6 +7146,7 @@ class Game {
     if (rdt > CONFIG.loop.maxFrameDelta) rdt = CONFIG.loop.maxFrameDelta;
     info.reset();
     this.bots.render(alpha);
+    this.net.render(rdt);
     this.view.render(alpha, rdt, this.player, this.weapons);
     this.impacts.update(rdt);
     this.renderer.clear();
