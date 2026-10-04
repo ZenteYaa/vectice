@@ -21,8 +21,10 @@ service cloud.firestore {
       function prices() {
         return {
           'martillo_prime': 1775,
+          'martillo_obsidiana': 2175,
           'titan_dragon': 2475,
           'cuervo_glaciar': 1275,
+          'cuervo_neon': 875,
           'pica_neon': 875
         };
       }

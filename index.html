@@ -18,6 +18,9 @@
   #hud-top small { opacity: .55; font-size: 9px; letter-spacing: 3px; }
   #hud-bl { bottom: 14px; left: 16px; }
   #hud-br { bottom: 14px; right: 18px; text-align: right; }
+  #inspect-hint { font-size: 11px; letter-spacing: 2px; opacity: .55; margin-bottom: 6px; transition: opacity .15s; }
+  #inspect-hint b { color: #3fd6c4; font-weight: 800; }
+  #inspect-hint.off { opacity: 0; }
   #ammo { font-size: 38px; font-weight: 700; letter-spacing: 1px; }
   #ammo small { font-size: 18px; opacity: .7; }
   #weapon-name { font-size: 14px; opacity: .9; }
@@ -234,6 +237,7 @@
   .lo-skin { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #ffffff08; border: 1px solid var(--line); cursor: pointer; text-align: left; }
   .lo-skin:hover { border-color: #ffffff55; }
   .lo-skin .sw { width: 26px; height: 26px; flex: none; background: linear-gradient(135deg, var(--c1), var(--c2)); border: 1px solid #ffffff33; }
+  .lo-skin .sw.tx { background-size: 26px 26px; background-repeat: repeat; }
   .lo-skin b { display: block; font-size: 12px; letter-spacing: 2px; }
   .lo-skin small { font-size: 9px; letter-spacing: 1px; opacity: .6; }
   .lo-skin.sel { border-color: var(--c1); background: #ffffff12; }
@@ -294,6 +298,8 @@
 <body>
 <canvas id="game"></canvas>
 <canvas id="overlay2d"></canvas>
+<!-- Patrones con las texturas de las skins para las siluetas de la tienda y la colección -->
+<svg id="wtex-svg" width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="wtex-defs"></defs></svg>
 
 <div class="hud" id="hud-top">
   <div class="en"><b id="sc-alive">5</b><small>ENEMIGOS</small></div>
@@ -314,7 +320,7 @@
   <div class="pf-note" id="pf-note">media móvil · 250 ms</div>
 </div>
 <div id="scope-blur"></div>
-<div class="hud" id="hud-br"><div id="credits"></div><div id="weapon-name"></div><div id="ammo"></div></div>
+<div class="hud" id="hud-br"><div id="inspect-hint"><b>[Y]</b> Inspeccionar</div><div id="credits"></div><div id="weapon-name"></div><div id="ammo"></div></div>
 
 <div id="lobby">
   <header class="nav">
@@ -356,7 +362,7 @@
     </section>
 
     <section class="panel" data-panel="skins" hidden>
-      <div class="play-head"><span class="kicker">VITRINA DESTACADA</span><small class="muted">Las skins cambian los colores del modelo del arma en partida.</small></div>
+      <div class="play-head"><span class="kicker">VITRINA DESTACADA</span><small class="muted">Cada skin cambia la textura del arma en partida. Pulsa Y (o F) para inspeccionarla.</small></div>
       <div class="shop-earn" id="shop-earn"></div>
       <div class="skins" id="skin-list"></div>
     </section>
@@ -414,6 +420,7 @@
         <tr><td>Clic izq. / Clic der.</td><td>Disparar · mira o ráfaga de la Pica</td></tr>
         <tr><td>1 / 2 / 3</td><td>Principal · secundaria · cuchillo</td></tr>
         <tr><td>R / X</td><td>Recargar · modo de fuego</td></tr>
+        <tr><td>Y / F</td><td>Inspeccionar el arma (disparar, apuntar o cambiar de arma la corta)</td></tr>
         <tr><td>B</td><td>Tienda de armas (B / X / Esc / ✕ para cerrar)</td></tr>
         <tr><td>E</td><td>Abrir / cerrar puertas tácticas (Bastión)</td></tr>
         <tr><td>K</td><td>Daño de prueba (30)</td></tr>
@@ -531,6 +538,21 @@ const CONFIG = {
     bobAmplitudeX: 0.012,
     bobAmplitudeY: 0.009,
     kickReturn: 15,           // 1/s
+  },
+  inspect: {
+    duration: 2.5,            // s: inspección completa (tecla Y o F)
+    cancelReturn: 0.1,        // s: al disparar, apuntar, recargar o cambiar de arma vuelve a la postura de tiro
+    phase1: 0.35,             // fin de la fase 1 (fracción de la duración)
+    phase2: 0.7,              // fin de la fase 2; la fase 3 vuelve suave al reposo
+    // Durante la inspección el arma gira sobre su propio centro, y ese centro se acerca a este punto
+    // (espacio de la cámara del arma, metros). Las armas largas se alejan más para que se vean enteras.
+    target: { x: 0.05, y: -0.09 },
+    targetDist: 0.32,         // z = -(targetDist + targetDistPerLength × largo del arma)
+    targetDistPerLength: 0.55,
+    // Poses clave: center = cuánto se acerca al punto (0..1), x/y/z = ajuste fino (m), giros en grados
+    // (rx cabeceo, ry giro, rz alabeo).
+    pose1: { center: 0.85, x: 0, y: 0, z: 0, rx: 6, ry: -45, rz: 12 },      // al centro, lateral derecho hacia la luz
+    pose2: { center: 0.85, x: -0.02, y: 0.01, z: -0.02, rx: 18, ry: 12, rz: -30 }, // levemente al otro lado para ver los detalles
   },
 };
 
@@ -2094,7 +2116,270 @@ class BotManager {
  *  ViewmodelFactory · modelos provisionales generados por parámetros (def.model).
  *  `parts()` produce una lista de piezas que usan tanto el modelo 3D como la silueta de la tienda.
  * ===================================================================================== */
-const VM_COLORS = { dark: 0x4a5058, mid: 0x6b737c, glove: 0x55603f };
+const VM_COLORS = { dark: 0x4a5058, mid: 0x6b737c, glove: 0x55603f, steel: 0xc3cbd3 };
+/** Tono neutro de cada pieza del arma: la textura de la skin pone el color y esto solo separa las piezas. */
+const VM_SHADE = { dark: 0xd6d6d6, mid: 0xffffff, accent: 0xebebeb };
+
+/* =====================================================================================
+ *  WeaponTextureFactory · texturas procedurales de las skins, pintadas en Canvas de 128×128.
+ *  Cada textura (mapa de color + mapa emisivo) se pinta UNA vez y se sube a la GPU al arrancar.
+ *  Todas las armas del viewmodel comparten un material: equipar una skin solo cambia sus
+ *  uniforms (map, emissiveMap, emisivo, rugosidad, metalicidad). Ni geometría ni shader nuevos,
+ *  así que cambiar de arma o de skin no provoca ningún tirón.
+ *  Son texturas "seamless": lo que cruza un borde se pinta también en el lado opuesto.
+ *  Añadir una textura = añadir una entrada aquí y poner su id en el campo tex de SKINS.
+ * ===================================================================================== */
+const WEAPON_TEXTURES = {
+  // Estándar de todas las armas: fibra de carbono táctica en grises oscuros y negro mate.
+  carbon: { painter: 'carbon', seed: 1, pal: { lo: '#0d0e10', hi: '#3b4048', fiber: 'rgba(255,255,255,0.05)', gap: '#060708' },
+    mat: { roughness: 0.6, metalness: 0.2, emissive: 0x000000, emissiveIntensity: 0 } },
+  // Martillo Prime: el mismo tejido, en oro.
+  prime: { painter: 'carbon', seed: 2, pal: { lo: '#5a4318', hi: '#f0cf78', fiber: 'rgba(255,244,210,0.12)', gap: '#2a1e08' },
+    mat: { roughness: 0.42, metalness: 0.35, emissive: 0x000000, emissiveIntensity: 0 } },
+  // Martillo Obsidiana: facetas de carbón con vetas de magma incandescente (canal emisivo).
+  obsidiana: { painter: 'facets', seed: 7, pal: { shades: ['#0e0e10', '#151518', '#1c1c20', '#0a0a0b'], line: '#ff3b00', core: '#ffc46b', dim: '#2a1208' },
+    mat: { roughness: 0.5, metalness: 0.25, emissive: 0xff3b00, emissiveIntensity: 0.8 } },
+  // Titán Dragón: escamas rojas con grietas de fuego.
+  dragon: { painter: 'facets', seed: 11, pal: { shades: ['#3b1210', '#4a1612', '#2e0d0b', '#561a14'], line: '#ff7a2e', core: '#ffe0a0', dim: '#1f0705' },
+    mat: { roughness: 0.5, metalness: 0.2, emissive: 0xff5a1a, emissiveIntensity: 0.7 } },
+  // Cuervo Glaciar: hielo facetado con grietas azules.
+  glaciar: { painter: 'facets', seed: 5, pal: { shades: ['#c9d8e4', '#dbe7f0', '#b8cad8', '#e6eff5'], line: '#4fb6ff', core: '#e8f8ff', dim: '#9fb6c8' },
+    mat: { roughness: 0.3, metalness: 0.1, emissive: 0x6cc4ff, emissiveIntensity: 0.45 } },
+  // Pica Neón y Cuervo Neón: cerámica blanca con circuitos y acentos en cian neón (canal emisivo).
+  neon: { painter: 'circuit', seed: 3, pal: { base: '#e7ecef', panel: '#c3ccd3', speck: 'rgba(0,0,0,0.06)', trace: '#00b8c6', pad: '#00f3ff', chip: '#262c33' },
+    mat: { roughness: 0.35, metalness: 0.05, emissive: 0x00f3ff, emissiveIntensity: 0.9 } },
+};
+
+const TEX_SIZE = 128;
+
+/** PRNG con semilla (mulberry32): cada skin se pinta exactamente igual en cada arranque. */
+function seededRandom(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Pinta fn en el tile y en sus 8 vecinos: lo que sale por un borde entra por el opuesto. */
+function paintWrapped(g, fn) {
+  for (let dy = -TEX_SIZE; dy <= TEX_SIZE; dy += TEX_SIZE) {
+    for (let dx = -TEX_SIZE; dx <= TEX_SIZE; dx += TEX_SIZE) {
+      g.save(); g.translate(dx, dy); fn(g); g.restore();
+    }
+  }
+}
+
+function strokeSegment(g, s) { g.beginPath(); g.moveTo(s[0][0], s[0][1]); g.lineTo(s[1][0], s[1][1]); g.stroke(); }
+
+const TEXTURE_PAINTERS = {
+  /** Sarga 2×2 de fibra de carbono: celdas de 16 px con el haz en horizontal o en vertical, en diagonal. */
+  carbon(g, e, pal) {
+    const C = 16, N = TEX_SIZE / C;
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const x = i * C, y = j * C, horiz = (((i + j) >> 1) & 1) === 0;
+        // Cada haz es un cilindro: oscuro en los bordes y con brillo en el centro.
+        const grd = horiz ? g.createLinearGradient(x, y, x, y + C) : g.createLinearGradient(x, y, x + C, y);
+        grd.addColorStop(0, pal.lo); grd.addColorStop(0.5, pal.hi); grd.addColorStop(1, pal.lo);
+        g.fillStyle = grd;
+        g.fillRect(x, y, C, C);
+        g.fillStyle = pal.fiber;
+        for (let k = 1; k < C; k += 2) { if (horiz) g.fillRect(x, y + k, C, 0.6); else g.fillRect(x + k, y, 0.6, C); }
+        g.fillStyle = pal.gap;
+        if (horiz) g.fillRect(x + C - 1, y, 1, C); else g.fillRect(x, y + C - 1, C, 1);
+      }
+    }
+    e.fillStyle = '#000';
+    e.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+  },
+
+  /** Facetas (triángulos sobre una rejilla periódica con jitter) y vetas incandescentes en parte de sus aristas. */
+  facets(g, e, pal, rnd) {
+    const N = 4, S = TEX_SIZE / N, J = S * 0.3;
+    const jx = [], jy = [];
+    for (let k = 0; k < N * N; k++) { jx.push((rnd() * 2 - 1) * J); jy.push((rnd() * 2 - 1) * J); }
+    const pt = (i, j) => [i * S + jx[(j % N) * N + (i % N)], j * S + jy[(j % N) * N + (i % N)]];
+    const tris = [], edges = [];
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const a = pt(i, j), b = pt(i + 1, j), c = pt(i + 1, j + 1), d = pt(i, j + 1);
+        const diagAC = rnd() < 0.5;
+        const cell = diagAC ? [[a, b, c], [a, c, d]] : [[a, b, d], [b, c, d]];
+        for (const p of cell) tris.push({ p, shade: pal.shades[Math.floor(rnd() * pal.shades.length)] });
+        // Aristas de arriba, izquierda y diagonal: las de abajo y derecha son de las celdas vecinas.
+        edges.push([a, b], [a, d], diagAC ? [a, c] : [b, d]);
+      }
+    }
+    const glow = edges.map(() => rnd() < 0.55);
+    paintWrapped(g, (c) => {
+      for (const t of tris) {
+        c.fillStyle = t.shade;
+        c.beginPath(); c.moveTo(t.p[0][0], t.p[0][1]); c.lineTo(t.p[1][0], t.p[1][1]); c.lineTo(t.p[2][0], t.p[2][1]); c.closePath(); c.fill();
+      }
+      c.lineCap = 'round';
+      c.strokeStyle = pal.dim; c.lineWidth = 1;
+      for (let k = 0; k < edges.length; k++) if (!glow[k]) strokeSegment(c, edges[k]);
+      c.shadowColor = pal.line; c.shadowBlur = 6; c.strokeStyle = pal.line; c.lineWidth = 2.2;
+      for (let k = 0; k < edges.length; k++) if (glow[k]) strokeSegment(c, edges[k]);
+      c.shadowBlur = 0; c.strokeStyle = pal.core; c.lineWidth = 0.8;
+      for (let k = 0; k < edges.length; k++) if (glow[k]) strokeSegment(c, edges[k]);
+    });
+    e.fillStyle = '#000';
+    e.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+    paintWrapped(e, (c) => {
+      c.lineCap = 'round'; c.shadowColor = '#fff'; c.shadowBlur = 5; c.strokeStyle = '#fff'; c.lineWidth = 2;
+      for (let k = 0; k < edges.length; k++) if (glow[k]) strokeSegment(c, edges[k]);
+    });
+  },
+
+  /** Cerámica blanca con pistas de circuito sobre una rejilla de 8 px (giros a 45°), pads y chips. */
+  circuit(g, e, pal, rnd) {
+    g.fillStyle = pal.base;
+    g.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+    g.fillStyle = pal.speck;
+    for (let k = 0; k < 260; k++) g.fillRect(rnd() * TEX_SIZE, rnd() * TEX_SIZE, 1, 1);
+    g.fillStyle = pal.panel;                                   // juntas entre paneles de cerámica
+    g.fillRect(0, 0, TEX_SIZE, 1); g.fillRect(0, 0, 1, TEX_SIZE);
+    const G = 8, N = TEX_SIZE / G, DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const paths = [];
+    for (let k = 0; k < 12; k++) {
+      let x = Math.floor(rnd() * N) * G, y = Math.floor(rnd() * N) * G, d = Math.floor(rnd() * 4);
+      const pts = [[x, y]];
+      const steps = 3 + Math.floor(rnd() * 6);
+      for (let s = 0; s < steps; s++) {
+        const dir = DIRS[d];
+        if (rnd() < 0.3) {                                     // giro a 45°: un tramo en diagonal y nueva dirección
+          const nd = (d + (rnd() < 0.5 ? 1 : 3)) % 4;
+          x += (dir[0] + DIRS[nd][0]) * G; y += (dir[1] + DIRS[nd][1]) * G; d = nd;
+        } else {
+          const len = G * (1 + Math.floor(rnd() * 2));
+          x += dir[0] * len; y += dir[1] * len;
+        }
+        pts.push([x, y]);
+      }
+      paths.push(pts);
+    }
+    const chips = [];
+    for (let k = 0; k < 3; k++) chips.push([Math.floor(rnd() * N) * G + 2, Math.floor(rnd() * N) * G + 2, 12 + Math.floor(rnd() * 2) * 6, 6 + Math.floor(rnd() * 2) * 4]);
+    const traces = (c, color, pad, blur) => {
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      if (blur) { c.shadowColor = color; c.shadowBlur = blur; }
+      c.strokeStyle = color; c.lineWidth = 1.6;
+      for (const pts of paths) {
+        c.beginPath(); c.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
+        c.stroke();
+      }
+      c.fillStyle = pad;
+      for (const pts of paths) {
+        const end = pts[pts.length - 1];
+        c.beginPath(); c.arc(end[0], end[1], 2.4, 0, Math.PI * 2); c.fill();
+        c.fillRect(pts[0][0] - 1.5, pts[0][1] - 1.5, 3, 3);
+      }
+    };
+    paintWrapped(g, (c) => {
+      for (const [x, y, w, h] of chips) {
+        c.fillStyle = pal.chip; c.fillRect(x, y, w, h);
+        c.fillStyle = pal.panel;
+        for (let i = x + 2; i < x + w - 1; i += 3) { c.fillRect(i, y - 1.5, 1, 1.5); c.fillRect(i, y + h, 1, 1.5); }
+      }
+      traces(c, pal.trace, pal.pad, 0);
+    });
+    e.fillStyle = '#000';
+    e.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+    paintWrapped(e, (c) => traces(c, '#fff', '#fff', 3));
+  },
+};
+
+const WeaponTextureFactory = {
+  _sets: null,
+
+  /** Pinta todas las texturas la primera vez que se piden (al arrancar el juego). */
+  _all() {
+    if (this._sets) return this._sets;
+    this._sets = {};
+    const toTexture = (canvas) => {
+      const t = new THREE.CanvasTexture(canvas);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      return t;
+    };
+    for (const id in WEAPON_TEXTURES) {
+      const def = WEAPON_TEXTURES[id];
+      const mapCanvas = document.createElement('canvas'), emissiveCanvas = document.createElement('canvas');
+      mapCanvas.width = mapCanvas.height = emissiveCanvas.width = emissiveCanvas.height = TEX_SIZE;
+      TEXTURE_PAINTERS[def.painter](mapCanvas.getContext('2d'), emissiveCanvas.getContext('2d'), def.pal, seededRandom(def.seed));
+      this._sets[id] = { map: toTexture(mapCanvas), emissiveMap: toTexture(emissiveCanvas), mat: def.mat, canvas: mapCanvas, url: null };
+    }
+    return this._sets;
+  },
+
+  /** Al arrancar: filtrado anisótropo y subida a la GPU de todas las texturas (luego equipar no sube nada). */
+  prepare(renderer) {
+    const aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    for (const id in this._all()) {
+      const s = this._sets[id];
+      s.map.anisotropy = s.emissiveMap.anisotropy = aniso;
+      renderer.initTexture(s.map);
+      renderer.initTexture(s.emissiveMap);
+    }
+  },
+
+  get(id) { const sets = this._all(); return sets[id] ?? sets.carbon; },
+
+  /** Pone una textura en un material: solo cambian uniforms, el shader no se recompila. */
+  applyTo(material, id) {
+    const s = this.get(id);
+    material.map = s.map;
+    material.emissiveMap = s.emissiveMap;
+    material.roughness = s.mat.roughness;
+    material.metalness = s.mat.metalness;
+    material.emissive.setHex(s.mat.emissive);
+    material.emissiveIntensity = s.mat.emissiveIntensity;
+  },
+
+  /** La misma imagen en la tienda y en la colección (se genera una vez por textura). */
+  dataURL(id) { const s = this.get(id); return (s.url ??= s.canvas.toDataURL()); },
+};
+
+/** Metros de arma que ocupa una textura de 128 px: el patrón tiene el mismo tamaño en todas las piezas. */
+const VM_TEX_TILE = 0.09;
+
+/**
+ * Como coloredBoxGeometry, más UV a escala real y un atributo texMask:
+ * 1 = la pieza lleva la textura de la skin, 0 = color propio sin textura (guantes, hoja del cuchillo).
+ */
+function texturedBoxGeometry(parts) {
+  const geos = [];
+  for (let k = 0; k < parts.length; k++) {
+    const p = parts[k];
+    const g = new THREE.BoxGeometry(p.w, p.h, p.d);
+    // BoxGeometry crea 4 vértices por cara, en orden ±X (u = fondo, v = alto), ±Y (u = ancho, v = fondo)
+    // y ±Z (u = ancho, v = alto). El desfase por pieza evita que todas las cajas empiecen el patrón igual.
+    const uv = g.attributes.uv, n = uv.count, ou = (k * 0.371) % 1, ov = (k * 0.619) % 1;
+    for (let i = 0; i < n; i++) {
+      const face = i >> 2;
+      const su = face < 2 ? p.d : p.w, sv = face < 2 ? p.h : face < 4 ? p.d : p.h;
+      uv.setXY(i, (uv.getX(i) * su) / VM_TEX_TILE + ou, (uv.getY(i) * sv) / VM_TEX_TILE + ov);
+    }
+    if (p.rx) g.rotateX(p.rx);
+    g.translate(p.x, p.y, p.z);
+    _tmpColor.setHex(p.color);
+    const col = new Float32Array(n * 3), mask = new Float32Array(n);
+    for (let i = 0; i < n; i++) { col[i * 3] = _tmpColor.r; col[i * 3 + 1] = _tmpColor.g; col[i * 3 + 2] = _tmpColor.b; mask[i] = p.tex; }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('texMask', new THREE.BufferAttribute(mask, 1));
+    geos.push(g);
+  }
+  const merged = mergeGeometries(geos);
+  for (const g of geos) g.dispose();
+  return merged;
+}
+
 
 const ViewmodelFactory = {
   _vmMat: null, _flashMat: null,
@@ -2107,8 +2392,8 @@ const ViewmodelFactory = {
     if (spec.kind === 'knife') {
       add('dark', 0.026, 0.032, 0.11, 0, 0, 0.04);              // mango
       add('mid', 0.05, 0.012, 0.018, 0, 0.002, -0.022);         // guarda
-      add(0xc3cbd3, 0.006, 0.034, 0.16, 0, 0.006, -0.11);       // hoja
-      add(0xc3cbd3, 0.006, 0.02, 0.03, 0, 0.0, -0.2, 0.5);      // punta
+      add('steel', 0.006, 0.034, 0.16, 0, 0.006, -0.11);       // hoja (acero: sin textura de skin)
+      add('steel', 0.006, 0.02, 0.03, 0, 0.0, -0.2, 0.5);      // punta
       add('glove', 0.07, 0.075, 0.13, 0, -0.012, 0.06);
       muzzle = [0, 0, -0.22];
     } else if (spec.kind === 'pistol') {
@@ -2201,21 +2486,43 @@ const ViewmodelFactory = {
     return this._flashTexture;
   },
 
-  /** Arma + guantes en UNA malla con colores por vértice y el fogonazo en otra: 2 draw calls por arma
-   *  (antes ~15-20, una por pieza). Material compartido por todas las armas y skins. */
-  build(spec, flashScale = 1, skin = null) {
-    this._vmMat ??= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.15 });
+  /**
+   * Material compartido por todas las armas del viewmodel. La skin cambia sus texturas y parámetros
+   * (WeaponTextureFactory.applyTo); el atributo texMask deja sin textura los guantes y la hoja del cuchillo.
+   * Siempre tiene map y emissiveMap, así que cambiar de skin nunca recompila el shader.
+   */
+  material() {
+    if (this._vmMat) return this._vmMat;
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true });
+    WeaponTextureFactory.applyTo(m, 'carbon');
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute float texMask;\nvarying float vTexMask;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvTexMask = texMask;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vTexMask;')
+        .replace('#include <map_fragment>', '#ifdef USE_MAP\n\tdiffuseColor *= mix( vec4( 1.0 ), texture2D( map, vMapUv ), vTexMask );\n#endif')
+        .replace('#include <emissivemap_fragment>', '#ifdef USE_EMISSIVEMAP\n\ttotalEmissiveRadiance *= texture2D( emissiveMap, vEmissiveMapUv ).rgb * vTexMask;\n#endif');
+    };
+    m.customProgramCacheKey = () => 'vm-skin-texmask';
+    return (this._vmMat = m);
+  },
+
+  /** Arma + guantes en UNA malla (colores por vértice, UV y texMask) y el fogonazo en otra: 2 draw calls
+   *  por arma. Se construye una vez por arma: las skins solo cambian las texturas del material. */
+  build(spec, flashScale = 1) {
+    const mat = this.material();
     // forceSinglePass: sin él, Three pinta los materiales transparentes de doble cara en 2 pasadas y
     // marca needsUpdate en cada una (recalcula el programa del shader en cada frame con fogonazo).
     this._flashMat ??= new THREE.MeshBasicMaterial({ map: this.flashTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
     const root = new THREE.Group();
     const { parts, muzzle: mz } = this.parts(spec);
-    // Skin: sustituye la paleta (cuerpo / detalles / acento); los guantes no cambian.
-    const colored = parts.map((p) => {
-      const key = !skin || p.mat === 'glove' ? p.mat : p.mat === 'dark' ? skin.colors.body : p.mat === 'mid' ? skin.colors.trim : skin.colors.accent;
-      return { ...p, color: VM_COLORS[key] ?? key };
+    // Piezas del arma en tono neutro (la textura de la skin pone el color); guantes y hoja con su color y sin textura.
+    const shaded = parts.map((p) => {
+      const plain = p.mat === 'glove' || p.mat === 'steel';
+      return { ...p, color: plain ? VM_COLORS[p.mat] : VM_SHADE[p.mat] ?? VM_SHADE.accent, tex: plain ? 0 : 1 };
     });
-    root.add(new THREE.Mesh(coloredBoxGeometry(colored), this._vmMat));
+    root.add(new THREE.Mesh(texturedBoxGeometry(shaded), mat));
     const muzzle = new THREE.Object3D();
     muzzle.position.set(mz[0], mz[1], mz[2]);
     root.add(muzzle);
@@ -2229,7 +2536,17 @@ const ViewmodelFactory = {
     flash.visible = false;
     muzzle.add(flash);
     const base = spec.kind === 'knife' ? new THREE.Vector3(0.16, -0.16, -0.36) : spec.kind === 'pistol' ? new THREE.Vector3(0.15, -0.15, -0.42) : new THREE.Vector3(0.17, -0.175, -0.37);
-    return { root, muzzle, flash, base };
+    // La inspección gira el arma sobre su centro (sin contar los guantes) y la aleja según su largo total
+    // (guantes incluidos, para que las manos no tapen la pantalla con las armas cortas).
+    let minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity, backZ = -Infinity;
+    for (const p of parts) {
+      backZ = Math.max(backZ, p.z + p.d / 2);
+      if (p.mat === 'glove') continue;
+      minY = Math.min(minY, p.y - p.h / 2); maxY = Math.max(maxY, p.y + p.h / 2);
+      minZ = Math.min(minZ, p.z - p.d / 2); maxZ = Math.max(maxZ, p.z + p.d / 2);
+    }
+    const center = new THREE.Vector3(0, (minY + maxY) / 2, (minZ + maxZ) / 2), length = backZ - minZ;
+    return { root, muzzle, flash, base, center, length };
   },
 };
 
@@ -2429,6 +2746,8 @@ class WeaponSystem {
     this.shotsFired = 0;              // Disparos consecutivos (para el patrón de recoil).
     this.burstLeft = 0; this.burstRpm = 0; this.burstSpreadMult = 1;
     this.ads = false;
+    this.isInspecting = false;        // inspección del arma (Y / F) en curso
+    this.inspectTime = 0;             // segundos desde que empezó
   }
 
   makeInstance(def) {
@@ -2459,6 +2778,7 @@ class WeaponSystem {
     this.state = 'drawing';
     this.stateTimer = this.stateDuration = inst.def.drawTime;
     this.ads = false; this.burstLeft = 0; this.shotsFired = 0;
+    this.isInspecting = false;        // cambiar de arma corta la inspección
     this.game.audio.draw();
     this.game.view.onWeaponChanged(inst.def);
   }
@@ -2517,6 +2837,13 @@ class WeaponSystem {
       this.game.audio.metal(3000, 0.015, 0.3);
     }
 
+    // ---- Inspección (Y / F): solo con el arma lista, sin apuntar, sin disparar y sin ráfaga en curso ----
+    if ((input.wasPressed('KeyY') || input.wasPressed('KeyF')) && this.state === 'ready' && !this.ads
+      && this.burstLeft === 0 && !input.fireHeld && this.time - cur.lastShotTime > 0.2) {
+      this.isInspecting = true;
+      this.inspectTime = 0;
+    }
+
     // ---- Clic derecho: mira si el arma la tiene; si no, su fuego alternativo (p. ej. ráfaga de la Pica) ----
     const alt = input.consumeAltPress();
     if (alt && this.state === 'ready') {
@@ -2545,6 +2872,11 @@ class WeaponSystem {
     if (pressed && cur.mode === 'burst' && this.burstLeft === 0 && this.state === 'ready') this._startBurst(def.burst, 1);
     const wantsFire = this.burstLeft > 0 || (cur.mode === 'auto' ? (input.fireHeld || pressed) : cur.mode === 'semi' ? pressed : false);
     if (!input.fireHeld && !pressed && this.burstLeft === 0) this.shotsFired = 0;
+
+    // Cualquier acción de combate corta la inspección en este mismo tick (el arma vuelve en 0,1 s).
+    const isShooting = wantsFire || pressed, isAiming = this.ads;
+    if (this.isInspecting && (isShooting || isAiming || this.state !== 'ready')) this.isInspecting = false;
+    if (this.isInspecting && (this.inspectTime += dt) >= CONFIG.inspect.duration) this.isInspecting = false;
 
     if (wantsFire && this.state === 'ready') {
       if (!def.melee && cur.ammo <= 0) {
@@ -2710,30 +3042,45 @@ class ViewController {
     this.kickBack = 0; this.kickRot = 0; this.kickRoll = 0;
     this.bobPhase = 0; this.bobWeight = 0; this.landDip = 0;
     this.flashTimer = 0;
+    // Inspección: peso de la pose (1 = completa) y la pose actual en números sueltos (cero objetos por frame).
+    this.inspW = 0;
+    this.ipC = 0; this.ipX = 0; this.ipY = 0; this.ipZ = 0; this.ipRX = 0; this.ipRY = 0; this.ipRZ = 0;
     this._v = new THREE.Vector3(); this._ndc = new THREE.Vector3();
     this.onWeaponChanged(game.weapons.current.def);
   }
 
   onWeaponChanged(def) {
-    const skin = this.game.profile.skinFor(def.id);
-    const key = skin ? `${def.id}:${skin.id}` : def.id;
-    if (!this.models[key]) {
-      const m = ViewmodelFactory.build(def.model, def.category === 'shotgun' || def.category === 'sniper' ? 1.4 : 1, skin);
+    // Un modelo por arma, construido una sola vez: la skin solo cambia las texturas del material.
+    if (!this.models[def.id]) {
+      const m = ViewmodelFactory.build(def.model, def.category === 'shotgun' || def.category === 'sniper' ? 1.4 : 1);
       this.vmPivot.add(m.root);
-      this.models[key] = m;
+      this.models[def.id] = m;
     }
-    for (const id in this.models) this.models[id].root.visible = id === key;
-    this.model = this.models[key];
+    for (const id in this.models) this.models[id].root.visible = id === def.id;
+    this.model = this.models[def.id];
+    this.inspW = 0;                  // arma nueva: sin pose de inspección
+    this.applySkin(def);
   }
 
-  /** Al empezar partida: se reconstruyen los modelos (pueden haber cambiado las skins). */
-  clearModels() {
-    for (const id in this.models) {
-      const root = this.models[id].root;
-      this.vmPivot.remove(root);
-      root.traverse((o) => o.geometry?.dispose());   // materiales compartidos: no se tocan
-    }
-    this.models = {};
+  /**
+   * Skin equipada del arma en mano → .map y .emissiveMap del material del viewmodel. Se llama al cambiar
+   * de arma, al empezar partida y cuando cambia el perfil (equipar en el menú, otra pestaña o dispositivo).
+   */
+  applySkin(def = this.game.weapons.current.def) {
+    const skin = this.game.profile.skinFor(def.id);
+    WeaponTextureFactory.applyTo(ViewmodelFactory.material(), skin ? skin.tex : 'carbon');
+  }
+
+  /** Pose de inspección en el instante t (0..1): reposo → pose1 → pose2 → reposo, con smoothstep. */
+  _inspectPose(t) {
+    const ic = CONFIG.inspect, a = ic.pose1, b = ic.pose2;
+    let k1 = 0, k2 = 0;
+    if (t < ic.phase1) k1 = smoothstep(t / ic.phase1);
+    else if (t < ic.phase2) { k2 = smoothstep((t - ic.phase1) / (ic.phase2 - ic.phase1)); k1 = 1 - k2; }
+    else k2 = 1 - smoothstep((t - ic.phase2) / (1 - ic.phase2));
+    this.ipC = a.center * k1 + b.center * k2;
+    this.ipX = a.x * k1 + b.x * k2; this.ipY = a.y * k1 + b.y * k2; this.ipZ = a.z * k1 + b.z * k2;
+    this.ipRX = (a.rx * k1 + b.rx * k2) * DEG; this.ipRY = (a.ry * k1 + b.ry * k2) * DEG; this.ipRZ = (a.rz * k1 + b.rz * k2) * DEG;
   }
 
   reset(yaw) {
@@ -2741,6 +3088,7 @@ class ViewController {
     this.recoilPitch = this.recoilYaw = 0; this.lastShotTime = -10;
     this.shake = 0; this.zoom = 1; this.scoped = false;
     this.sway.set(0, 0); this.swayRot.set(0, 0); this.kickBack = this.kickRot = this.kickRoll = 0;
+    this.inspW = 0;
   }
 
   /**
@@ -2865,9 +3213,26 @@ class ViewController {
     }
     this.landDip = damp(this.landDip, player.isCrouched ? -0.012 : 0, 8, dt);
 
+    // Inspección (Y / F): mientras dura se evalúa la pose del instante; si se corta (disparo, mira,
+    // recarga) la última pose se desvanece en CONFIG.inspect.cancelReturn. Solo números: cero basura.
+    const ic = CONFIG.inspect;
+    if (weapons.isInspecting) {
+      this._inspectPose(clamp((weapons.inspectTime + alpha * this.game.tickDt) / ic.duration, 0, 1));
+      this.inspW = 1;
+    } else if (this.inspW > 0) this.inspW = Math.max(0, this.inspW - dt / ic.cancelReturn);
+    const iw = smoothstep(this.inspW);
+
     const m = this.model, r = m.root;
     r.position.set(m.base.x + this.sway.x + bx, m.base.y + this.sway.y + by + dip + this.landDip, m.base.z + this.kickBack);
-    r.rotation.set(this.kickRot + this.swayRot.x + dipRot + shP, this.swayRot.y + shY, this.kickRoll + roll + bx * 2 + shY * 0.5);
+    r.rotation.set(this.kickRot + this.swayRot.x + dipRot + shP + this.ipRX * iw, this.swayRot.y + shY + this.ipRY * iw, this.kickRoll + roll + bx * 2 + shY * 0.5 + this.ipRZ * iw);
+    if (iw > 0) {
+      // Gira sobre su centro (no sobre la empuñadura) y ese centro se acerca al punto de inspección.
+      // La inercia y el balanceo se mantienen encima. applyEuler usa un cuaternión interno de Three: sin basura.
+      const w = this.ipC * iw, c = this._v.copy(m.center).applyEuler(r.rotation);
+      r.position.x += w * (ic.target.x + this.ipX - c.x - m.base.x);
+      r.position.y += w * (ic.target.y + this.ipY - c.y - m.base.y);
+      r.position.z += w * (this.ipZ - (ic.targetDist + ic.targetDistPerLength * m.length) - c.z - m.base.z);
+    }
 
     // Fogonazo + luz dinámica en el mundo.
     this.flashTimer -= dt;
@@ -2902,7 +3267,7 @@ class HUD {
     this.el = {
       status: $('status'), move: $('move-info'),
       hpNum: $('hp-num'), hpBar: $('hp-bar'), shNum: $('sh-num'), shBar: $('sh-bar'),
-      scopeBlur: $('scope-blur'), credits: $('credits'), ammo: $('ammo'), name: $('weapon-name'),
+      scopeBlur: $('scope-blur'), credits: $('credits'), ammo: $('ammo'), name: $('weapon-name'), inspect: $('inspect-hint'),
       alive: $('sc-alive'), kd: $('sc-kd'), wave: $('sc-wave'),
       pfFps: $('pf-fps'), pfMs: $('pf-ms'), pfCalls: $('pf-calls'), pfTris: $('pf-tris'), pfCpu: $('pf-cpu'), pfNote: $('pf-note'),
     };
@@ -3083,6 +3448,8 @@ class HUD {
     }
     if (c.sh !== sh) { c.sh = sh; e.shNum.textContent = String(sh); e.shBar.style.width = Math.min(100, (sh / 50) * 100) + '%'; }
     if (c.blur !== g.view.scoped) { c.blur = g.view.scoped; e.scopeBlur.style.display = g.view.scoped ? 'block' : 'none'; }
+    const hideHint = wpn.isInspecting || g.view.scoped;
+    if (c.hint !== hideHint) { c.hint = hideHint; e.inspect.classList.toggle('off', hideHint); }
     if (c.cur !== cur || c.mode !== cur.mode) {
       e.name.textContent = `[${SLOT_KEYS[CATEGORIES[cur.def.category].slot]}] ${cur.def.name}${cur.def.melee ? '' : ' · ' + cur.mode.toUpperCase()}`;
     }
@@ -3249,15 +3616,15 @@ class Shop {
  *  Invitado: localStorage. Con cuenta de Google: Firestore (CloudAccount, más abajo).
  *  Si cambias precios o añades skins, actualiza también la tabla de precios de firestore.rules.
  * ===================================================================================== */
+// tex = textura procedural del arma en partida (WEAPON_TEXTURES); css = colores de la tarjeta en el menú.
+// Las armas sin skin llevan la textura de serie, fibra de carbono ('carbon').
 const SKINS = [
-  { id: 'martillo_prime', weapon: 'martillo', name: 'Martillo Prime', tier: 'PREMIUM', price: 1775,
-    colors: { body: 0x2a2d36, trim: 0xd8b25a, accent: 0xf0e6cc }, css: ['#e2bd62', '#3a3220'] },
-  { id: 'titan_dragon', weapon: 'titan', name: 'Titán Dragón', tier: 'EXCLUSIVA', price: 2475,
-    colors: { body: 0x3b1210, trim: 0xff7a2e, accent: 0xb3261e }, css: ['#ff7a2e', '#3b1210'] },
-  { id: 'cuervo_glaciar', weapon: 'cuervo', name: 'Cuervo Glaciar', tier: 'DELUXE', price: 1275,
-    colors: { body: 0xdfe8f0, trim: 0x6cc4ff, accent: 0x9db3c8 }, css: ['#7ccfff', '#1c2b3a'] },
-  { id: 'pica_neon', weapon: 'pica', name: 'Pica Neón', tier: 'SELECTA', price: 875,
-    colors: { body: 0x1c1a2c, trim: 0x31f2e0, accent: 0xff3bd4 }, css: ['#ff4fd8', '#14303a'] },
+  { id: 'martillo_prime', weapon: 'martillo', name: 'Martillo Prime', tier: 'PREMIUM', price: 1775, tex: 'prime', css: ['#e2bd62', '#3a3220'] },
+  { id: 'martillo_obsidiana', weapon: 'martillo', name: 'Martillo Obsidiana', tier: 'EXCLUSIVA', price: 2175, tex: 'obsidiana', css: ['#ff3b00', '#24100a'] },
+  { id: 'titan_dragon', weapon: 'titan', name: 'Titán Dragón', tier: 'EXCLUSIVA', price: 2475, tex: 'dragon', css: ['#ff7a2e', '#3b1210'] },
+  { id: 'cuervo_glaciar', weapon: 'cuervo', name: 'Cuervo Glaciar', tier: 'DELUXE', price: 1275, tex: 'glaciar', css: ['#7ccfff', '#1c2b3a'] },
+  { id: 'cuervo_neon', weapon: 'cuervo', name: 'Cuervo Neón', tier: 'SELECTA', price: 875, tex: 'neon', css: ['#00f3ff', '#0e2a33'] },
+  { id: 'pica_neon', weapon: 'pica', name: 'Pica Neón', tier: 'SELECTA', price: 875, tex: 'neon', css: ['#00f3ff', '#0e2a33'] },
 ];
 
 const SKIN_BY_ID = Object.fromEntries(SKINS.map((s) => [s.id, s]));
@@ -3657,7 +4024,8 @@ class LobbyUI {
     this.detailWeapon = null;                     // arma abierta en la colección (null = vista de loadout)
     this.detailSel = null;
     this.buySkin = null;
-    this._art = {};                                // siluetas SVG cacheadas por arma
+    this._art = {};                                // siluetas SVG cacheadas por arma (y por arma + textura)
+    this._patterns = new Set();                    // texturas ya registradas como <pattern> SVG
     this._toastT = 0;
     this._buildMaps();
     this._buildFriends();
@@ -3843,6 +4211,7 @@ class LobbyUI {
 
   /** El perfil ha cambiado (login, logout, compra, otro dispositivo): se repinta todo lo que depende de él. */
   refreshProfile() {
+    this.game.view.applySkin();                    // el arma 3D lleva al momento la skin equipada
     this.updateWallet();
     this.renderSkins();
     this.renderCollection();
@@ -3879,7 +4248,7 @@ class LobbyUI {
     const p = this.game.profile, skin = this.buySkin, w = WEAPON_DEFS[skin.weapon];
     const owned = p.owned.has(skin.id), after = p.credits - skin.price;
     document.getElementById('buy-body').innerHTML = `
-      <div class="confirm-art" style="--c1:${skin.css[0]};--c2:${skin.css[1]}">${this._weaponArt(w)}</div>
+      <div class="confirm-art" style="--c1:${skin.css[0]};--c2:${skin.css[1]}">${this._skinArt(w, skin)}</div>
       <div class="confirm-line"><span>${skin.name.toUpperCase()}</span><span>${skin.tier} · ${w.name.toUpperCase()}</span></div>
       <div class="confirm-line"><span>Precio</span><b>¤ ${skin.price}</b></div>
       <div class="confirm-line"><span>Saldo después de comprar</span><span class="${after < 0 ? 'neg' : ''}">¤ ${after}</span></div>
@@ -3918,6 +4287,32 @@ class LobbyUI {
     return this._art[w.id];
   }
 
+  /** Silueta rellena con la textura procedural de la skin (o la de serie): la misma imagen que lleva el arma en partida. */
+  _skinArt(w, skin) {
+    if (w.category === 'melee') return this._weaponArt(w);
+    const tex = skin ? skin.tex : 'carbon', key = w.id + ':' + tex;
+    if (!this._art[key]) {
+      this._texPattern(tex);
+      this._art[key] = this._weaponArt(w).replace('fill="currentColor"', `fill="url(#wtex-${tex})"`);
+    }
+    return this._art[key];
+  }
+
+  /** Registra la textura como <pattern> SVG una sola vez (a la misma escala que en el arma: 90 mm por textura). */
+  _texPattern(tex) {
+    if (this._patterns.has(tex)) return;
+    this._patterns.add(tex);
+    const NS = 'http://www.w3.org/2000/svg', size = String(VM_TEX_TILE * 1000);
+    const pattern = document.createElementNS(NS, 'pattern'), image = document.createElementNS(NS, 'image');
+    pattern.setAttribute('id', 'wtex-' + tex);
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    pattern.setAttribute('width', size); pattern.setAttribute('height', size);
+    image.setAttribute('href', WeaponTextureFactory.dataURL(tex));
+    image.setAttribute('width', size); image.setAttribute('height', size);
+    pattern.appendChild(image);
+    document.getElementById('wtex-defs').appendChild(pattern);
+  }
+
   /* ----------------------------- Tienda de skins ----------------------------- */
   renderSkins() {
     const p = this.game.profile, list = document.getElementById('skin-list');
@@ -3926,7 +4321,7 @@ class LobbyUI {
       const label = owned ? (p.equipped[s.weapon] === s.id ? 'EQUIPADA' : 'EN PROPIEDAD') : `COMPRAR · ¤ ${s.price}`;
       return `<div class="skin" style="--c1:${s.css[0]};--c2:${s.css[1]}">
         <span class="tier">${s.tier} · ${w.name.toUpperCase()}</span>
-        <div class="art">${this._weaponArt(w)}</div>
+        <div class="art">${this._skinArt(w, s)}</div>
         <b>${s.name}</b>
         <button class="buy${poor ? ' poor' : ''}" data-skin="${s.id}" ${owned ? 'disabled' : ''}>${label}</button>
       </div>`;
@@ -3952,7 +4347,7 @@ class LobbyUI {
         const have = SKINS.filter((s) => s.weapon === w.id && p.owned.has(s.id)).length;
         const total = SKINS.filter((s) => s.weapon === w.id).length;
         return `<button class="lo-w${eq ? ' eq' : ''}" data-weapon="${w.id}" ${eq ? `style="--c1:${eq.css[0]};--c2:${eq.css[1]}"` : ''}>
-          <div class="art">${this._weaponArt(w)}</div><b>${w.name.toUpperCase()}</b>
+          <div class="art">${eq ? this._skinArt(w, eq) : this._weaponArt(w)}</div><b>${w.name.toUpperCase()}</b>
           <small>${eq ? eq.name : 'Estándar'}</small>${total ? `<em class="cnt">${have}/${total} SKINS</em>` : ''}</button>`;
       }).join('')}</div>`).join('');
     el.onclick = (e) => {
@@ -3974,8 +4369,9 @@ class LobbyUI {
     const c1 = skin ? skin.css[0] : '#cfd6dc', c2 = skin ? skin.css[1] : '#1a2430';
     const row = (s) => {
       const id = s ? s.id : '', own = !s || p.owned.has(s.id), on = (s ? s.id : null) === eqId, cur = (s ? s.id : null) === sel;
+      const tx = w.category === 'melee' ? '' : WeaponTextureFactory.dataURL(s ? s.tex : 'carbon');
       return `<button class="lo-skin${cur ? ' sel' : ''}${own ? '' : ' locked'}${on ? ' on' : ''}" data-skin="${id}"
-        style="--c1:${s ? s.css[0] : '#cfd6dc'};--c2:${s ? s.css[1] : '#2a3440'}"><span class="sw"></span>
+        style="--c1:${s ? s.css[0] : '#cfd6dc'};--c2:${s ? s.css[1] : '#2a3440'}"><span class="sw${tx ? ' tx' : ''}"${tx ? ` style="background-image:url(${tx})"` : ''}></span>
         <span><b>${s ? s.name.toUpperCase() : 'ESTÁNDAR'}</b><small>${s ? (own ? s.tier : `BLOQUEADA · ¤ ${s.price}`) : 'DE SERIE'}</small></span></button>`;
     };
     const ownSel = !skin || p.owned.has(skin.id), isOn = sel === eqId;
@@ -3989,7 +4385,7 @@ class LobbyUI {
       <div class="lo-preview" style="--c1:${c1};--c2:${c2}">
         <span class="tier">${skin ? skin.tier : 'ESTÁNDAR'} · ${w.name.toUpperCase()}</span>
         <h3>${skin ? skin.name : w.name}</h3>
-        <div class="art">${this._weaponArt(w)}</div>
+        <div class="art">${this._skinArt(w, skin)}</div>
         <div class="acts">${action}</div>
       </div>`;
     document.getElementById('collection').hidden = true;
@@ -4132,7 +4528,7 @@ class FrameScheduler {
 }
 
 /** Teclas que captura el Keyboard Lock en pantalla completa: Esc llega al juego (pausa) y Ctrl+W no cierra la pestaña. */
-const FULLSCREEN_KEYS = ['Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'KeyB', 'KeyE', 'KeyX', 'KeyC', 'KeyK',
+const FULLSCREEN_KEYS = ['Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'KeyB', 'KeyE', 'KeyX', 'KeyC', 'KeyK', 'KeyY', 'KeyF',
   'Digit1', 'Digit2', 'Digit3', 'ControlLeft', 'ShiftLeft', 'Space', 'BracketLeft', 'BracketRight'];
 
 /* =====================================================================================
@@ -4164,6 +4560,7 @@ class Game {
     this.gpuFence = null;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
+    WeaponTextureFactory.prepare(this.renderer);   // texturas de skins: se pintan y se suben a la GPU una sola vez
 
     this.settings = store.load('vertice.settings', { sensitivity: CONFIG.mouse.sensitivity, weaponSway: true, volume: 0.8, shadows: true, renderScale: 1, showFps: true, fpsCap: 0, botDifficulty: 'normal' });
     this.profile = new Profile();
@@ -4192,6 +4589,7 @@ class Game {
     this.player.onDeath = () => {
       this.deaths++; this.match.deaths++;
       this.player.respawn(); this.view.reset(this.world.spawnYaw); this.shop.shield = null;
+      this.weapons.isInspecting = false;
       this.bots.requestReset();                    // se aplica al final del tick de los bots
       this.hud.showNotice('HAS CAÍDO · LOS DEFENSORES VUELVEN A SUS PUESTOS', 2.5);
     };
@@ -4283,8 +4681,7 @@ class Game {
     this.player.respawn();
     this.view.reset(this.world.spawnYaw);
     this.weapons = new WeaponSystem(this);
-    this.view.clearModels();
-    this.view.onWeaponChanged(this.weapons.current.def);
+    this.view.onWeaponChanged(this.weapons.current.def);   // aplica la skin equipada (cuenta o invitado) sin reconstruir el arma
     this.shop.credits = ECONOMY.startCredits;
     this.shop.shield = null;
     this.kills = 0; this.deaths = 0;
