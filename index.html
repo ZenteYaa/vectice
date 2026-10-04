@@ -124,8 +124,8 @@
   .mode small { opacity: .6; letter-spacing: 2px; font-size: 11px; }
   .mode.sel { border-color: var(--cy); background: #3fd6c41f; }
   .mode.locked { opacity: .35; cursor: not-allowed; }
-  .maps { display: flex; gap: 16px; flex-wrap: wrap; }
-  .map { width: 300px; background: #ffffff08; border: 1px solid var(--line); padding: 0; cursor: pointer; text-align: left; position: relative; transition: transform .12s, border-color .12s; }
+  .maps { display: flex; gap: 16px; }                     /* una sola fila: con más mapas, las tarjetas se estrechan */
+  .map { flex: 0 1 300px; min-width: 0; background: #ffffff08; border: 1px solid var(--line); padding: 0; cursor: pointer; text-align: left; position: relative; transition: transform .12s, border-color .12s; }
   .map:hover { transform: translateY(-3px); border-color: #ffffff55; }
   .map.sel { border-color: var(--map-tint); box-shadow: 0 0 0 1px var(--map-tint), 0 10px 30px #0008; }
   .map .thumb { height: 190px; overflow: hidden; border-bottom: 1px solid var(--line); }
@@ -1487,6 +1487,43 @@ const MAPS = {
       b.bot(-10, -25, -20, -25);   // conexión A-B: vigila la rotación
     },
   },
+  paramo: {
+    name: 'Páramo', size: 86, tint: '#4fc3ff', floor: 0xe6dccb, sunX: 0,   // suelo polvoriento; sol centrado en X = misma luz para las dos bases
+    desc: 'Explanada abierta entre dos bases de contenedores. Duelo a 80 m: territorio del Titán.',
+    // Base oeste (tu equipo). La base este (x = +40, mirando al oeste) es su espejo exacto y la ocupan
+    // los defensores. yaw -π/2 = mirando a +X (en este motor, yaw 0 mira a -Z y +π/2 mira a -X).
+    spawn: { x: -40, z: 0, yaw: -Math.PI / 2 },
+    build(b) {
+      const X = 42.5, Z = 22;       // 85 × 44 m: el muro trasero queda a 2,5 m de cada spawn
+      b.wall(-X, -Z, X, -Z, 6, 1); b.wall(-X, Z, X, Z, 6, 1); b.wall(-X, -Z, -X, Z, 6, 1); b.wall(X, -Z, X, Z, 6, 1);
+      // Esquinas achaflanadas y franjas de luz en el perímetro (como el plano de referencia).
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.box(sx * (X - 2), sz * (Z - 2), 4, 4, 6, 'wall');
+      for (const sx of [-1, 1]) {
+        b.box(sx * (X - 0.55), -11, 0.1, 13, 0.35, 'neon', 3.6); b.box(sx * (X - 0.55), 11, 0.1, 13, 0.35, 'neon', 3.6);
+        b.box(sx * 31, -(Z - 0.55), 14, 0.1, 0.35, 'neon', 3.6); b.box(sx * 31, Z - 0.55, 14, 0.1, 0.35, 'neon', 3.6);
+      }
+      // Bases: tres baterías de contenedores por lado, espejo exacto en X. La central tapa la línea
+      // directa entre spawns; los huecos entre baterías son las salidas norte, centro y sur.
+      for (const sx of [-1, 1]) {
+        b.box(sx * 26.5, -13.6, 4.9, 10.6, 2.9, 'container'); b.box(sx * 30.2, -13.1, 2.6, 6.9, 2.3, 'container');
+        b.box(sx * 27.0, -1.0, 4.2, 10.0, 2.9, 'container');  b.box(sx * 23.2, -0.3, 3.4, 8.1, 2.3, 'container');
+        b.box(sx * 26.5, 11.0, 5.0, 9.4, 2.9, 'container');   b.box(sx * 30.4, 11.5, 2.8, 5.4, 2.3, 'container');
+      }
+      // Explanada central: rocas bajas (cobertura agachado) con simetría de giro, igual para los dos lados.
+      for (const k of [-1, 1]) {
+        b.box(k * -15.6, k * -16.8, 1.4, 1.2, 0.9, 'rock'); b.box(k * -21.5, k * -5.4, 1.2, 1.4, 1.0, 'rock');
+        b.box(k * -12.8, k * -7.2, 1.6, 1.1, 0.8, 'rock');  b.box(k * -3.4, k * -11.2, 1.8, 1.2, 1.1, 'rock');
+        b.box(k * -11.8, k * 5.0, 1.1, 1.1, 0.8, 'rock');   b.box(k * -5.2, k * 13.4, 1.3, 1.5, 1.0, 'rock');
+      }
+      b.site('A', 0, -14, 6); b.site('B', 0, 14, 6);
+      // Defensores en la base este. A más de 45 m (su alcance de visión) del spawn oeste.
+      b.bot(40, 0, 20, 0);          // spawn rival, detrás de la batería central
+      b.bot(21, -14, 0, -14);       // salida norte
+      b.bot(19.5, 0, 0, 2);         // frente a la batería central
+      b.bot(21.5, 11, 0, 11);       // salida sur
+      b.bot(36, 18, 12, 18);        // pasillo sur, pegado al muro
+    },
+  },
 };
 const DEFAULT_MAP = 'santuario';
 
@@ -1506,7 +1543,7 @@ class MapSketch {
   bot() {}                          // los puestos de los bots no se revelan en el minimapa
   svg(tint) {
     const S = this.size / 2;
-    const fill = { wall: '#9aa6b2', cover: '#c98c4a', column: '#6f7a86', crate: '#7f8a55' };
+    const fill = { wall: '#9aa6b2', cover: '#c98c4a', column: '#6f7a86', crate: '#7f8a55', container: '#8e6a52', rock: '#6c6862', neon: '#4fc3ff' };
     const r = this.rects.map((o) => `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${fill[o.mat]}"/>`).join('');
     const d = this.doors.map((o) => `<rect x="${o.x - o.w / 2}" y="${o.z - o.d / 2}" width="${o.w}" height="${o.d}" fill="${tint}" opacity=".9"/>`).join('');
     const s = this.sites.map((o) => `<circle cx="${o.x}" cy="${o.z}" r="${o.r}" fill="${tint}" fill-opacity=".18" stroke="${tint}" stroke-width=".5"/><text x="${o.x}" y="${o.z + 2.4}" text-anchor="middle" font-size="7" font-weight="800" fill="#fff">${o.id}</text>`).join('');
@@ -1571,6 +1608,20 @@ class World {
       }
       g.strokeStyle = 'rgba(40,40,45,0.55)'; g.lineWidth = 3; g.strokeRect(0, 0, s, s);
     });
+    // Chapa ondulada de contenedor (1 m = 4 ondas) con churretes de óxido.
+    const corrugated = this._canvasTexture(256, (g, sz) => {
+      g.fillStyle = '#6d747b'; g.fillRect(0, 0, sz, sz);
+      for (let i = 0; i < 4; i++) {
+        const x = i * sz / 4, gr = g.createLinearGradient(x, 0, x + sz / 4, 0);
+        gr.addColorStop(0, 'rgba(255,255,255,0.10)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.22)'); gr.addColorStop(1, 'rgba(255,255,255,0.10)');
+        g.fillStyle = gr; g.fillRect(x, 0, sz / 4, sz);
+      }
+      for (let i = 0; i < 14; i++) {
+        g.fillStyle = `rgba(${150 + Math.random() * 40 | 0},${70 + Math.random() * 30 | 0},30,${0.25 + Math.random() * 0.3})`;
+        g.fillRect(Math.random() * sz, Math.random() * sz * 0.4, 2 + Math.random() * 4, 20 + Math.random() * 90);
+      }
+      g.strokeStyle = 'rgba(30,30,32,0.5)'; g.lineWidth = 2; g.strokeRect(0, 0, sz, sz);
+    });
     this.mat = {
       wall: new THREE.MeshStandardMaterial({ map: concrete, color: 0xc9ccd0, roughness: 0.92 }),
       cover: new THREE.MeshStandardMaterial({ map: concrete, color: 0xe0a663, roughness: 0.85 }),
@@ -1578,6 +1629,9 @@ class World {
       crate: new THREE.MeshStandardMaterial({ map: concrete, color: 0x7f8a55, roughness: 0.9 }),
       door: new THREE.MeshStandardMaterial({ color: 0x5c6670, roughness: 0.5, metalness: 0.4 }),
       post: new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.6, metalness: 0.4 }),
+      container: new THREE.MeshStandardMaterial({ map: corrugated, color: 0xe4e8ec, roughness: 0.8 }),
+      rock: new THREE.MeshStandardMaterial({ map: concrete, color: 0xb3ab9c, roughness: 1 }),
+      neon: new THREE.MeshStandardMaterial({ color: 0x4fc3ff, emissive: 0x2aa8ff, emissiveIntensity: 1.6, roughness: 0.4 }),
     };
     this.edgeMat = new THREE.LineBasicMaterial({ color: 0x1b1e22, transparent: true, opacity: 0.45 });
     this.siteRingMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false });
@@ -1625,6 +1679,7 @@ class World {
 
     const size = def.size + 8;
     this.floorMat.map.repeat.set(size / 4, size / 4);
+    this.floorMat.color.set(def.floor ?? 0xffffff);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(size, size), this.floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
@@ -1634,7 +1689,7 @@ class World {
     const sc = this.sun.shadow.camera, half = def.size / 2 + 4;
     sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.near = 1; sc.far = 140;
     sc.updateProjectionMatrix();
-    this.sun.position.set(half * 0.5, 45, half * 0.35);
+    this.sun.position.set(half * (def.sunX ?? 0.5), 45, half * 0.35);
 
     def.build(this);
     this._flushStatic();
@@ -1840,7 +1895,7 @@ class PlayerController {
     this.shield = 0;              // Puntos de escudo actuales (los compra la tienda).
     this.onDamaged = null;        // Callback(cantidad, origenX, origenZ) para HUD/audio.
     this.onDeath = null;
-    this.spawnOffset = 0;         // en grupo cada jugador aparece desplazado a un lado de la base (m, eje X)
+    this.spawnOffset = 0;         // en grupo cada jugador aparece desplazado a un lado de la base (m, a lo ancho de su mirada)
   }
 
   /** Daño entrante: el escudo recibe el daño antes que la vida; lo que sobra pasa a la vida. */
@@ -1856,8 +1911,10 @@ class PlayerController {
   respawn() {
     this.pos.copy(this.world.spawn);
     if (this.spawnOffset !== 0) {
-      this.pos.x += this.spawnOffset;
-      if (this.overlapsAt(this.pos.x, 0, this.pos.z, this.cfg.standHeight)) this.pos.x = this.world.spawn.x;
+      // De lado respecto a donde mira el spawn (su vector derecho), para que nadie aparezca delante de otro.
+      const yaw = this.world.spawnYaw;
+      this.pos.x += this.spawnOffset * Math.cos(yaw); this.pos.z -= this.spawnOffset * Math.sin(yaw);
+      if (this.overlapsAt(this.pos.x, 0, this.pos.z, this.cfg.standHeight)) this.pos.copy(this.world.spawn);
     }
     this.prevPos.copy(this.pos);
     this.vel.set(0, 0, 0);
@@ -4444,6 +4501,10 @@ const SOCIAL = {
   // Documento rulesVersion/{versión} que firestore.rules deja leer a cualquiera (aunque no exista). Si la
   // lectura se deniega, las reglas activas en Firebase no son las de este index.html. Cámbialo a la vez en los dos.
   rulesVersion: 'social-2',
+  // Mapas que aceptan las reglas antiguas. Uno nuevo solo se puede usar en grupo si Firebase deja leer
+  // rulesVersion/{mapsRulesVersion}, es decir, si ya están publicadas las reglas que lo incluyen.
+  legacyMaps: ['santuario', 'bastion'],
+  mapsRulesVersion: 'maps-1',
 };
 
 const DIFFICULTY_NAMES = { facil: 'Fácil', normal: 'Normal', dificil: 'Difícil' };
@@ -4619,6 +4680,15 @@ class Social {
       if (err?.code === 'permission-denied') err.code = 'rules-outdated';
       throw err;
     }
+    // Sin la marca de mapas el panel funciona igual; solo los mapas nuevos quedan fuera del grupo.
+    try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.mapsRulesVersion)); this.newMapsOk = true; }
+    catch (err) { this.newMapsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de mapas', err); }
+  }
+
+  /** ¿Aceptan las reglas publicadas este mapa en un grupo? */
+  partyMapOk(map) { return SOCIAL.legacyMaps.includes(map) || this.newMapsOk === true; }
+  _partyMapDenied(map) {
+    this._toast(`${MAPS[map]?.name ?? map} aún no se puede jugar en grupo: publica las reglas nuevas de Firestore.`, true);
   }
 
   /** Lectura con el paso y la ruta apuntados: si falla, el error dice exactamente qué se rechazó. */
@@ -4896,7 +4966,8 @@ class Social {
   _partyOps(b) {
     const ref = this.fb.doc(this._col('parties'));
     b.set(ref, {
-      leader: this.uid, members: [this.uid], status: 'idle', map: this.game.ui.selectedMap, difficulty: this.game.settings.botDifficulty,
+      leader: this.uid, members: [this.uid], status: 'idle',
+      map: this.partyMapOk(this.game.ui.selectedMap) ? this.game.ui.selectedMap : DEFAULT_MAP, difficulty: this.game.settings.botDifficulty,
       launchSeq: 0, launchAt: null, createdAt: this._ts(), updatedAt: this._ts(),
     });
     b.update(this._ref('users', this.uid), { partyId: ref.id, partySize: 1, status: this._activity, lastSeen: this._ts() });
@@ -5125,6 +5196,7 @@ class Social {
     if (!this.ready || !this.inParty || !this.isLeader) return;
     const map = this.game.ui.selectedMap, difficulty = this.game.settings.botDifficulty;
     if (p.map === map && p.difficulty === difficulty) return;
+    if (!this.partyMapOk(map)) { if (this.inParty) this._partyMapDenied(map); return; }
     this.fb.updateDoc(this._ref('parties', p.id), { map, difficulty, updatedAt: this._ts() })
       .catch((err) => this._toast(cloudErrorText(err), true));
   }
@@ -5132,6 +5204,7 @@ class Social {
   /** INICIAR PARTIDA del líder: status 'launching' + launchSeq nuevo → todos los miembros arrancan. */
   launch(map) {
     if (!this.inParty || !this.isLeader) return Promise.resolve(false);
+    if (!this.partyMapOk(map)) { this._partyMapDenied(map); return Promise.resolve(false); }
     return this._run(() => this.fb.updateDoc(this._ref('parties', this.party.id), {
       status: 'launching', launchSeq: this.fb.increment(1), launchAt: this._ts(),
       map, difficulty: this.game.settings.botDifficulty, updatedAt: this._ts(),
@@ -5679,12 +5752,12 @@ class LobbyUI {
 
   _buildMaps() {
     const list = document.getElementById('map-list');
-    list.innerHTML = Object.entries(MAPS).map(([id, m]) => `
+    list.innerHTML = Object.entries(MAPS).map(([id, m]) => { const sk = new MapSketch(m); return `
       <button class="map${id === this.selectedMap ? ' sel' : ''}" data-map="${id}" style="--map-tint:${m.tint}">
         <span class="check">SELECCIONADO</span>
-        <div class="thumb">${new MapSketch(m).svg(m.tint)}</div>
-        <div class="meta"><b>${m.name}</b><small>SITES: A - B - C</small><p>${m.desc}</p></div>
-      </button>`).join('');
+        <div class="thumb">${sk.svg(m.tint)}</div>
+        <div class="meta"><b>${m.name}</b><small>SITES: ${sk.sites.map((x) => x.id).join(' - ')}</small><p>${m.desc}</p></div>
+      </button>`; }).join('');
     list.addEventListener('click', (e) => {
       const card = e.target.closest('.map'); if (!card) return;
       this._sfx('click');

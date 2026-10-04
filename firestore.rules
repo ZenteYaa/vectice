@@ -12,7 +12,7 @@ rules_version = '2';
 // users/{uid}/partyInvites/{grupo}  Invitaciones a un grupo.
 // parties/{grupo}                   Grupo: líder, miembros (máx. 5), mapa, dificultad y arranque de partida.
 // parties/{grupo}/rtc/{miembro}     Conexión WebRTC de la partida en grupo: oferta del líder (anfitrión) y respuesta del miembro.
-// rulesVersion/social-2, net-1      Marcas de versión (no existen; solo se pueden leer). El juego lee social-2 al conectar:
+// rulesVersion/social-2, net-1, maps-1  Marcas de versión (no existen; solo se pueden leer). El juego lee social-2 al conectar:
 //                                   si se deniega, las reglas publicadas en Firebase son antiguas.
 //
 // Cuentas (players):
@@ -257,7 +257,7 @@ service cloud.firestore {
           && d.members is list && d.members.size() >= 1 && d.members.size() <= 5
           && d.leader in d.members
           && d.status in ['idle', 'launching']
-          && d.map in ['santuario', 'bastion']
+          && d.map in ['santuario', 'bastion', 'paramo']
           && d.difficulty in ['facil', 'normal', 'dificil']
           && d.launchSeq is int && d.launchSeq >= 0
           && (d.launchAt == null || d.launchAt is timestamp)
@@ -352,9 +352,9 @@ service cloud.firestore {
 
     // Marcas de versión: leerlas siempre está permitido (los documentos no existen). Si el juego no puede leer
     // social-2, las reglas activas en Firebase no son estas (SOCIAL.rulesVersion de index.html). net-1 marca
-    // que incluyen la señalización de la partida en grupo (parties/{grupo}/rtc).
+    // que incluyen la señalización de la partida en grupo (parties/{grupo}/rtc). maps-1: el grupo acepta el mapa Páramo.
     match /rulesVersion/{version} {
-      allow get: if version in ['social-2', 'net-1'];
+      allow get: if version in ['social-2', 'net-1', 'maps-1'];
     }
 
     // Todo lo demás, cerrado.
