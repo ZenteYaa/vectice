@@ -13,13 +13,13 @@
   #hud-top > div { padding: 5px 14px; border-right: 1px solid #ffffff14; text-align: center; }
   #hud-top > div:last-child { border-right: 0; }
   #hud-top b { display: block; font-size: 20px; letter-spacing: 1px; }
-  #hud-top .en b { color: #ff5a6e; }
+  #hud-top .en b { color: #ff4655; }
   #hud-top .kd b { color: #e9eef2; }
   #hud-top small { opacity: .55; font-size: 9px; letter-spacing: 3px; }
   #hud-bl { bottom: 14px; left: 16px; }
   #hud-br { bottom: 14px; right: 18px; text-align: right; }
   #inspect-hint { font-size: 11px; letter-spacing: 2px; opacity: .55; margin-bottom: 6px; transition: opacity .15s; }
-  #inspect-hint b { color: #3fd6c4; font-weight: 800; }
+  #inspect-hint b { color: #00f3ff; font-weight: 800; }
   #inspect-hint.off { opacity: 0; }
   #ammo { font-size: 38px; font-weight: 700; letter-spacing: 1px; }
   #ammo small { font-size: 18px; opacity: .7; }
@@ -37,14 +37,15 @@
   /* Monitor de rendimiento estilo eSports: los valores viven en <span> fijos y solo cambia su textContent. */
   #perf { top: 10px; right: 12px; z-index: 19;   /* por debajo de los modales (20): no tapa el botón CERRAR de Ajustes */
     min-width: 196px; font: 12px/1.5 ui-monospace, Consolas, Menlo, monospace; padding: 6px 10px 7px; background: rgba(5,8,12,.72);
-    border: 1px solid #ffffff1f; border-left: 3px solid #3fd6c4; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+    border: 1px solid #ffffff1f; border-left: 3px solid #00f3ff; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
   #perf .pf-row { display: flex; justify-content: space-between; gap: 14px; }
   #perf .pf-k { opacity: .55; font-size: 10px; letter-spacing: 2px; align-self: center; }
   #perf .pf-fps { font-size: 22px; font-weight: 800; }
   #perf .pf-v { font-weight: 700; }
   #perf .pf-note { font-size: 10px; opacity: .45; letter-spacing: 1px; margin-top: 2px; }
   #perf .ok { color: #7dff8a; } #perf .mid { color: #ffd34d; } #perf .bad { color: #ff5a4d; }
-  body.state-menu #perf { top: auto; bottom: 14px; right: 316px; }   /* en el lobby no tapa la cartera ni el panel social */
+  body.state-menu #perf { top: 74px; right: 52px; }   /* en el lobby: bajo la cartera, sin tapar la barra de acción ni la pestaña SOCIAL */
+  body.state-menu:has(#screen-lobby:not(.social-collapsed)) #perf { right: 334px; }   /* con SOCIAL abierto, a su izquierda */
   #scope-blur { position: fixed; inset: 0; pointer-events: none; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     mask-image: radial-gradient(circle at center, transparent 0, transparent 30vh, #000 45vh); -webkit-mask-image: radial-gradient(circle at center, transparent 0, transparent 30vh, #000 45vh); }
   #credits { font-size: 13px; color: #6fe3d2; margin-bottom: 4px; }
@@ -89,77 +90,209 @@
   #game { transition: filter .5s; }
   body.state-landing #game { filter: blur(1px) brightness(.55) saturate(.8); }
   body.state-menu #game { filter: blur(4px) brightness(.45) saturate(.75); transition: filter 1.2s; }
-  :root { --cy: #3fd6c4; --rd: #ff5a6e; --bg: #0b1016; --line: #ffffff1c; }
+  :root { --cy: #00f3ff; --rd: #ff4655; --bg: #0b0e14; --bg2: #161b22; --line: #ffffff1c; }
 
   /* ===================== Lobby ===================== */
-  #screen-lobby { position: fixed; inset: 0; display: flex; flex-direction: column; color: #e9eef2;
-    background: radial-gradient(ellipse at 30% 110%, #3fd6c41a, transparent 55%), linear-gradient(180deg, #0b1016e6 0%, #0b101699 40%, #0b1016d9 100%); }
+  #screen-lobby { position: fixed; inset: 0; display: flex; flex-direction: column; color: #e9eef2; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 120%, #00f3ff14, transparent 60%), linear-gradient(180deg, #0b0e14e6 0%, #0b0e1480 45%, #0b0e14e0 100%); }
   #screen-lobby button { font: inherit; color: inherit; }
-  .nav { height: 62px; display: flex; align-items: center; gap: 34px; padding: 0 28px; border-bottom: 1px solid var(--line); background: #070a0ecc; }
+  .nav { position: relative; z-index: 3; height: 62px; display: flex; align-items: center; gap: 28px; padding: 0 22px; border-bottom: 1px solid var(--line); background: #0b0e14d9; }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: 6px; font-size: 18px; color: var(--rd); }
   .logo svg { width: 24px; height: 24px; }
-  .tabs { display: flex; height: 100%; }
-  .tab { background: none; border: 0; padding: 0 22px; height: 100%; cursor: pointer; letter-spacing: 3px; font-size: 13px; font-weight: 700; opacity: .55; position: relative; }
-  .tab:hover { opacity: .9; }
-  .tab.active { opacity: 1; }
-  .tab.active::after { content: ''; position: absolute; left: 18px; right: 18px; bottom: 0; height: 3px; background: var(--rd); }
-  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 18px; margin-right: 46px; }
-  .wallet { font-weight: 700; font-size: 16px; color: var(--cy); }
-  .wallet i { font-style: normal; opacity: .8; margin-right: 6px; }
-  .gear { width: 38px; height: 38px; background: #ffffff0d; border: 1px solid var(--line); cursor: pointer; display: grid; place-items: center; }
-  .gear:hover { border-color: var(--cy); color: var(--cy); }
-  .gear svg { width: 20px; height: 20px; }
+  /* Pestañas centradas con borde biselado; la activa lleva el indicador luminoso. */
+  .tabs { flex: 1; align-self: stretch; display: flex; justify-content: center; align-items: flex-start; gap: 4px; min-width: 0; }
+  .tab { position: relative; height: 44px; padding: 0 22px; background: var(--bg2); border: 1px solid var(--line); border-top: 0; cursor: pointer; letter-spacing: 3px; font-size: 12px;
+    font-weight: 800; color: #e9eef2a6; clip-path: polygon(0 0, 100% 0, 100% 70%, calc(100% - 12px) 100%, 12px 100%, 0 70%); transition: color .12s, background .12s; }
+  .tab:hover { color: #e9eef2; background: #1d242e; }
+  .tab.active { color: #fff; background: linear-gradient(180deg, #ff465526, #161b22 80%); }
+  .tab.active::after { content: ''; position: absolute; left: 16px; right: 16px; bottom: 3px; height: 3px; background: var(--rd); box-shadow: 0 0 10px var(--rd), 0 0 22px #ff465588; }
+  .nav-right { flex: none; display: flex; align-items: center; gap: 16px; margin-right: 44px; }
+  @media (max-width: 1450px) {
+    .nav { gap: 14px; }
+    .tab { padding: 0 13px; letter-spacing: 2px; font-size: 11px; }
+    .logo { letter-spacing: 3px; font-size: 15px; }
+    .nav-right { gap: 10px; }
+  }
+  @media (max-width: 1200px) { .logo span { display: none; } .acct-login span { display: none; } }
+  .wallet { display: flex; align-items: baseline; gap: 6px; padding: 7px 14px; background: var(--bg2); border: 1px solid #00f3ff44; font-weight: 800; font-size: 17px; color: var(--cy);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+  .wallet i { font-style: normal; opacity: .85; }
+  .wallet small { font-size: 9px; letter-spacing: 2px; opacity: .55; font-weight: 700; }
+  .wallet.bump { animation: walletBump .45s ease; }
+  @keyframes walletBump { 40% { color: #fff; text-shadow: 0 0 12px var(--cy); } }
 
-  .lobby-main { flex: 1; display: flex; padding: 28px 340px 28px 46px; overflow: auto; transition: padding .25s; }
-  #screen-lobby.social-collapsed .lobby-main { padding-right: 90px; }
-  .panel { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .lobby-main { position: relative; flex: 1; min-height: 0; display: flex; padding: 18px 70px 18px 32px; overflow: auto; }
+  .panel { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .panel[hidden] { display: none; }
   .play-head { display: flex; align-items: baseline; gap: 16px; margin-top: 6px; }
   .kicker { font-size: 11px; letter-spacing: 4px; opacity: .6; font-weight: 700; }
   .muted { opacity: .5; font-size: 12px; }
-  .modes { display: flex; gap: 12px; }
-  .mode { width: 280px; padding: 14px 18px; text-align: left; background: #ffffff0a; border: 1px solid var(--line); cursor: pointer;
-    clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%); }
-  .mode b { display: block; letter-spacing: 2px; font-size: 15px; }
-  .mode small { opacity: .6; letter-spacing: 2px; font-size: 11px; }
-  .mode.sel { border-color: var(--cy); background: #3fd6c41f; }
-  .mode.locked { opacity: .35; cursor: not-allowed; }
-  .maps { display: flex; gap: 16px; }                     /* una sola fila: con más mapas, las tarjetas se estrechan */
-  .map { flex: 0 1 300px; min-width: 0; background: #ffffff08; border: 1px solid var(--line); padding: 0; cursor: pointer; text-align: left; position: relative; transition: transform .12s, border-color .12s; }
-  .map:hover { transform: translateY(-3px); border-color: #ffffff55; }
-  .map.sel { border-color: var(--map-tint); box-shadow: 0 0 0 1px var(--map-tint), 0 10px 30px #0008; }
-  .map .thumb { height: 190px; overflow: hidden; border-bottom: 1px solid var(--line); }
-  .map .thumb svg { width: 100%; height: 100%; display: block; }
-  .map .meta { padding: 10px 14px 12px; }
-  .map .meta b { display: block; font-size: 20px; letter-spacing: 5px; text-transform: uppercase; }
-  .map .meta small { display: block; font-size: 11px; letter-spacing: 2px; color: var(--map-tint); margin: 2px 0 5px; }
-  .map .meta p { margin: 0; font-size: 11px; opacity: .6; line-height: 1.4; }
-  .map .check { position: absolute; top: 10px; left: 10px; font-size: 10px; letter-spacing: 2px; background: var(--map-tint); color: #0b1016; padding: 3px 7px; font-weight: 800; display: none; }
-  .map.sel .check { display: block; }
-  .start { margin-top: auto; align-self: flex-start; width: 420px; height: 70px; background: var(--rd); border: 0; cursor: pointer; position: relative; overflow: hidden;
-    font-size: 22px !important; font-weight: 900; letter-spacing: 8px; color: #fff; clip-path: polygon(0 0, 100% 0, 100% 70%, 94% 100%, 0 100%); transition: filter .12s, transform .12s; }
+  .bevel { clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); }
+
+  /* ---- JUGAR: escuadrón de 5 ranuras + barra de acción ---- */
+  .panel.play { align-items: center; justify-content: space-between; gap: 10px; }
+  .party-bar { align-self: stretch; display: flex; align-items: baseline; gap: 14px; min-height: 26px; padding-left: 4px; }
+  .squad { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px; }
+  .slot { --h: clamp(230px, calc(100vh - 300px), 400px); position: relative; flex: none; height: var(--h); width: calc(var(--h) * .44); box-sizing: border-box; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end; padding: 0 0 14px; background: linear-gradient(180deg, #161b22cc, #0b0e14e6); border: 1px solid var(--line); text-align: center;
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+  .slot.inner { --h: clamp(250px, calc(100vh - 270px), 430px); width: calc(var(--h) * .47); }
+  .slot.center { --h: clamp(280px, calc(100vh - 235px), 470px); width: calc(var(--h) * .56); border-color: #00f3ff88;
+    box-shadow: inset 0 0 0 1px #00f3ff55, inset 0 0 40px #00f3ff22, 0 0 30px #00f3ff22; }
+  .slot .card-art { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
+  .slot .card-art svg, .slot .card-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slot .card-art .ini { font-size: calc(var(--h) * .3); font-weight: 900; color: #ffffff22; }
+  .slot .card-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, #0b0e14f2 82%); }
+  .slot-foot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; padding: 0 8px; box-sizing: border-box; }
+  .slot .rank { width: 46px; height: 46px; margin-bottom: 4px; color: #8c96a0; }
+  .slot.center .rank { width: 58px; height: 58px; }
+  .slot .rank-n { font-size: 9px; letter-spacing: 2px; opacity: .55; margin-bottom: 6px; }
+  .slot b { max-width: 100%; font-size: 15px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot.center b { font-size: 19px; letter-spacing: 2px; }
+  .slot .tag { font-size: 11px; letter-spacing: 1px; opacity: .55; min-height: 13px; }
+  .slot em { margin-top: 6px; font-style: normal; font-size: 10px; letter-spacing: 2px; font-weight: 800; color: var(--cy); }
+  .slot em.no { color: #8c96a0; } .slot em.game { color: var(--rd); }
+  .slot.off { opacity: .6; }
+  .slot .crown { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1; display: flex; align-items: center; gap: 5px; padding: 3px 9px; background: #0b0e14cc;
+    border: 1px solid #ffc04d88; font-size: 9px; letter-spacing: 2px; font-weight: 900; color: #ffc04d; white-space: nowrap; }
+  .slot .crown svg { width: 14px; height: 14px; }
+  .slot .sacts { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
+  .slot:hover .sacts { opacity: 1; }
+  #screen-lobby .slot .sacts .mini { padding: 2px 6px; font-size: 10px; background: #0b0e14cc; }
+  #screen-lobby .ready-btn { margin-top: 8px; padding: 6px 14px; background: #0b0e14cc; border: 1px solid var(--cy); color: var(--cy); cursor: pointer; font-size: 10px; letter-spacing: 2px; font-weight: 900; }
+  #screen-lobby .ready-btn.on { background: var(--cy); color: #0b0e14; }
+  #screen-lobby .slot.empty { justify-content: center; padding: 0; border-style: dashed; border-color: #ffffff30; background: #0b0e1499; cursor: pointer; color: #e9eef2b3; }
+  #screen-lobby .slot.empty:hover { border-color: var(--cy); color: var(--cy); background: #00f3ff0d; }
+  .slot.empty .plus, .slot.locked .plus { width: 44%; max-width: 70px; aspect-ratio: 1; }
+  .slot.empty small, .slot.locked small { margin-top: 14px; font-size: 10px; letter-spacing: 3px; }
+  .slot.locked { justify-content: center; padding: 0; border-style: dashed; background: #0b0e1466; opacity: .5; }
+
+  .actionbar { flex: none; display: flex; align-items: center; justify-content: center; gap: 22px; padding-bottom: 4px; }
+  .act-btn { width: 240px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--bg2); border: 1px solid #ffffff33;
+    cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: border-color .12s, background .12s; }
+  .act-btn:hover { border-color: var(--cy); background: #00f3ff12; }
+  .act-btn small { font-size: 9px; letter-spacing: 2px; opacity: .55; }
+  .act-btn b { font-size: 11px; letter-spacing: 1.5px; max-width: 224px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .act-btn.open { border-color: var(--cy); }
+  .start { width: 340px; height: 66px; background: var(--rd); border: 0; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 0 26px #ff465566;
+    font-size: 20px !important; font-weight: 900; letter-spacing: 7px; color: #fff; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    transition: filter .12s, transform .12s; }
   .start::before { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, #ffffff40 50%, transparent 70%); transform: translateX(-100%); transition: transform .5s; }
   .start:hover { filter: brightness(1.12); transform: translateY(-2px); }
   .start:hover::before { transform: translateX(100%); }
   .start:active { transform: translateY(1px); }
   .start span { position: relative; }
+  #screen-lobby .start:disabled { background: #2a3038; color: #e9eef299; cursor: default; filter: none; transform: none; box-shadow: none; }
+  #screen-lobby .start:disabled::before { display: none; }
+  /* Selector de modo: se despliega hacia arriba, encima del escuadrón. */
+  .mode-wrap { position: relative; }
+  .mode-pop { position: absolute; left: 0; bottom: calc(100% + 10px); z-index: 4; width: min(560px, 80vw); padding: 14px; background: #0b0e14f5; border: 1px solid #00f3ff55;
+    box-shadow: 0 18px 50px #000c; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); }
+  .mode-pop[hidden] { display: none; }
+  .mode-pop h5 { margin: 0 0 8px; font-size: 10px; letter-spacing: 3px; opacity: .55; }
+  .mode-pop h5 + * { margin-bottom: 14px; }
+  .mode-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mode { padding: 10px 12px; text-align: left; background: var(--bg2); border: 1px solid var(--line); cursor: pointer; }
+  .mode b { display: block; letter-spacing: 2px; font-size: 12px; }
+  .mode small { display: block; margin-top: 3px; opacity: .6; letter-spacing: 1px; font-size: 10px; line-height: 1.35; }
+  .mode:hover:not(:disabled) { border-color: #ffffff66; }
+  .mode.sel { border-color: var(--cy); background: #00f3ff17; }
+  .mode:disabled { opacity: .35; cursor: not-allowed; }
+  .maps { display: flex; gap: 10px; }
+  .map { flex: 1 1 0; min-width: 0; background: var(--bg2); border: 1px solid var(--line); padding: 0; cursor: pointer; text-align: left; position: relative; }
+  .map:hover { border-color: #ffffff55; }
+  .map.sel { border-color: var(--map-tint); box-shadow: 0 0 0 1px var(--map-tint); }
+  .map .thumb { height: 92px; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .map .thumb svg { width: 100%; height: 100%; display: block; }
+  .map .meta { padding: 6px 9px 8px; }
+  .map .meta b { display: block; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; }
+  .map .meta small { display: block; font-size: 9px; letter-spacing: 2px; color: var(--map-tint); margin-top: 2px; }
+  .map .meta p { display: none; }
+  .map .check { display: none; }
+  .maps.locked .map:not(.sel) { opacity: .35; }
+
+  /* ---- Chat (esquina inferior izquierda, translúcido: no tapa el escuadrón) ---- */
+  .chat { position: absolute; left: 16px; bottom: 16px; z-index: 2; width: 320px; height: 200px; display: flex; flex-direction: column; background: #0b0e14b3; border: 1px solid #ffffff22;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); opacity: .82; transition: opacity .15s, background .15s; }
+  .chat:hover, .chat:focus-within { opacity: 1; background: #0b0e14eb; }
+  #screen-lobby:not(.tab-play) .chat { display: none; }
+  .chat-head { display: flex; gap: 2px; padding: 4px 4px 0; }
+  #screen-lobby .chan { padding: 3px 10px; background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; font-size: 10px; letter-spacing: 1px; font-weight: 800; opacity: .5; }
+  #screen-lobby .chan.active { opacity: 1; border-bottom-color: var(--cy); color: var(--cy); }
+  #screen-lobby .chan[data-chan="all"].active { border-bottom-color: #ffc04d; color: #ffc04d; }
+  @media (max-width: 1500px), (max-height: 820px) { .chat { width: 280px; height: 140px; } }
+  @media (max-width: 1500px) {
+    .actionbar { padding-left: 290px; gap: 14px; }
+    .act-btn { width: 200px; }
+    .start { width: 290px; }
+  }
+  .chat-log { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 10px; font-size: 12px; line-height: 1.45; scrollbar-width: thin; scrollbar-color: #ffffff30 transparent; user-select: text; }
+  .chat-log::-webkit-scrollbar { width: 4px; } .chat-log::-webkit-scrollbar-thumb { background: #ffffff30; }
+  .chat-log p { margin: 0 0 2px; overflow-wrap: anywhere; }
+  .chat-log .ch { font-size: 10px; font-weight: 800; margin-right: 4px; }
+  .chat-log .ch.party { color: var(--cy); } .chat-log .ch.all { color: #ffc04d; }
+  .chat-log .who { font-weight: 800; } .chat-log .who i { font-style: normal; opacity: .5; font-weight: 400; }
+  .chat-log .sys { opacity: .5; font-style: italic; }
+  .chat-in input { width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; background: #ffffff0a; border: 0; border-top: 1px solid #ffffff1a; color: #e9eef2; font: inherit; font-size: 12px; outline: none; user-select: text; }
+  .chat-in input:focus { background: #00f3ff0f; }
+  .chat-in input::placeholder { color: #e9eef266; }
+  .chat-in input:disabled { opacity: .5; }
+
+  /* ---- HISTORIAL y PERFIL ---- */
+  .hist { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .hist th { text-align: left; font-size: 10px; letter-spacing: 2px; opacity: .55; font-weight: 700; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  .hist td { padding: 9px 10px; border-bottom: 1px solid #ffffff10; background: #161b2280; }
+  .hist td.res { font-weight: 900; letter-spacing: 2px; }
+  .hist tr.good td.res { color: var(--cy); } .hist tr.bad td.res { color: var(--rd); }
+  .hist-empty { padding: 30px; text-align: center; opacity: .55; font-size: 13px; background: #161b2280; border: 1px dashed var(--line); }
+  .stat-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .stat { padding: 12px 14px; background: var(--bg2); border: 1px solid var(--line); }
+  .stat small { display: block; font-size: 9px; letter-spacing: 2px; opacity: .55; }
+  .stat b { display: block; margin-top: 4px; font-size: 22px; }
+  .prof { display: flex; gap: 28px; align-items: flex-start; }
+  .prof-card { --h: clamp(280px, calc(100vh - 200px), 440px); flex: none; }
+  .prof-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .prof-id { display: flex; align-items: center; gap: 14px; }
+  .prof-id h2 { margin: 0; font-size: 28px; letter-spacing: 3px; }
+  .prof-id h2 i { font-style: normal; font-weight: 400; opacity: .5; }
+  .prof-rank { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg2); border: 1px solid var(--line); }
+  .prof-rank svg { width: 48px; height: 48px; color: #8c96a0; }
+  .prof-rank b { display: block; letter-spacing: 3px; } .prof-rank small { opacity: .55; font-size: 11px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .pcard { position: relative; padding: 0; height: 170px; background: var(--bg2); border: 1px solid var(--line); cursor: pointer; overflow: hidden; text-align: left; }
+  .pcard .card-art { position: absolute; inset: 0; } .pcard .card-art svg, .pcard .card-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pcard .card-art .ini { display: grid; place-items: center; height: 100%; font-size: 54px; font-weight: 900; color: #ffffff22; }
+  .pcard span.lbl { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 6px; background: linear-gradient(180deg, transparent, #0b0e14f0 50%); font-size: 10px; letter-spacing: 1px; font-weight: 800; }
+  .pcard span.lbl small { display: block; font-weight: 400; opacity: .65; }
+  .pcard.sel { border-color: var(--cy); box-shadow: inset 0 0 0 1px var(--cy); }
+  .pcard.locked .card-art { filter: grayscale(.8) brightness(.45); }
+  .pcard:hover { border-color: #ffffff77; }
+  /* INVENTARIO: subpestañas ARSENAL / TIENDA */
+  .subnav { display: flex; gap: 4px; margin-bottom: 4px; }
+  #screen-lobby .subnav button { padding: 8px 18px; background: var(--bg2); border: 1px solid var(--line); cursor: pointer; font-size: 11px; letter-spacing: 3px; font-weight: 800; opacity: .6; }
+  #screen-lobby .subnav button.active { opacity: 1; border-color: var(--rd); box-shadow: inset 0 -2px 0 var(--rd); }
 
   .skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
-  .skin { border: 1px solid var(--line); background: linear-gradient(160deg, var(--c2), #0b1016 75%); padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 250px; position: relative; }
+  .skin { border: 1px solid var(--line); background: linear-gradient(160deg, var(--c2), #0b0e14 75%); padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 250px; position: relative; }
   .skin .tier { font-size: 10px; letter-spacing: 3px; color: var(--c1); font-weight: 800; }
   .skin .art { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--c1); filter: drop-shadow(0 6px 18px var(--c1)); }
   .skin .art svg { width: 92%; height: 110px; }
   .skin b { font-size: 17px; letter-spacing: 3px; text-transform: uppercase; }
   .skin .buy { border: 1px solid var(--c1); background: #0008; padding: 10px; cursor: pointer; letter-spacing: 2px; font-weight: 800; font-size: 12px !important; white-space: nowrap; }
-  .skin .buy:hover:not(:disabled) { background: var(--c1); color: #0b1016; }
+  .skin .buy:hover:not(:disabled) { background: var(--c1); color: #0b0e14; }
   .skin .buy:disabled { opacity: .6; cursor: default; }
 
-  #social { position: absolute; top: 62px; right: 0; bottom: 0; width: 300px; background: #070a0ee6; border-left: 1px solid var(--line); transition: width .25s; }
-  #screen-lobby.social-collapsed #social { width: 44px; }
-  #social-toggle { position: absolute; top: 10px; left: -1px; width: 28px; height: 40px; background: #ffffff10; border: 1px solid var(--line); cursor: pointer; transform: translateX(-100%); }
-  #screen-lobby.social-collapsed #social-toggle { transform: translateX(-100%) scaleX(-1); }
-  .social-body { padding: 16px; height: 100%; overflow: auto; box-sizing: border-box; transition: opacity .2s; }
-  #screen-lobby.social-collapsed .social-body { opacity: 0; pointer-events: none; }
+  /* Panel social: cajón flotante a la derecha. Se desliza POR ENCIMA del lobby (no lo encoge). */
+  #social { position: absolute; top: 62px; right: 0; bottom: 0; z-index: 5; width: 320px; background: #0b0e14f2; border-left: 1px solid #00f3ff44; box-shadow: -20px 0 50px #0009;
+    transform: translateX(0); transition: transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s; }
+  #screen-lobby.social-collapsed #social { transform: translateX(100%); box-shadow: none; }
+  #social-toggle { position: absolute; top: 50%; left: 0; width: 34px; height: 150px; margin-top: -75px; transform: translateX(-100%); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; background: var(--bg2); border: 1px solid #00f3ff55; border-right: 0; cursor: pointer; clip-path: polygon(0 10px, 100% 0, 100% 100%, 0 calc(100% - 10px)); }
+  #social-toggle span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; letter-spacing: 4px; font-weight: 900; }
+  #social-toggle i { font-style: normal; font-size: 18px; color: var(--cy); transform: scaleX(-1); transition: transform .2s; }
+  #screen-lobby.social-collapsed #social-toggle i { transform: none; }
+  #social-toggle:hover { background: #1d242e; }
+  .social-body { padding: 16px; height: 100%; overflow: auto; box-sizing: border-box; }
   .soc-title { font-weight: 800; letter-spacing: 4px; font-size: 13px; margin-bottom: 14px; }
   .soc-title small { font-weight: 400; letter-spacing: 1px; opacity: .45; font-size: 10px; display: block; margin-top: 3px; }
   #social h4 { font-size: 10px; letter-spacing: 3px; opacity: .55; margin: 16px 0 8px; }
@@ -168,19 +301,19 @@
   .acct { position: relative; display: flex; align-items: center; }
   .acct-login { display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 14px; background: #ffffff0d; border: 1px solid var(--line); cursor: pointer;
     letter-spacing: 2px; font-weight: 800; font-size: 11px !important; white-space: nowrap; }
-  .acct-login:hover:not(:disabled) { border-color: var(--cy); background: #3fd6c41f; }
+  .acct-login:hover:not(:disabled) { border-color: var(--cy); background: #00f3ff1f; }
   .acct-login:disabled { opacity: .55; cursor: default; }
   .acct-login svg { width: 16px; height: 16px; flex: none; }
   .acct-user { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px 0 4px; background: #ffffff0a; border: 1px solid var(--line); cursor: pointer; text-align: left; }
   .acct-user:hover, .acct.open .acct-user { border-color: var(--cy); }
   .acct-user[hidden], .acct-login[hidden] { display: none; }
-  .acct-av { width: 32px; height: 32px; flex: none; display: grid; place-items: center; background: #0b1016; border: 1px solid var(--cy); overflow: hidden; font-weight: 900; font-size: 15px; }
+  .acct-av { width: 32px; height: 32px; flex: none; display: grid; place-items: center; background: #0b0e14; border: 1px solid var(--cy); overflow: hidden; font-weight: 900; font-size: 15px; }
   .acct-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .acct-user b { display: block; font-size: 12px; letter-spacing: 1px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .acct-st { display: block; font-size: 9px; letter-spacing: 2px; white-space: nowrap; }
   .acct-st::before { content: '\25CF'; margin-right: 5px; }
   .acct-st.ok { color: var(--cy); } .acct-st.busy { color: #ffc04d; } .acct-st.bad { color: var(--rd); }
-  .acct-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: #0b1016f7; border: 1px solid #ffffff2a; padding: 14px; z-index: 15; box-shadow: 0 16px 40px #000a; }
+  .acct-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: #0b0e14f7; border: 1px solid #ffffff2a; padding: 14px; z-index: 15; box-shadow: 0 16px 40px #000a; }
   .acct-menu[hidden] { display: none; }
   .acct-menu h5 { margin: 0 0 10px; font-size: 10px; letter-spacing: 3px; opacity: .55; }
   .acct-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
@@ -191,7 +324,7 @@
   .acct-menu p:empty { display: none; }
   .acct-menu .btn { width: 100%; padding: 10px 14px; font-size: 12px; letter-spacing: 3px; margin-top: 6px; }
   .acct-menu .btn[hidden] { display: none; }
-  #toast { position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 20px); background: #0b1016f2; border: 1px solid var(--cy); color: #e9eef2; padding: 12px 20px; font-size: 13px;
+  #toast { position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 20px); background: #0b0e14f2; border: 1px solid var(--cy); color: #e9eef2; padding: 12px 20px; font-size: 13px;
     letter-spacing: 1px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 40; max-width: min(640px, 90vw); text-align: center; line-height: 1.5; }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
   #toast.bad { border-color: var(--rd); }
@@ -200,14 +333,15 @@
   /* ===================== Tienda: confirmación de compra ===================== */
   .shop-earn { font-size: 11px; letter-spacing: 1px; opacity: .6; }
   .skin .buy.poor { border-color: #ffffff33; }
-  .confirm-art { height: 150px; display: flex; align-items: center; justify-content: center; color: var(--c1); background: linear-gradient(160deg, var(--c2), #0b1016 80%);
+  .confirm-art.card svg { height: 100%; width: auto; }
+  .confirm-art { height: 150px; display: flex; align-items: center; justify-content: center; color: var(--c1); background: linear-gradient(160deg, var(--c2), #0b0e14 80%);
     border: 1px solid var(--line); margin: 14px 0 10px; }
   .confirm-art svg { width: 80%; height: 120px; filter: drop-shadow(0 6px 18px var(--c1)); }
   .confirm-line { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); }
   .confirm-line b { color: var(--cy); }
   .confirm-line .neg { color: var(--rd); }
   .modal-foot .btn + .btn { margin-left: 10px; }
-  .btn.primary { border-color: var(--cy); background: #3fd6c42a; }
+  .btn.primary { border-color: var(--cy); background: #00f3ff2a; }
   .btn:disabled { opacity: .45; cursor: default; }
 
   /* ===================== Colección (loadout estilo Valorant) ===================== */
@@ -237,7 +371,7 @@
   .lo-skin.sel { border-color: var(--c1); background: #ffffff12; }
   .lo-skin.locked { opacity: .55; }
   .lo-skin.on::after { content: 'EQUIPADA'; margin-left: auto; font-size: 9px; letter-spacing: 2px; color: var(--cy); font-weight: 800; }
-  .lo-preview { border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 60%, var(--c2), #0b1016 75%); display: flex; flex-direction: column; padding: 18px 22px; }
+  .lo-preview { border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 60%, var(--c2), #0b0e14 75%); display: flex; flex-direction: column; padding: 18px 22px; }
   .lo-preview .tier { font-size: 10px; letter-spacing: 3px; color: var(--c1); font-weight: 800; }
   .lo-preview h3 { margin: 4px 0 0; font-size: 26px; letter-spacing: 5px; text-transform: uppercase; }
   .lo-preview .art { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--c1); }
@@ -252,11 +386,11 @@
   .p-sub { font-size: 12px; letter-spacing: 3px; opacity: .55; margin-bottom: 12px; }
   .pause-box button, .btn { font: inherit; color: #e9eef2; background: #ffffff0d; border: 1px solid var(--line); padding: 14px 18px; text-align: left; letter-spacing: 4px; font-weight: 700; cursor: pointer;
     clip-path: polygon(0 0, 100% 0, 100% 70%, 96% 100%, 0 100%); }
-  .pause-box button:hover, .btn:hover { border-color: var(--cy); background: #3fd6c41f; }
-  .pause-box button.danger:hover { border-color: var(--rd); background: #ff5a6e22; }
+  .pause-box button:hover, .btn:hover { border-color: var(--cy); background: #00f3ff1f; }
+  .pause-box button.danger:hover { border-color: var(--rd); background: #ff465522; }
   .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #000a; z-index: 20; }
   .modal.open { display: flex; }
-  .modal-box { width: min(620px, 92vw); max-height: 86vh; display: flex; flex-direction: column; background: #0b1016; border: 1px solid #ffffff2a; color: #e9eef2; }
+  .modal-box { width: min(620px, 92vw); max-height: 86vh; display: flex; flex-direction: column; background: #0b0e14; border: 1px solid #ffffff2a; color: #e9eef2; }
   .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); letter-spacing: 5px; }
   .modal-head .x { font: inherit; background: none; border: 1px solid var(--line); color: inherit; width: 32px; height: 32px; cursor: pointer; }
   .modal-head .x:hover { border-color: var(--rd); color: var(--rd); }
@@ -296,7 +430,7 @@
   #screen-landing::before { top: 0; }
   #screen-landing::after { bottom: 0; }
   .land-scan { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, #ffffff06 0 1px, transparent 1px 4px); }
-  .land-scan::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 18vh; background: linear-gradient(180deg, transparent, #3fd6c404 70%, #3fd6c40e);
+  .land-scan::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 18vh; background: linear-gradient(180deg, transparent, #00f3ff04 70%, #00f3ff0e);
     transform: translateY(-30vh); animation: landScan 7s linear infinite; }
   @keyframes landScan { to { transform: translateY(110vh); } }
   .land-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -317,8 +451,8 @@
   .land-main > * { animation: landIn .9s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 110ms + 150ms); }
   @keyframes landIn { from { opacity: 0; transform: translateY(14px); } }
   .land-kicker { font-size: 11px; letter-spacing: 7px; color: var(--cy); font-weight: 700; }
-  .land-logo { width: 72px; height: 72px; color: var(--rd); margin: 22px 0 8px; filter: drop-shadow(0 0 24px #ff5a6e66); }
-  .land-main h1 { margin: 0 -.26em 0 0; font-size: clamp(56px, 10vw, 132px); line-height: 1; font-weight: 900; letter-spacing: .26em; text-shadow: 0 0 60px #ff5a6e33, 0 4px 30px #000; }
+  .land-logo { width: 72px; height: 72px; color: var(--rd); margin: 22px 0 8px; filter: drop-shadow(0 0 24px #ff465566); }
+  .land-main h1 { margin: 0 -.26em 0 0; font-size: clamp(56px, 10vw, 132px); line-height: 1; font-weight: 900; letter-spacing: .26em; text-shadow: 0 0 60px #ff465533, 0 4px 30px #000; }
   .land-tag { margin: 16px 0 0; font-size: 12px; letter-spacing: 5px; opacity: .65; }
   .land-btns { display: flex; flex-direction: column; gap: 12px; margin-top: 46px; width: min(430px, 86vw); }
   .land-btn { position: relative; height: 58px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid transparent; cursor: pointer; font: inherit;
@@ -326,11 +460,11 @@
     clip-path: polygon(0 0, 100% 0, 100% 72%, 95% 100%, 0 100%); }
   .land-btn > span::before { content: '[ '; opacity: .5; }
   .land-btn > span::after { content: ' ]'; opacity: .5; }
-  .land-btn.primary { background: #ece8e1; color: #0b1016; }
+  .land-btn.primary { background: #ece8e1; color: #0b0e14; }
   .land-btn.primary:hover:not(:disabled) { background: var(--rd); color: #fff; transform: translateY(-2px); }
   .land-btn.primary svg { width: 18px; height: 18px; padding: 4px; background: #fff; flex: none; }
   .land-btn.ghost { height: 50px; background: #05080c8c; color: #e9eef2; border-color: #ffffff3d; font-size: 12px; }
-  .land-btn.ghost:hover:not(:disabled) { border-color: var(--cy); color: var(--cy); background: #3fd6c414; }
+  .land-btn.ghost:hover:not(:disabled) { border-color: var(--cy); color: var(--cy); background: #00f3ff14; }
   .land-btn:active:not(:disabled) { transform: translateY(1px); }
   .land-btn:disabled { cursor: default; opacity: .6; }
   .land-msg { min-height: 18px; margin-top: 14px; font-size: 12px; color: #ff8a7a; max-width: 460px; line-height: 1.5; }
@@ -361,10 +495,10 @@
   .soc-add { display: flex; gap: 6px; margin-bottom: 14px; }
   .soc-add input { flex: 1; min-width: 0; height: 36px; box-sizing: border-box; padding: 0 10px; background: #ffffff0d; border: 1px solid var(--line); color: #e9eef2; font: inherit; font-size: 13px;
     letter-spacing: 1px; outline: none; user-select: text; }
-  .soc-add input:focus { border-color: var(--cy); background: #3fd6c40f; }
+  .soc-add input:focus { border-color: var(--cy); background: #00f3ff0f; }
   .soc-add input::placeholder { color: #e9eef266; }
-  #social .soc-add button { width: 36px; height: 36px; flex: none; background: #3fd6c42a; border: 1px solid var(--cy); color: var(--cy); font-size: 20px; font-weight: 700; cursor: pointer; line-height: 1; }
-  #social .soc-add button:hover { background: var(--cy); color: #0b1016; }
+  #social .soc-add button { width: 36px; height: 36px; flex: none; background: #00f3ff2a; border: 1px solid var(--cy); color: var(--cy); font-size: 20px; font-weight: 700; cursor: pointer; line-height: 1; }
+  #social .soc-add button:hover { background: var(--cy); color: #0b0e14; }
   .soc-tabs { display: flex; border-bottom: 1px solid var(--line); }
   #social .soc-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: -1px; padding: 8px 4px 9px; background: none; border: 0; border-bottom: 2px solid transparent;
     cursor: pointer; font-size: 10px; letter-spacing: 2px; font-weight: 800; opacity: .55; }
@@ -391,14 +525,14 @@
   .req-acts .mini { margin-top: 0; }
   #screen-lobby .mini { padding: 4px 8px; background: #ffffff0d; border: 1px solid #ffffff2e; cursor: pointer; white-space: nowrap; font-size: 9px; letter-spacing: 1.5px; font-weight: 800; }
   #screen-lobby .mini:hover:not(:disabled) { border-color: #e9eef2; }
-  #screen-lobby .mini.go { border-color: var(--cy); color: var(--cy); background: #3fd6c414; }
-  #screen-lobby .mini.go:hover:not(:disabled) { background: var(--cy); color: #0b1016; }
+  #screen-lobby .mini.go { border-color: var(--cy); color: var(--cy); background: #00f3ff14; }
+  #screen-lobby .mini.go:hover:not(:disabled) { background: var(--cy); color: #0b0e14; }
   #screen-lobby .mini.no:hover:not(:disabled) { border-color: var(--rd); color: var(--rd); }
   #screen-lobby .mini:disabled { opacity: .5; cursor: default; }
   #screen-lobby .mini.tac::before { content: '[ '; opacity: .6; }
   #screen-lobby .mini.tac::after { content: ' ]'; opacity: .6; }
   /* Avatar: foto de Google (o la inicial) con un punto de estado: lobby, partida, grupo, desconectado. */
-  .av { position: relative; flex: none; width: 34px; height: 34px; box-sizing: border-box; display: grid; place-items: center; background: #0b1016; border: 1px solid #ffffff38;
+  .av { position: relative; flex: none; width: 34px; height: 34px; box-sizing: border-box; display: grid; place-items: center; background: #0b0e14; border: 1px solid #ffffff38;
     font-weight: 900; font-size: 14px; color: #e9eef2; }
   .av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .av.lobby::after, .av.game::after, .av.party::after, .av.off::after { content: ''; position: absolute; right: -4px; bottom: -4px; width: 8px; height: 8px; border: 2px solid #070a0e;
@@ -408,44 +542,9 @@
   .av.party { border-color: #ffc04d; --dot: #ffc04d; }
   .av.off { --dot: #5a636c; filter: grayscale(1); }
 
-  /* ===================== Grupo (party): ranuras de agentes en JUGAR ===================== */
-  #screen-lobby .party-leave { margin-left: auto; padding: 6px 12px; background: none; border: 1px solid #ffffff2e; cursor: pointer; font-size: 10px; letter-spacing: 2px; font-weight: 800; }
+  /* ===================== Grupo (party) ===================== */
+  #screen-lobby .party-leave { padding: 5px 12px; background: none; border: 1px solid #ffffff2e; cursor: pointer; font-size: 10px; letter-spacing: 2px; font-weight: 800; }
   #screen-lobby .party-leave:hover { border-color: var(--rd); color: var(--rd); }
-  .party-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 150px)); gap: 10px; }
-  .slot { position: relative; height: 142px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; padding: 10px 8px;
-    background: linear-gradient(180deg, #ffffff0a, #ffffff03 60%, #3fd6c40d); border: 1px solid var(--line); text-align: center; clip-path: polygon(0 0, 100% 0, 100% 86%, 88% 100%, 0 100%); }
-  .slot .av { width: 54px; height: 54px; font-size: 22px; margin-bottom: 6px; }
-  .slot b { max-width: 100%; font-size: 13px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .slot small { min-height: 13px; font-size: 10px; letter-spacing: 1px; opacity: .5; }
-  .slot em { font-style: normal; font-size: 9px; letter-spacing: 2px; color: var(--cy); }
-  .slot.me { border-color: #3fd6c488; background: linear-gradient(180deg, #3fd6c41f, #ffffff05 70%); }
-  .slot.off { opacity: .6; }
-  .slot.off em { color: #8c96a0; }
-  .slot .crown { position: absolute; top: 7px; left: 8px; font-size: 9px; letter-spacing: 2px; font-weight: 900; color: #ffc04d; }
-  .slot .sacts { position: absolute; top: 5px; right: 5px; display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
-  .slot:hover .sacts { opacity: 1; }
-  #screen-lobby .slot .sacts .mini { padding: 2px 6px; font-size: 10px; }
-  #screen-lobby .slot.empty { justify-content: center; border-style: dashed; border-color: #ffffff30; background: #ffffff05; cursor: pointer; }
-  #screen-lobby .slot.empty:hover { border-color: var(--cy); color: var(--cy); background: #3fd6c40f; }
-  .slot.empty span, .slot.locked span { font-size: 28px; font-weight: 300; line-height: 1; opacity: .7; }
-  .slot.empty small { letter-spacing: 3px; opacity: .7; }
-  .slot.locked { justify-content: center; border-style: dashed; background: none; opacity: .45; }
-  /* Miembro de un grupo: el mapa lo elige el líder. */
-  #screen-lobby.party-member .map { cursor: not-allowed; }
-  #screen-lobby.party-member .map:hover { transform: none; }
-  #screen-lobby.party-member .map:not(.sel) { opacity: .4; }
-  #screen-lobby .start:disabled { background: #2a3038; color: #e9eef299; cursor: default; filter: none; transform: none; }
-  #screen-lobby .start:disabled::before { display: none; }
-  /* Con el grupo encima, en pantallas bajas (portátiles de 768 px) encogen las miniaturas de los mapas
-     y, por debajo de 740 px, también las ranuras: INICIAR PARTIDA siempre se ve entero. */
-  #screen-lobby .start { flex: none; }
-  #screen-lobby .map .thumb { height: clamp(64px, calc(100vh - 650px), 190px); }
-  @media (max-height: 740px) {
-    #screen-lobby .map .thumb { height: clamp(64px, calc(100vh - 578px), 190px); }
-    #screen-lobby .map .meta p { display: none; }
-    .slot { height: 118px; }
-    .slot .av { width: 40px; height: 40px; font-size: 17px; margin-bottom: 3px; }
-  }
 
   /* ===================== Invitación de grupo y cuenta atrás del grupo ===================== */
   #invite-modal { z-index: 24; background: #000c; }
@@ -459,7 +558,7 @@
   #launch[hidden] { display: none; }
   .launch-box { text-align: center; }
   .launch-box small { display: block; font-size: 12px; letter-spacing: 6px; color: var(--cy); font-weight: 800; }
-  #launch-n { display: block; font-size: 140px; font-weight: 900; line-height: 1.1; color: #fff; text-shadow: 0 0 40px #ff5a6e88; animation: launchTick 1s ease-out infinite; }
+  #launch-n { display: block; font-size: 140px; font-weight: 900; line-height: 1.1; color: #fff; text-shadow: 0 0 40px #ff465588; animation: launchTick 1s ease-out infinite; }
   @keyframes launchTick { from { transform: scale(1.25); opacity: .4; } 30% { transform: scale(1); opacity: 1; } }
   #launch-map { display: block; font-size: 16px; letter-spacing: 6px; font-weight: 800; }
   #launch-hint { display: block; margin-top: 26px; font-style: normal; font-size: 11px; letter-spacing: 2px; opacity: .7; }
@@ -518,13 +617,15 @@
   <div class="land-foot"><span>ZENTEYACOMPANY.LAT</span><span>128 TICK · SIN V-SYNC</span></div>
 </div>
 
-<div id="screen-lobby">
+<div id="screen-lobby" class="social-collapsed tab-play">
   <header class="nav">
-    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2 L22 21 H17 L12 11 L7 21 H2 Z" fill="currentColor"/></svg>VÉRTICE</div>
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2 L22 21 H17 L12 11 L7 21 H2 Z" fill="currentColor"/></svg><span>VÉRTICE</span></div>
     <nav class="tabs">
+      <button class="tab" data-tab="settings">AJUSTES</button>
+      <button class="tab" data-tab="history">HISTORIAL</button>
       <button class="tab active" data-tab="play">JUGAR</button>
-      <button class="tab" data-tab="skins">TIENDA DE SKINS</button>
-      <button class="tab" data-tab="collection">COLECCIÓN</button>
+      <button class="tab" data-tab="profile">PERFIL</button>
+      <button class="tab" data-tab="inventory">INVENTARIO</button>
     </nav>
     <div class="nav-right">
       <div class="acct" id="acct">
@@ -540,40 +641,63 @@
           <button class="btn" id="acct-logout">CERRAR SESIÓN</button>
         </div>
       </div>
-      <div class="wallet" title="Créditos de cuenta: se gastan en skins y se ganan jugando"><i>¤</i><span id="acct-credits">0</span></div>
-      <button class="gear" data-open-settings title="Ajustes"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.8a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.8a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5ZM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7Z"/></svg></button>
+      <div class="wallet" id="wallet" title="Monedas de cuenta: se gastan en skins y tarjetas y se ganan jugando"><i>¤</i><span id="acct-credits">0</span><small>MONEDAS</small></div>
     </div>
   </header>
 
   <main class="lobby-main">
-    <section class="panel" data-panel="play">
-      <div class="play-head"><span class="kicker">GRUPO</span><small class="muted" id="party-info"></small><button class="party-leave" id="party-leave" hidden>SALIR DEL GRUPO</button></div>
-      <div class="party-grid" id="party-slots"></div>
-      <div class="play-head"><span class="kicker">MODO</span></div>
-      <div class="modes">
-        <button class="mode sel"><b>5 VS 5 - TÁCTICO</b><small>(VS BOTS)</small></button>
-        <button class="mode locked" disabled><b>CLASIFICATORIA</b><small>PRÓXIMAMENTE</small></button>
+    <section class="panel play" data-panel="play">
+      <div class="party-bar"><span class="kicker">ESCUADRÓN</span><small class="muted" id="party-info"></small><button class="party-leave" id="party-leave" hidden>SALIR DEL GRUPO</button></div>
+      <div class="squad" id="party-slots"></div>
+      <div class="actionbar">
+        <div class="mode-wrap">
+          <button class="act-btn" id="mode-btn" aria-haspopup="true"><small>SELECCIONAR MODO</small><b id="mode-label"></b></button>
+          <div class="mode-pop" id="mode-pop" hidden>
+            <h5>MODO</h5><div class="mode-list" id="mode-list"></div>
+            <h5>MAPA</h5><div class="maps" id="map-list"></div>
+          </div>
+        </div>
+        <button id="btn-start" class="start"><span>BUSCAR PARTIDA</span></button>
+        <button class="act-btn" id="btn-practice" title="Galería de tiro: blancos a 10-60 m que no disparan, ¤ 9000 para probar cualquier arma"><small>SIN COLA</small><b>PRÁCTICA</b></button>
       </div>
-      <div class="play-head"><span class="kicker">MAPA</span></div>
-      <div class="maps" id="map-list"></div>
-      <button id="btn-start" class="start"><span>INICIAR PARTIDA</span></button>
+    </section>
+
+    <section class="panel" data-panel="history" hidden>
+      <div class="play-head"><span class="kicker">CARRERA</span><small class="muted">Totales de tu cuenta.</small></div>
+      <div class="stat-row" id="career"></div>
+      <div class="play-head"><span class="kicker">ÚLTIMAS PARTIDAS</span><small class="muted" id="hist-note"></small></div>
+      <div id="history"></div>
+    </section>
+
+    <section class="panel" data-panel="profile" hidden>
+      <div class="prof" id="profile-view"></div>
     </section>
 
     <section class="panel" data-panel="skins" hidden>
+      <div class="subnav"><button data-sub="collection">ARSENAL</button><button data-sub="skins" class="active">TIENDA</button></div>
+      <div class="play-head"><span class="kicker">TARJETAS DE JUGADOR</span><small class="muted">Tu imagen en el escuadrón y en el perfil. Se equipan en PERFIL.</small></div>
+      <div class="cards" id="card-shop"></div>
       <div class="play-head"><span class="kicker">VITRINA DESTACADA</span><small class="muted">Cada skin cambia la textura del arma en partida. Pulsa Y (o F) para inspeccionarla.</small></div>
       <div class="shop-earn" id="shop-earn"></div>
       <div class="skins" id="skin-list"></div>
     </section>
 
     <section class="panel" data-panel="collection" hidden>
+      <div class="subnav"><button data-sub="collection" class="active">ARSENAL</button><button data-sub="skins">TIENDA</button></div>
       <div class="play-head"><span class="kicker">ARSENAL</span><span class="inv-sum" id="inv-sum"></span><small class="muted">Elige un arma para ver sus skins y equiparlas.</small></div>
       <div class="loadout" id="collection"></div>
       <div class="lo-detail" id="coll-detail" hidden></div>
     </section>
   </main>
 
+  <div class="chat" id="chat">
+    <div class="chat-head"><button class="chan active" data-chan="party">/party</button><button class="chan" data-chan="all">/all</button></div>
+    <div class="chat-log" id="chat-log"></div>
+    <form class="chat-in" id="chat-form" autocomplete="off"><input id="chat-input" type="text" maxlength="200" placeholder="chat..." spellcheck="false" aria-label="Chat"></form>
+  </div>
+
   <aside id="social">
-    <button id="social-toggle" title="Mostrar / ocultar amigos">‹</button>
+    <button id="social-toggle" title="Amigos, solicitudes e invitaciones"><span>SOCIAL</span><i>‹</i></button>
     <div class="social-body">
       <div class="soc-title">SOCIAL <small>Amigos y grupo en tiempo real</small></div>
       <div class="soc-guest" id="soc-guest">
@@ -699,7 +823,7 @@ const firebaseConfig = {
  *   firebase-app.js       → initializeApp
  *   firebase-auth.js      → getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider
  *   firebase-firestore.js → getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, writeBatch,
- *                           onSnapshot, serverTimestamp, arrayUnion, arrayRemove, increment
+ *                           onSnapshot, serverTimestamp, arrayUnion, arrayRemove, increment, query, orderBy, limit, addDoc
  */
 const FIREBASE_SDK = {
   app: 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -1524,6 +1648,22 @@ const MAPS = {
       b.bot(36, 18, 12, 18);        // pasillo sur, pegado al muro
     },
   },
+  galeria: {
+    name: 'Galería de tiro', size: 80, tint: '#7dff9a', hidden: true, floor: 0xd9dde2,   // solo PRÁCTICA (no sale en la lista)
+    desc: 'Cinco carriles con blancos a 10, 20, 30, 45 y 60 m.',
+    spawn: { x: 0, z: 34, yaw: 0 },
+    build(b) {
+      const W = 40;
+      b.wall(-W, -W, W, -W, 6, 1); b.wall(-W, W, W, W, 6, 1); b.wall(-W, -W, -W, W, 6, 1); b.wall(W, -W, W, W, 6, 1);
+      // Puesto de tiro: barandilla baja delante del spawn y separadores de carril.
+      b.box(-9, 30.5, 14, 0.4, 1.05, 'cover'); b.box(9, 30.5, 14, 0.4, 1.05, 'cover');
+      for (const x of [-15, -9, -3, 3, 9, 15]) b.wall(x, 29, x, 24, 1.2, 0.3);
+      // Marcas de distancia (10 / 20 / 30 / 45 / 60 m) a lo ancho.
+      for (const d of [10, 20, 30, 45, 60]) { b.box(-21, 34 - d, 3, 0.2, 0.05, 'column'); b.box(21, 34 - d, 3, 0.2, 0.05, 'column'); }
+      b.box(0, -37, 30, 1, 3, 'crate');
+      b.bot(-12, 24, -12, 34); b.bot(-6, 14, -6, 34); b.bot(0, 4, 0, 34); b.bot(6, -11, 6, 34); b.bot(12, -26, 12, 34);
+    },
+  },
 };
 const DEFAULT_MAP = 'santuario';
 
@@ -2076,6 +2216,8 @@ class BotManager {
     this.tickCount = 0;
     this.pendingReset = false;
     this.diff = BOT_CFG.difficulty.normal;
+    // Lo que cambia según el modo (configure): arma, alcance de visión, si disparan y la pausa entre oleadas.
+    this.W = BOT_CFG.weapon; this.viewRange = BOT_CFG.viewRange; this.passive = false; this.respawnDelay = BOT_CFG.respawnDelay; this.maxBots = 0;
     this.group = new THREE.Group();
     game.scene.add(this.group);
     // Scratch reutilizable (cero asignaciones en el bucle).
@@ -2151,8 +2293,19 @@ class BotManager {
     return bot;
   }
 
+  /** Modo de la partida (MODES) o null fuera de ella. Se llama antes de setup(). */
+  configure(mode) {
+    const m = mode ? MODES[mode] : null;
+    this.W = m?.sniper ? BOT_SNIPER : BOT_CFG.weapon;
+    this.viewRange = m?.sniper ? 110 : BOT_CFG.viewRange;
+    this.passive = !!m?.passive;
+    this.respawnDelay = m?.passive ? 1.5 : BOT_CFG.respawnDelay;
+    this.maxBots = m?.bots ?? 0;
+  }
+
   /** Coloca un bot en cada puesto del mapa (reutiliza los objetos: sin basura al cambiar de mapa). */
   setup(posts) {
+    if (this.maxBots > 0 && posts.length > this.maxBots) posts = posts.slice(0, this.maxBots);
     while (this.bots.length < posts.length) this.bots.push(this._makeBot(this.bots.length));
     for (let i = 0; i < this.bots.length; i++) {
       const b = this.bots[i];
@@ -2226,7 +2379,7 @@ class BotManager {
   _engage(b, reactMult) {
     b.state = BotState.ENGAGE;
     b.react = rand(this.diff.reaction[0], this.diff.reaction[1]) * reactMult;
-    b.lostT = 0; b.phase = 0; b.burstLeft = BOT_CFG.weapon.burst; b.fireT = 0; b.moving = false;
+    b.lostT = 0; b.phase = 0; b.burstLeft = this.W.burst; b.fireT = 0; b.moving = false;
   }
 
   /**
@@ -2244,7 +2397,7 @@ class BotManager {
   /** ¿Ve el bot a alguno de los objetivos? Elige el visible más cercano (o mantiene al que ya combate). */
   _perceive(b, ey, halfFov, targets) {
     const world = this.game.world;
-    let best = null, bestD = BOT_CFG.viewRange;
+    let best = null, bestD = this.viewRange;
     for (let k = 0; k < targets.length; k++) {
       const t = targets[k];
       if (t.health <= 0) continue;
@@ -2309,12 +2462,12 @@ class BotManager {
         if (b.state === BotState.ENGAGE) {
           if (b.phase === 1) {                            // strafe corto entre ráfagas
             this._strafe(b, dt);
-            if ((b.phaseT -= dt) <= 0) { b.phase = 0; b.moving = false; b.burstLeft = BOT_CFG.weapon.burst; b.fireT = 0.1; }
+            if ((b.phaseT -= dt) <= 0) { b.phase = 0; b.moving = false; b.burstLeft = this.W.burst; b.fireT = 0.1; }
           } else if (b.seen && b.react <= 0 && tAlive) {  // ráfaga quieto (frena 100 ms antes, como un humano)
             b.fireT -= dt;
             if (b.fireT <= 0 && b.burstLeft > 0) {
-              this._fire(b, t);
-              b.fireT = 60 / BOT_CFG.weapon.rpm;
+              if (!this.passive) this._fire(b, t);         // PRÁCTICA: apuntan pero no disparan
+              b.fireT = 60 / this.W.rpm;
               if (--b.burstLeft === 0) { b.phase = 1; b.phaseT = rand(0.3, 0.65); b.strafeDir = Math.random() < 0.5 ? -1 : 1; b.moving = true; }
             }
           }
@@ -2328,7 +2481,7 @@ class BotManager {
 
   /** Disparo de un bot a su objetivo (tú o un compañero): sale de sus ojos hacia donde apunta + cono de dispersión. */
   _fire(b, target) {
-    const g = this.game, W = BOT_CFG.weapon;
+    const g = this.game, W = this.W;
     const cp = Math.cos(b.pitch), sy = Math.sin(b.yaw), cyw = Math.cos(b.yaw);
     const fx = -sy * cp, fy = Math.sin(b.pitch), fz = -cyw * cp;      // adelante
     const rx = cyw, rz = -sy;                                         // derecha (horizontal)
@@ -2360,7 +2513,7 @@ class BotManager {
   /** Lo que se ve y se oye de un disparo de bot: trazadora, impacto, fogonazo y sonido según dónde estés tú. */
   showShot(b, end, wallHit, normal) {
     const g = this.game, p = g.player.pos;
-    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, BOT_CFG.weapon.tracerSpeed, 3);
+    g.impacts.spawnTracer(this._muzzleWorld(b, this._muz), end, this.W.tracerSpeed, 3);
     if (wallHit) g.impacts.spawnImpact(end, normal, true);
     // Audio posicional: paneo según el ángulo respecto a tu vista, volumen y agudos según distancia.
     const dx = b.pos.x - p.x, dz = b.pos.z - p.z;
@@ -2429,7 +2582,7 @@ class BotManager {
       this._updateBoxes(b);
       this.alive++;
     }
-    if (this.alive === 0) this.respawnT = BOT_CFG.respawnDelay;
+    if (this.alive === 0) this.respawnT = this.respawnDelay;
   }
 
   /** Posición en mundo del cañón del bot (rotación Y de Three aplicada a mano, sin matrices). */
@@ -2455,8 +2608,8 @@ class BotManager {
       if (this.alive === 0) {
         this.game.onWaveCleared();
         this.game.net.sendCleared();
-        this.respawnT = BOT_CFG.respawnDelay;
-        this.game.hud.showNotice(`ZONA DESPEJADA · NUEVA OLEADA EN ${BOT_CFG.respawnDelay} s`, BOT_CFG.respawnDelay);
+        this.respawnT = this.respawnDelay;
+        this.game.hud.showNotice(`ZONA DESPEJADA · NUEVA OLEADA EN ${this.respawnDelay} s`, this.respawnDelay);
       }
       return kill;
     }
@@ -4045,7 +4198,73 @@ const SKINS = [
   { id: 'pica_neon', weapon: 'pica', name: 'Pica Neón', tier: 'SELECTA', price: 875, tex: 'neon', css: ['#00f3ff', '#0e2a33'] },
 ];
 
-const SKIN_BY_ID = Object.fromEntries(SKINS.map((s) => [s.id, s]));
+/**
+ * Tarjetas de jugador: tu imagen en el escuadrón, el perfil y el grupo. Se compran como una skin (mismo
+ * inventario y misma regla de precio exacto en firestore.rules) y se equipan en PERFIL (loadout.card).
+ * Sin tarjeta se usa la foto de Google (o la inicial). glyph = emblema dibujado en SVG.
+ */
+const PLAYER_CARDS = [
+  { id: 'card_aurora', weapon: 'card', name: 'Aurora', tier: 'SELECTA', price: 600, glyph: 'aurora', css: ['#00f3ff', '#0e2a33'] },
+  { id: 'card_cuervo', weapon: 'card', name: 'Cuervo Nocturno', tier: 'SELECTA', price: 750, glyph: 'cuervo', css: ['#9d8cff', '#1b1733'] },
+  { id: 'card_vertice', weapon: 'card', name: 'Vértice', tier: 'DELUXE', price: 900, glyph: 'vertice', css: ['#ff4655', '#2b0f14'] },
+  { id: 'card_lince', weapon: 'card', name: 'Lince', tier: 'DELUXE', price: 1100, glyph: 'lince', css: ['#ffc04d', '#2e2410'] },
+  { id: 'card_titan', weapon: 'card', name: 'Titán', tier: 'PREMIUM', price: 1500, glyph: 'titan', css: ['#7dff9a', '#0f2a17'] },
+  { id: 'card_eclipse', weapon: 'card', name: 'Eclipse', tier: 'EXCLUSIVA', price: 2000, glyph: 'eclipse', css: ['#ff7a2e', '#2a0e05'] },
+];
+const CARD_BY_ID = Object.fromEntries(PLAYER_CARDS.map((c) => [c.id, c]));
+const SKIN_BY_ID = Object.fromEntries([...SKINS, ...PLAYER_CARDS].map((s) => [s.id, s]));
+
+const CARD_GLYPHS = {
+  aurora: '<path d="M10 104 Q30 84 50 100 T90 96" stroke-width="5"/><path d="M10 118 Q32 98 52 114 T90 110" stroke-width="3" opacity=".6"/><circle cx="50" cy="70" r="14"/>',
+  cuervo: '<path d="M18 92 L50 62 L82 92 L66 88 L50 102 L34 88 Z" fill="currentColor" stroke="none"/><path d="M28 112 L50 96 L72 112" stroke-width="4"/>',
+  vertice: '<path d="M50 52 L82 118 H66 L50 84 L34 118 H18 Z" fill="currentColor" stroke="none"/>',
+  lince: '<path d="M22 88 Q50 62 78 88 Q50 112 22 88 Z" stroke-width="4"/><path d="M50 74 V102" stroke-width="7"/><path d="M26 60 L34 74 M74 60 L66 74" stroke-width="4"/>',
+  titan: '<circle cx="50" cy="88" r="26" stroke-width="3"/><circle cx="50" cy="88" r="4" fill="currentColor"/><path d="M50 52 V72 M50 104 V124 M14 88 H34 M66 88 H86" stroke-width="3"/>',
+  eclipse: '<circle cx="50" cy="86" r="28" fill="currentColor" stroke="none"/><circle cx="60" cy="80" r="26" fill="#0b0e14" stroke="none"/><circle cx="50" cy="86" r="34" stroke-width="1.5" opacity=".6"/>',
+};
+const _cardSvgCache = new Map();
+/** Arte de la tarjeta (retrato 100 × 180, sin ids repetidos: cada tarjeta usa su propio gradiente). */
+function cardSVG(card) {
+  if (!_cardSvgCache.has(card.id)) {
+    const [c1, c2] = card.css, g = 'cg-' + card.id;
+    _cardSvgCache.set(card.id, `<svg viewBox="0 0 100 180" preserveAspectRatio="xMidYMid slice" style="color:${c1}">
+      <defs><linearGradient id="${g}" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="${c2}"/><stop offset="1" stop-color="#05070a"/></linearGradient>
+      <radialGradient id="${g}r" cx=".5" cy=".48" r=".5"><stop offset="0" stop-color="${c1}" stop-opacity=".35"/><stop offset="1" stop-color="${c1}" stop-opacity="0"/></radialGradient></defs>
+      <rect width="100" height="180" fill="url(#${g})"/><rect width="100" height="180" fill="url(#${g}r)"/>
+      <path d="M-10 40 L110 -20 M-10 70 L110 10 M-10 160 L110 100" stroke="${c1}" stroke-opacity=".08" stroke-width="8"/>
+      <g fill="none" stroke="currentColor" stroke-linecap="square" style="filter:drop-shadow(0 0 6px ${c1})">${CARD_GLYPHS[card.glyph]}</g>
+      <text x="50" y="22" text-anchor="middle" font-size="7" font-weight="900" letter-spacing="3" fill="${c1}" opacity=".7" font-family="monospace">VÉRTICE</text></svg>`);
+  }
+  return _cardSvgCache.get(card.id);
+}
+
+/** Imagen de un jugador: su tarjeta, si no su foto de Google, si no su inicial. */
+function playerArtHTML(cardId, photo, name) {
+  const card = CARD_BY_ID[cardId];
+  if (card) return `<div class="card-art">${cardSVG(card)}</div>`;
+  const initial = escapeHTML(String(name || '?').charAt(0).toUpperCase());
+  return `<div class="card-art">${photo ? `<img src="${escapeHTML(photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span class="ini">${photo ? '' : initial}</span></div>`;
+}
+
+// Emblema de rango (aún sin clasificatoria: todos SIN RANGO), corona del líder y "+" de las ranuras vacías.
+const RANK_SVG = '<svg class="rank" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M24 4 L42 14 V30 L24 44 L6 30 V14 Z" fill="#161b22"/><path d="M14 22 L24 16 L34 22 M14 30 L24 24 L34 30" stroke-width="3"/></svg>';
+const CROWN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7 L8 12 L12 5 L16 12 L21 7 L19 18 H5 Z"/></svg>';
+const PLUS_SVG = '<svg class="plus" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3"><path d="M32 8 V56 M8 32 H56"/><path d="M4 4 H14 M4 4 V14 M60 4 H50 M60 4 V14 M4 60 H14 M4 60 V50 M60 60 H50 M60 60 V50" stroke-width="2" opacity=".6"/></svg>';
+
+/**
+ * Modos de partida (SELECCIONAR MODO). Todos son contra bots: no hay servidor de emparejamiento.
+ *  credits = dinero de ronda al empezar · difficulty = fija la dificultad · map / bots / weapon = duelo
+ *  fijo en Páramo con un único francotirador · passive = los bots no disparan · noStats = no suma a la carrera.
+ */
+const MODES = {
+  competitivo: { name: 'COMPETITIVO', title: '5 VS 5 · COMPETITIVO', desc: 'Contra 5 bots, economía desde ¤ 800 y la dificultad de Ajustes.', credits: ECONOMY.startCredits },
+  casual: { name: 'CASUAL', title: '5 VS 5 · CASUAL', desc: 'Bots en Fácil y ¤ 9000 cada ronda para probar cualquier arma.', credits: ECONOMY.maxCredits, difficulty: 'facil' },
+  duelo: { name: 'DUELO 1V1', title: 'DUELO 1V1 · FRANCOTIRADOR', desc: 'Páramo, tu Titán contra un francotirador a 80 m. Individual.', credits: 0, map: 'paramo', bots: 1, weapon: 'titan', sniper: true, solo: true },
+  practica: { name: 'PRÁCTICA', title: 'PRÁCTICA · GALERÍA DE TIRO', desc: 'Blancos que no disparan, ¤ 9000.', credits: ECONOMY.maxCredits, map: 'galeria', passive: true, noStats: true, hidden: true, solo: true },
+};
+const DEFAULT_MODE = 'competitivo';
+// Francotirador del duelo: un disparo cada 1,5 s, muy preciso y con alcance para los 80 m de Páramo.
+const BOT_SNIPER = { damage: 75, headMultiplier: 2, rpm: 40, burst: 1, spread: 0.3, moveSpread: 1.5, range: 120, tracerSpeed: 700 };
 
 const store = {
   load(key, fallback) { try { const v = localStorage.getItem(key); return v ? { ...fallback, ...JSON.parse(v) } : { ...fallback }; } catch { return { ...fallback }; } },
@@ -4243,6 +4462,8 @@ class CloudAccount {
         // Amigos y grupos (Social)
         collection: fsSdk.collection, writeBatch: fsSdk.writeBatch, deleteDoc: fsSdk.deleteDoc,
         arrayUnion: fsSdk.arrayUnion, arrayRemove: fsSdk.arrayRemove, increment: fsSdk.increment,
+        // Chat
+        query: fsSdk.query, orderBy: fsSdk.orderBy, limit: fsSdk.limit, addDoc: fsSdk.addDoc,
       };
       // Firebase recuerda la sesión: al recargar, este callback llega solo con el usuario de antes.
       authSdk.onAuthStateChanged(auth, (u) => { this._onUser(u); });
@@ -4505,6 +4726,10 @@ const SOCIAL = {
   // rulesVersion/{mapsRulesVersion}, es decir, si ya están publicadas las reglas que lo incluyen.
   legacyMaps: ['santuario', 'bastion'],
   mapsRulesVersion: 'maps-1',
+  // Tarjeta de jugador y LISTO en el perfil público, modo del grupo y chat: solo con las reglas lobby-1 publicadas.
+  lobbyRulesVersion: 'lobby-1',
+  chatMax: 40,               // mensajes que se cargan de cada canal
+  chatGapMs: 1000,           // como mucho un mensaje por segundo
 };
 
 const DIFFICULTY_NAMES = { facil: 'Fácil', normal: 'Normal', dificil: 'Difícil' };
@@ -4570,7 +4795,11 @@ class Social {
     this.outgoing = new Map();           // solicitudes enviadas: uid → { at }
     this.invites = new Map();            // partyId → { partyId, from, at }
     this.people = new Map();             // uid → perfil público (amigos, solicitudes, invitaciones y grupo)
-    this.party = null;                   // { id, leader, members, status, map, difficulty, launchSeq, launchAt }
+    this.party = null;                   // { id, leader, members, status, map, difficulty, launchSeq, launchAt, mode }
+    this.lobbyOk = false;                // reglas lobby-1 publicadas: tarjeta, LISTO, modo del grupo y chat
+    this.chat = { party: [], all: [] };  // últimos mensajes de cada canal, del más antiguo al más nuevo
+    this._chatPartySub = null;
+    this._chatAt = 0;
     this.skew = 0;                       // hora del servidor − hora local (ms), medida con el propio latido
     this.busy = false;                   // hay una acción del jugador en curso
     this.invited = new Map();            // uid → cuándo le invité (el botón muestra "INVITADO")
@@ -4639,6 +4868,8 @@ class Social {
       await this._ensureParty(partyId, gen);
       if (gen !== this._gen) return;
       this.status = 'ready';
+      this._watchAllChat(gen);
+      this.syncCard();
       this._hb = setInterval(() => this._beat(), SOCIAL.heartbeatMs);
       this._tick = setInterval(() => this._onTick(), SOCIAL.tickMs);
       this._refreshToken();
@@ -4683,6 +4914,8 @@ class Social {
     // Sin la marca de mapas el panel funciona igual; solo los mapas nuevos quedan fuera del grupo.
     try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.mapsRulesVersion)); this.newMapsOk = true; }
     catch (err) { this.newMapsOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca de mapas', err); }
+    try { await this.fb.getDoc(this._ref('rulesVersion', SOCIAL.lobbyRulesVersion)); this.lobbyOk = true; }
+    catch (err) { this.lobbyOk = false; if (err?.code !== 'permission-denied') console.warn('[FIRESTORE SOCIAL] marca del lobby', err); }
   }
 
   /** ¿Aceptan las reglas publicadas este mapa en un grupo? */
@@ -4739,6 +4972,9 @@ class Social {
     for (const unsub of this._peopleSubs.values()) unsub();
     this._peopleSubs.clear();
     this._unwatchParty();
+    if (this._chatPartySub) this._chatPartySub();
+    this._chatPartySub = null;
+    this.chat = { party: [], all: [] };
     this.status = 'off'; this.error = ''; this.uid = null; this.me = null; this.party = null; this.busy = false;
     this.friends.clear(); this.incoming.clear(); this.outgoing.clear(); this.invites.clear(); this.people.clear(); this.invited.clear();
     this._primed.clear(); this._accepted.clear(); this._seenInvites.clear();
@@ -4863,6 +5099,8 @@ class Social {
       lastSeen: d.lastSeen?.toMillis?.() ?? null,
       partyId: typeof d.partyId === 'string' ? d.partyId : null,
       partySize: Number.isInteger(d.partySize) ? d.partySize : 1,
+      card: CARD_BY_ID[d.card] ? d.card : null,
+      ready: d.ready === true,
     };
   }
 
@@ -4969,6 +5207,7 @@ class Social {
       leader: this.uid, members: [this.uid], status: 'idle',
       map: this.partyMapOk(this.game.ui.selectedMap) ? this.game.ui.selectedMap : DEFAULT_MAP, difficulty: this.game.settings.botDifficulty,
       launchSeq: 0, launchAt: null, createdAt: this._ts(), updatedAt: this._ts(),
+      ...(this.lobbyOk ? { mode: this._partyMode() } : {}),
     });
     b.update(this._ref('users', this.uid), { partyId: ref.id, partySize: 1, status: this._activity, lastSeen: this._ts() });
     return ref.id;
@@ -5020,7 +5259,9 @@ class Social {
       difficulty: BOT_CFG.difficulty[d.difficulty] ? d.difficulty : 'normal',
       launchSeq: Number.isInteger(d.launchSeq) ? d.launchSeq : 0,
       launchAt: d.launchAt?.toMillis?.() ?? null,
+      mode: MODES[d.mode] && !MODES[d.mode].solo ? d.mode : DEFAULT_MODE,
     };
+    if (!prev || prev.id !== p.id) { this._watchPartyChat(p.id); if (this.me?.ready) this.setReady(false); }
     // Arranque: solo con datos confirmados por el servidor, y nunca uno antiguo (al recargar o reconectar).
     if (this._launchSeq < 0) this._launchSeq = p.launchSeq;
     else if (!pending && p.launchSeq > this._launchSeq) {
@@ -5042,6 +5283,7 @@ class Social {
   /** Me expulsaron, el grupo desapareció o dejó de poder leerse: vuelvo a tener un grupo propio. */
   async _partyLost(reason) {
     this._unwatchParty();
+    this._watchPartyChat(null);
     this.party = null;
     if (reason === 'kicked') this._toast('El líder te ha expulsado del grupo.', true);
     else if (reason === 'gone') this._toast('El grupo se ha disuelto.');
@@ -5166,6 +5408,7 @@ class Social {
       this._leaveOps(b, old);
       const id = this._partyOps(b);
       this.party = null;
+      this._watchPartyChat(null);                  // al salir dejo de poder leer ese chat
       this._watchParty(id);
       try {
         await this._commit('salir del grupo', b, [`parties/${old.id}`, `parties/${id}`]);
@@ -5194,20 +5437,97 @@ class Social {
   syncPartySettings() {
     const p = this.party;
     if (!this.ready || !this.inParty || !this.isLeader) return;
-    const map = this.game.ui.selectedMap, difficulty = this.game.settings.botDifficulty;
-    if (p.map === map && p.difficulty === difficulty) return;
+    const map = this.game.ui.selectedMap, difficulty = this.game.settings.botDifficulty, mode = this._partyMode();
+    if (p.map === map && p.difficulty === difficulty && (!this.lobbyOk || p.mode === mode)) return;
     if (!this.partyMapOk(map)) { if (this.inParty) this._partyMapDenied(map); return; }
-    this.fb.updateDoc(this._ref('parties', p.id), { map, difficulty, updatedAt: this._ts() })
+    this.fb.updateDoc(this._ref('parties', p.id), { map, difficulty, ...(this.lobbyOk ? { mode } : {}), updatedAt: this._ts() })
       .catch((err) => this._toast(cloudErrorText(err), true));
   }
 
-  /** INICIAR PARTIDA del líder: status 'launching' + launchSeq nuevo → todos los miembros arrancan. */
-  launch(map) {
+  /** Modo que se guarda en el grupo (los individuales no: el grupo sigue en Competitivo). */
+  _partyMode() { const m = this.game.ui.selectedMode; return MODES[m] && !MODES[m].solo ? m : DEFAULT_MODE; }
+
+  /* ----------------------------- Lobby: LISTO, tarjeta y chat (reglas lobby-1) ----------------------------- */
+  /** LISTO / NO LISTO en tu perfil público: lo ven los demás miembros del grupo en tu ranura. */
+  setReady(on) {
+    if (!this.ready || !this.lobbyOk || !this.me || this.me.ready === on) return;
+    this.me.ready = on;
+    this._emit();
+    this.fb.updateDoc(this._ref('users', this.uid), { ready: on, lastSeen: this._ts() }).catch((err) => this._log(err, 'marcar LISTO', `users/${this.uid}`));
+  }
+
+  /** Publica la tarjeta equipada para que tus amigos la vean en el grupo ('' = foto de Google). */
+  syncCard() {
+    if (!this.ready || !this.lobbyOk || !this.me) return;
+    const card = this.game.profile.equipped.card ?? '';
+    if ((this.me.card ?? '') === card) return;
+    this.me.card = card || null;
+    this.fb.updateDoc(this._ref('users', this.uid), { card, lastSeen: this._ts() }).catch((err) => this._log(err, 'publicar tu tarjeta', `users/${this.uid}`));
+  }
+
+  get chatOk() { return this.ready && this.lobbyOk === true; }
+
+  _chatQuery(col) { const fb = this.fb; return fb.query(col, fb.orderBy('createdAt', 'desc'), fb.limit(SOCIAL.chatMax)); }
+
+  _onChat(chan, snap) {
+    const list = [];
+    snap.forEach((d) => {
+      const m = d.data({ serverTimestamps: 'estimate' });
+      if (typeof m.text !== 'string') return;
+      list.push({ id: d.id, chan, uid: String(m.uid ?? ''), name: String(m.name ?? '?'), tag: String(m.tag ?? ''), text: m.text, at: m.createdAt?.toMillis?.() ?? this.now });
+    });
+    this.chat[chan] = list.reverse();
+    this._emit();
+  }
+
+  /** /all: un único canal para todos los jugadores con sesión. */
+  _watchAllChat(gen) {
+    if (!this.lobbyOk) return;
+    this._subs.push(this.fb.onSnapshot(this._chatQuery(this._col('chat')), (s) => { if (gen === this._gen) this._onChat('all', s); },
+      (err) => this._log(err, 'escuchar el chat general', 'chat')));
+  }
+
+  /** /party: el chat del grupo actual (cambia al entrar o salir de un grupo). */
+  _watchPartyChat(pid) {
+    if (this._chatPartySub) this._chatPartySub();
+    this._chatPartySub = null;
+    this.chat.party = [];
+    if (!this.lobbyOk || !pid) return;
+    const gen = this._gen;
+    this._chatPartySub = this.fb.onSnapshot(this._chatQuery(this._col('parties', pid, 'chat')), (s) => { if (gen === this._gen && this.party?.id === pid) this._onChat('party', s); },
+      (err) => {
+        this._chatPartySub = null;
+        // Sin permiso = ya no soy miembro (salí, me echaron o se disolvió): no es un fallo.
+        if (err?.code !== 'permission-denied' || this.party?.id === pid) this._log(err, 'escuchar el chat del grupo', `parties/${pid}/chat`);
+      });
+  }
+
+  /** Envía un mensaje. chan = 'party' | 'all'. Devuelve true si salió. */
+  async sendChat(chan, text) {
+    text = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text || !this.chatOk || !this.me) return false;
+    if (chan === 'party' && !this.party) return false;
+    if (Date.now() - this._chatAt < SOCIAL.chatGapMs) { this._toast('Espera un segundo entre mensajes.', true); return false; }
+    this._chatAt = Date.now();
+    const col = chan === 'party' ? this._col('parties', this.party.id, 'chat') : this._col('chat');
+    try {
+      await this.fb.addDoc(col, { uid: this.uid, name: this.me.name, tag: this.me.tag, text, createdAt: this._ts() });
+      return true;
+    } catch (err) {
+      this._log(err, 'enviar un mensaje', chan === 'party' ? `parties/${this.party?.id}/chat` : 'chat');
+      this._toast('No se pudo enviar el mensaje.', true);
+      return false;
+    }
+  }
+
+  /** BUSCAR PARTIDA del líder: status 'launching' + launchSeq nuevo → todos los miembros arrancan. */
+  launch(map, mode = DEFAULT_MODE) {
     if (!this.inParty || !this.isLeader) return Promise.resolve(false);
     if (!this.partyMapOk(map)) { this._partyMapDenied(map); return Promise.resolve(false); }
     return this._run(() => this.fb.updateDoc(this._ref('parties', this.party.id), {
       status: 'launching', launchSeq: this.fb.increment(1), launchAt: this._ts(),
       map, difficulty: this.game.settings.botDifficulty, updatedAt: this._ts(),
+      ...(this.lobbyOk ? { mode: MODES[mode] && !MODES[mode].solo ? mode : DEFAULT_MODE } : {}),
     }), '', 'No se pudo iniciar la partida del grupo.');
   }
 
@@ -5284,7 +5604,9 @@ class SocialUI {
       slots: $('party-slots'), partyInfo: $('party-info'), leave: $('party-leave'),
       invite: $('invite-modal'), inviteBody: $('invite-body'), inviteYes: $('invite-yes'), inviteNo: $('invite-no'),
       launch: $('launch'), launchN: $('launch-n'), launchMap: $('launch-map'), launchHint: $('launch-hint'), start: $('btn-start'),
+      chatLog: $('chat-log'), chatForm: $('chat-form'), chatInput: $('chat-input'),
     };
+    this.chan = 'party';                 // canal al que va lo que escribes: party | all
     this._bind();
   }
 
@@ -5313,13 +5635,24 @@ class SocialUI {
     e.guestLogin.addEventListener('click', () => { this._sfx('click'); this.game.account.signIn(); });
     e.retry.addEventListener('click', () => { this._sfx('click'); this.s.retry(); });
     e.slots.addEventListener('click', (ev) => this._onSlotClick(ev));
+    // Chat: Enter envía al canal activo; "/party texto" o "/all texto" (también /p y /a) cambia de canal y lo envía.
+    document.querySelectorAll('#chat .chan').forEach((b) => b.addEventListener('click', () => { this._sfx('click'); this.chan = b.dataset.chan; this._renderChat(); e.chatInput.focus(); }));
+    e.chatForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      let text = e.chatInput.value;
+      const m = /^\/(party|p|all|a)(?:\s+|$)/i.exec(text);
+      if (m) { this.chan = m[1].toLowerCase().startsWith('p') ? 'party' : 'all'; text = text.slice(m[0].length); this._renderChat(); }
+      if (!text.trim()) { e.chatInput.value = ''; return; }
+      this.s.sendChat(this.chan, text).then((ok) => { if (ok) e.chatInput.value = ''; });
+    });
+    e.chatInput.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.stopPropagation(); e.chatInput.blur(); } });
     e.leave.addEventListener('click', () => { this._sfx('click'); this.s.leaveParty(); });
     e.inviteYes.addEventListener('click', () => { if (this.inviteShown) { this._sfx('click'); this.s.joinParty(this.inviteShown); } });
     e.inviteNo.addEventListener('click', () => { if (this.inviteShown) { this._sfx('click'); this.s.declineInvite(this.inviteShown); } });
     // Un clic durante la cuenta atrás ya captura el ratón: la partida empieza sin tener que pulsar nada más.
     e.launch.addEventListener('pointerdown', () => { this.game.input.requestLock().then(() => this._renderLaunchHint()); });
     // Foto de Google que no carga (sin red, enlace caducado): se quita y queda la inicial de debajo.
-    document.addEventListener('error', (ev) => { const t = ev.target; if (t instanceof HTMLImageElement && t.parentElement?.classList.contains('av')) t.remove(); }, true);
+    document.addEventListener('error', (ev) => { const t = ev.target; if (t instanceof HTMLImageElement && (t.parentElement?.classList.contains('av') || t.parentElement?.classList.contains('card-art'))) t.remove(); }, true);
     document.addEventListener('pointerdown', (ev) => {
       if (this.confirmRemove && !ev.target.closest('[data-act="remove"]')) { this.confirmRemove = null; this.render(); }
     });
@@ -5340,6 +5673,7 @@ class SocialUI {
     this._renderParty();
     this._renderStart();
     this._renderInvite();
+    this._renderChat();
     const pending = s.ready ? s.incoming.size : 0;
     e.nReq.textContent = pending ? String(pending) : '';
     e.toggle.classList.toggle('news', pending > 0);
@@ -5453,44 +5787,63 @@ class SocialUI {
     }
   }
 
-  /* ----------------------------- Ranuras del grupo (pestaña JUGAR) ----------------------------- */
+  /* ----------------------------- Escuadrón (pestaña JUGAR): 5 ranuras, tú en el centro ----------------------------- */
   _renderParty() {
     const s = this.s, e = this.el, account = this.game.account.user;
     const members = s.ready && s.party ? s.party.members : [s.uid ?? 'me'];
     const leader = s.party?.leader ?? members[0];
+    const me = s.ready ? s.uid : members[0];
+    const others = members.filter((m) => m !== me);
+    // Posiciones de izquierda a derecha: 0 y 1 a la izquierda, 2 = tú, 3 y 4 a la derecha. Se llenan de dentro afuera.
+    const ORDER = [1, 3, 0, 4], at = [null, null, me, null, null];
+    others.forEach((uid, k) => { if (k < ORDER.length) at[ORDER[k]] = uid; });
+    const size = ['outer', 'inner', 'center', 'inner', 'outer'];
     let html = '';
-    for (let i = 0; i < SOCIAL.partyMax; i++) {
-      const uid = members[i];
-      if (uid) html += this._slotHTML(uid, uid === leader);
-      else if (s.ready && !s.partyFull) html += '<button class="slot empty" data-act="invite-open" title="Invitar a un amigo"><span>+</span><small>INVITAR</small></button>';
-      else html += `<div class="slot locked"><span>+</span><small>${account ? '' : 'CON CUENTA'}</small></div>`;
+    for (let i = 0; i < 5; i++) {
+      const uid = at[i];
+      if (uid) html += this._slotHTML(uid, uid === leader, size[i]);
+      else if (s.ready && !s.partyFull) html += `<button class="slot ${size[i]} empty" data-act="invite-open" title="Invitar a un amigo">${PLUS_SVG}<small>INVITAR</small></button>`;
+      else html += `<div class="slot ${size[i]} locked">${PLUS_SVG}<small>${account ? '' : 'CON CUENTA'}</small></div>`;
     }
     this._put(e.slots, html);
     const p = s.party;
     e.partyInfo.textContent = !account ? 'Inicia sesión con Google para jugar en grupo con tus amigos.'
       : !s.ready ? ''
-        : !s.inParty ? `Invita a tus amigos desde el panel social (hasta ${SOCIAL.partyMax}).`
-          : s.isLeader ? `${s.partySize}/${SOCIAL.partyMax} · Eres el líder: tú eliges mapa y dificultad e inicias la partida.`
-            : `${s.partySize}/${SOCIAL.partyMax} · El líder elige: ${MAPS[p.map].name} · ${DIFFICULTY_NAMES[p.difficulty]}.`;
+        : !s.inParty ? `Pulsa + para invitar a tus amigos (hasta ${SOCIAL.partyMax}).`
+          : s.isLeader ? `${s.partySize}/${SOCIAL.partyMax} · Eres el líder: tú eliges modo, mapa y dificultad.`
+            : `${s.partySize}/${SOCIAL.partyMax} · El líder elige: ${MODES[p.mode].name} · ${MAPS[p.map].name} · ${DIFFICULTY_NAMES[p.difficulty]}.`;
     e.leave.hidden = !(s.ready && s.inParty);
   }
 
-  _slotHTML(uid, isLeader) {
+  _slotHTML(uid, isLeader, size) {
     const s = this.s, me = !s.ready || uid === s.uid;
     const user = this.game.account.user;
     const p = s.ready ? s.person(uid) : null;
     const name = p ? p.name : me ? (user ? cleanPlayerName(user.name) : 'Invitado') : 'Cargando…';
-    const photo = me && user && user.photo.startsWith('https://') ? user.photo : '';
+    const photo = me ? (user && user.photo.startsWith('https://') ? user.photo : '') : p?.photo ?? '';
+    const card = me ? this.game.profile.equipped.card : p?.card;
     const tag = p ? '#' + p.tag : me && !user ? 'SIN CUENTA' : '';
     const on = me || s.isOnline(p);
     const ingame = me ? this.game.state === GameState.INGAME : p?.status === 'ingame';
-    const where = !on ? 'DESCONECTADO' : ingame ? 'EN PARTIDA' : 'EN EL LOBBY';
-    const acts = s.ready && s.inParty && s.isLeader && !me
+    const grouped = s.ready && s.inParty;
+    // Estado: en grupo (con las reglas del lobby) LISTO / NO LISTO; si no, dónde está.
+    let state, cls = '';
+    if (!on) { state = 'DESCONECTADO'; cls = 'no'; }
+    else if (ingame) { state = 'EN PARTIDA'; cls = 'game'; }
+    else if (grouped && s.lobbyOk) {
+      if (isLeader) state = 'LÍDER · LISTO';
+      else { const r = me ? s.me?.ready : p?.ready; state = r ? 'LISTO' : 'NO LISTO'; cls = r ? '' : 'no'; }
+    } else state = 'EN EL LOBBY';
+    const acts = grouped && s.isLeader && !me
       ? `<div class="sacts"><button class="mini" data-act="promote" data-uid="${escapeHTML(uid)}" title="Hacer líder del grupo">★</button>`
         + `<button class="mini no" data-act="kick" data-uid="${escapeHTML(uid)}" title="Expulsar del grupo">✕</button></div>`
       : '';
-    return `<div class="slot${me ? ' me' : ''}${on ? '' : ' off'}">${isLeader && s.inParty ? '<span class="crown">★ LÍDER</span>' : ''}${acts}
-      ${this._av(p ?? { name, photo }, on ? (ingame ? 'game' : 'lobby') : 'off')}<b>${escapeHTML(name)}</b><small>${escapeHTML(tag)}</small><em>${me ? 'TÚ · ' : ''}${where}</em></div>`;
+    const readyBtn = me && grouped && !isLeader && s.lobbyOk && on && !ingame
+      ? `<button class="ready-btn${s.me?.ready ? ' on' : ''}" data-act="ready">${s.me?.ready ? '✓ LISTO' : 'MARCAR LISTO'}</button>` : '';
+    return `<div class="slot ${size}${me ? ' me' : ''}${on ? '' : ' off'}">${playerArtHTML(card, photo, name)}
+      ${isLeader && grouped ? `<span class="crown">${CROWN_SVG}LÍDER</span>` : ''}${acts}
+      <div class="slot-foot">${RANK_SVG}<span class="rank-n">SIN RANGO</span><b>${escapeHTML(name)}</b><small class="tag">${escapeHTML(tag)}</small>
+        <em class="${cls}">${me && !grouped ? 'TÚ · ' : ''}${state}</em>${readyBtn}</div></div>`;
   }
 
   _onSlotClick(ev) {
@@ -5504,16 +5857,37 @@ class SocialUI {
       this.render();
       if (!this.s.friends.size) this.el.input.focus();
     }
+    if (b.dataset.act === 'ready') this.s.setReady(!this.s.me?.ready);
     if (b.dataset.act === 'kick') this.s.kick(uid);
     if (b.dataset.act === 'promote') this.s.promote(uid);
   }
 
-  /** INICIAR PARTIDA: los miembros esperan al líder; durante la cuenta atrás nadie puede pulsarlo. */
+  /* ----------------------------- Chat (/party y /all) ----------------------------- */
+  _renderChat() {
+    const s = this.s, e = this.el, signed = this.game.account.user !== null;
+    if (this.chan === 'party' && s.ready && !s.party) this.chan = 'all';
+    document.querySelectorAll('#chat .chan').forEach((b) => b.classList.toggle('active', b.dataset.chan === this.chan));
+    const ok = s.chatOk;
+    e.chatInput.disabled = !ok;
+    e.chatInput.placeholder = !signed ? 'Inicia sesión con Google para chatear'
+      : !s.ready ? 'chat... (conectando)'
+        : !ok ? 'chat... (publica las reglas nuevas de Firestore)'
+          : `chat... (${this.chan === 'party' ? '/party · tu grupo' : '/all · todos'})`;
+    const msgs = ok ? [...s.chat.party, ...s.chat.all].sort((a, b) => a.at - b.at) : [];
+    const html = msgs.length
+      ? msgs.map((m) => `<p><span class="ch ${m.chan}">[${m.chan === 'party' ? 'GRUPO' : 'TODOS'}]</span><span class="who">${escapeHTML(m.name)}<i>#${escapeHTML(m.tag)}</i>:</span> ${escapeHTML(m.text)}</p>`).join('')
+      : `<p class="sys">${ok ? 'Escribe /party para tu grupo o /all para todos.' : signed ? 'El chat estará disponible con las reglas nuevas publicadas.' : 'El chat necesita una cuenta de Google.'}</p>`;
+    const log = e.chatLog, stick = log.scrollHeight - log.scrollTop - log.clientHeight < 30;
+    this._put(log, html);
+    if (stick) log.scrollTop = log.scrollHeight;
+  }
+
+  /** BUSCAR PARTIDA: los miembros esperan al líder; durante la cuenta atrás nadie puede pulsarlo. */
   _renderStart() {
     const s = this.s, btn = this.el.start;
     const member = s.ready && s.inParty && !s.isLeader, starting = this.launching || this._countdown !== null;
     btn.disabled = member || starting;
-    btn.firstElementChild.textContent = starting ? 'INICIANDO…' : member ? 'ESPERANDO AL LÍDER' : 'INICIAR PARTIDA';
+    btn.firstElementChild.textContent = starting ? 'INICIANDO…' : member ? 'ESPERANDO AL LÍDER' : 'BUSCAR PARTIDA';
   }
 
   setLaunching(on) {
@@ -5657,6 +6031,8 @@ class LobbyUI {
   constructor(game) {
     this.game = game;
     this.selectedMap = DEFAULT_MAP;
+    this.selectedMode = MODES[store.load('vertice.lobby', {}).mode] && !MODES[store.load('vertice.lobby', {}).mode].hidden ? store.load('vertice.lobby', {}).mode : DEFAULT_MODE;
+    this.invTab = 'collection';                  // última subpestaña de INVENTARIO
     this.root = document.getElementById('screen-lobby');
     this.settingsEl = document.getElementById('settings');
     this.pauseEl = document.getElementById('pause');
@@ -5667,12 +6043,14 @@ class LobbyUI {
     this._patterns = new Set();                    // texturas ya registradas como <pattern> SVG
     this._toastT = 0;
     this._buildMaps();
+    this._buildModes();
     this.social = new SocialUI(game);
     const e = ACCOUNT_ECONOMY;
     document.getElementById('shop-earn').textContent =
       `Los créditos de cuenta se ganan jugando: +${e.killReward} por baja (+${e.headshotBonus} si es a la cabeza) y +${e.waveReward} por oleada despejada. Se suman al volver al menú.`;
     this.renderSkins();
     this.renderCollection();
+    this.renderCardShop();
     this.updateWallet();
     this.renderAccount();
     this._bind();
@@ -5680,15 +6058,50 @@ class LobbyUI {
 
   _sfx(kind) { const a = this.game.audio; a.init(); a.ui(kind); }
 
+  /**
+   * Pestañas de la cabecera: AJUSTES (abre el modal), HISTORIAL, JUGAR, PERFIL e INVENTARIO.
+   * INVENTARIO tiene dos paneles: 'collection' (ARSENAL) y 'skins' (TIENDA); showTab acepta los dos.
+   */
   showTab(name) {
-    this.root.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
+    if (name === 'settings') { this.openSettings(); return; }
+    if (name === 'inventory') name = this.invTab;
+    if (name === 'skins' || name === 'collection') this.invTab = name;
+    const head = name === 'skins' || name === 'collection' ? 'inventory' : name;
+    this.root.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === head));
     this.root.querySelectorAll('.panel').forEach((p) => { p.hidden = p.dataset.panel !== name; });
+    this.root.classList.toggle('tab-play', name === 'play');
+    this.closeModePop();
     if (name === 'collection') { this.closeWeapon(); this.renderCollection(); }
+    if (name === 'history') this.renderHistory();
+    if (name === 'profile') this.renderProfile();
   }
 
   _bind() {
     // Pestañas
     this.root.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { this._sfx('click'); this.showTab(t.dataset.tab); }));
+    this.root.querySelectorAll('.subnav button').forEach((b) => b.addEventListener('click', () => { this._sfx('click'); this.showTab(b.dataset.sub); }));
+    // Barra de acción: modo (desplegable), BUSCAR PARTIDA y PRÁCTICA.
+    const pop = document.getElementById('mode-pop');
+    document.getElementById('mode-btn').addEventListener('click', () => { this._sfx('click'); pop.hidden ? this.openModePop() : this.closeModePop(); });
+    document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !e.target.closest('.mode-wrap')) this.closeModePop(); });
+    document.getElementById('mode-list').addEventListener('click', (e) => {
+      const b = e.target.closest('.mode'); if (!b || b.disabled) return;
+      this._sfx('click');
+      const s = this.game.social;
+      if (s.ready && s.inParty && !s.isLeader) { this.toast('El modo lo elige el líder del grupo.'); return; }
+      this.selectMode(b.dataset.mode);
+      s.syncPartySettings();
+    });
+    document.getElementById('btn-practice').addEventListener('click', () => { this._sfx('start'); this.game.startPractice(); });
+    // PERFIL: elegir tarjeta · TIENDA: comprar tarjeta
+    document.getElementById('profile-view').addEventListener('click', (e) => this._onProfileClick(e));
+    document.getElementById('card-shop').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-card]'); if (!b) return;
+      this._sfx('click');
+      const c = CARD_BY_ID[b.dataset.card];
+      if (c && !this.game.profile.owned.has(c.id)) this.openBuy(c);
+      else if (c) { this.showTab('profile'); }
+    });
     // Cuenta de Google. signIn() se llama directamente desde el clic: el navegador exige ese gesto para abrir el popup.
     const acct = document.getElementById('acct');
     document.getElementById('acct-login').addEventListener('click', () => { this._sfx('click'); this.game.account.signIn(); });
@@ -5710,7 +6123,6 @@ class LobbyUI {
     });
     document.getElementById('btn-start').addEventListener('click', () => { this._sfx('start'); this.game.requestStart(); });
     document.getElementById('social-toggle').addEventListener('click', () => { this._sfx('click'); this.root.classList.toggle('social-collapsed'); });
-    document.querySelectorAll('[data-open-settings]').forEach((b) => b.addEventListener('click', () => { this._sfx('click'); this.openSettings(); }));
     document.querySelectorAll('[data-close-settings]').forEach((b) => b.addEventListener('click', () => { this._sfx('click'); this.closeSettings(); }));
     this.settingsEl.addEventListener('click', (e) => { if (e.target === this.settingsEl) this.closeSettings(); });
     // Pausa
@@ -5752,7 +6164,7 @@ class LobbyUI {
 
   _buildMaps() {
     const list = document.getElementById('map-list');
-    list.innerHTML = Object.entries(MAPS).map(([id, m]) => { const sk = new MapSketch(m); return `
+    list.innerHTML = Object.entries(MAPS).filter(([, m]) => !m.hidden).map(([id, m]) => { const sk = new MapSketch(m); return `
       <button class="map${id === this.selectedMap ? ' sel' : ''}" data-map="${id}" style="--map-tint:${m.tint}">
         <span class="check">SELECCIONADO</span>
         <div class="thumb">${sk.svg(m.tint)}</div>
@@ -5763,6 +6175,8 @@ class LobbyUI {
       this._sfx('click');
       const s = this.game.social;
       if (s.ready && s.inParty && !s.isLeader) { this.toast('El mapa lo elige el líder del grupo.'); return; }
+      const fixed = MODES[this.selectedMode].map;
+      if (fixed && card.dataset.map !== fixed) { this.toast(`${MODES[this.selectedMode].name} se juega siempre en ${MAPS[fixed].name}.`); return; }
       this.selectMap(card.dataset.map, true);
       s.syncPartySettings();                     // en grupo, los miembros lo ven al momento
     });
@@ -5775,16 +6189,121 @@ class LobbyUI {
     this.selectedMap = mapId;
     document.querySelectorAll('#map-list .map').forEach((c) => c.classList.toggle('sel', c.dataset.map === mapId));
     if (reload && changed && this.game.state !== GameState.INGAME) this.game.loadMap(mapId);
+    this._renderModeLabel();
+  }
+
+  /* ----------------------------- SELECCIONAR MODO ----------------------------- */
+  _buildModes() {
+    document.getElementById('mode-list').innerHTML = Object.entries(MODES).filter(([, m]) => !m.hidden)
+      .map(([id, m]) => `<button class="mode" data-mode="${id}"><b>${m.title}</b><small>${m.desc}</small></button>`).join('');
+    this.selectMode(this.selectedMode, false);    // al construir el lobby el motor aún no tiene mapa cargado
+  }
+
+  selectMode(mode, reload = true) {
+    if (!MODES[mode] || MODES[mode].hidden) return;
+    this.selectedMode = mode;
+    store.save('vertice.lobby', { mode });
+    document.querySelectorAll('#mode-list .mode').forEach((b) => b.classList.toggle('sel', b.dataset.mode === mode));
+    const fixed = MODES[mode].map;
+    document.getElementById('map-list').classList.toggle('locked', !!fixed);
+    if (fixed) this.selectMap(fixed, reload);
+    this._renderModeLabel();
+  }
+
+  _renderModeLabel() {
+    const m = MODES[this.selectedMode];
+    document.getElementById('mode-label').textContent = `${m.name} · ${MAPS[this.selectedMap].name.toUpperCase()}`;
+  }
+
+  openModePop() {
+    const s = this.game.social, grouped = s.ready && s.inParty;
+    // En grupo, los modos individuales no se pueden elegir.
+    document.querySelectorAll('#mode-list .mode').forEach((b) => { b.disabled = grouped && !!MODES[b.dataset.mode].solo; });
+    document.getElementById('mode-pop').hidden = false;
+    document.getElementById('mode-btn').classList.add('open');
+  }
+
+  closeModePop() {
+    document.getElementById('mode-pop').hidden = true;
+    document.getElementById('mode-btn').classList.remove('open');
   }
 
   /** El grupo cambió: un miembro ve (y jugará) el mapa que eligió el líder. */
   onPartyChanged() {
     const s = this.game.social, member = !!(s.party && s.inParty && !s.isLeader);
-    if (member) this.selectMap(s.party.map, true);
+    if (member) { if (s.lobbyOk) this.selectMode(s.party.mode); this.selectMap(s.party.map, true); }
+    // Al entrar en un grupo con un modo individual elegido, vuelve a Competitivo.
+    if (s.inParty && MODES[this.selectedMode].solo) { this.selectMode(DEFAULT_MODE); this.selectMap(DEFAULT_MAP, true); }
     this.root.classList.toggle('party-member', member);
   }
 
-  updateWallet() { document.getElementById('acct-credits').textContent = this.game.profile.credits; }
+  updateWallet() {
+    const el = document.getElementById('acct-credits'), v = String(this.game.profile.credits);
+    if (el.textContent === v) return;
+    const bump = el.textContent !== '0' && el.textContent !== '';
+    el.textContent = v;
+    if (bump) { const w = document.getElementById('wallet'); w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); }
+  }
+
+  /* ----------------------------- HISTORIAL ----------------------------- */
+  renderHistory() {
+    const st = this.game.profile.stats;
+    const kd = st.deaths > 0 ? (st.kills / st.deaths).toFixed(2) : String(st.kills);
+    const hs = st.kills > 0 ? Math.round((st.headshots / st.kills) * 100) + '%' : '0%';
+    const cell = (v, k) => `<div class="stat"><small>${k}</small><b>${v}</b></div>`;
+    document.getElementById('career').innerHTML = cell(st.matches, 'PARTIDAS') + cell(st.kills, 'BAJAS') + cell(st.deaths, 'MUERTES')
+      + cell(kd, 'K/D') + cell(hs, '% A LA CABEZA') + cell(st.waves, 'OLEADAS');
+    const rows = store.load('vertice.history.' + (this.game.account.user?.uid ?? 'guest'), { rows: [] }).rows;
+    document.getElementById('hist-note').textContent = 'Se guardan en este navegador (las 30 últimas).';
+    const fmt = (ms) => new Date(ms).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const dur = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    document.getElementById('history').innerHTML = rows.length ? `<table class="hist"><tr><th>RESULTADO</th><th>MODO</th><th>MAPA</th><th>BAJAS / MUERTES</th><th>CABEZA</th><th>OLEADAS</th><th>DURACIÓN</th><th>FECHA</th></tr>${
+      rows.map((r) => {
+        const good = r.kills >= r.deaths;
+        return `<tr class="${good ? 'good' : 'bad'}"><td class="res">${r.mode === 'practica' ? 'PRÁCTICA' : good ? 'POSITIVA' : 'NEGATIVA'}</td><td>${escapeHTML(MODES[r.mode]?.name ?? r.mode)}</td>`
+          + `<td>${escapeHTML(MAPS[r.map]?.name ?? r.map)}</td><td>${r.kills} / ${r.deaths}</td><td>${r.hs}</td><td>${r.waves}</td><td>${dur(r.secs)}</td><td>${fmt(r.at)}</td></tr>`;
+      }).join('')}</table>` : '<div class="hist-empty">Aún no hay partidas. Pulsa BUSCAR PARTIDA o PRÁCTICA en JUGAR.</div>';
+  }
+
+  /* ----------------------------- PERFIL y tarjetas de jugador ----------------------------- */
+  renderProfile() {
+    const g = this.game, p = g.profile, user = g.account.user, me = g.social.ready ? g.social.me : null;
+    const name = me ? me.name : user ? cleanPlayerName(user.name) : 'Invitado';
+    const tag = me ? '#' + me.tag : user ? '' : 'SIN CUENTA';
+    const photo = user && user.photo.startsWith('https://') ? user.photo : '';
+    const eq = p.equipped.card ?? null;
+    const st = p.stats, kd = st.deaths > 0 ? (st.kills / st.deaths).toFixed(2) : String(st.kills);
+    const opt = (id, art, label, sub, own) => `<button class="pcard${(id || null) === eq ? ' sel' : ''}${own ? '' : ' locked'}" data-pick="${id}">${art}<span class="lbl">${label}<small>${sub}</small></span></button>`;
+    document.getElementById('profile-view').innerHTML = `
+      <div class="slot center prof-card">${playerArtHTML(eq, photo, name)}<div class="slot-foot">${RANK_SVG}<span class="rank-n">SIN RANGO</span><b>${escapeHTML(name)}</b><small class="tag">${escapeHTML(tag)}</small></div></div>
+      <div class="prof-main">
+        <div class="prof-id"><h2>${escapeHTML(name)}<i> ${escapeHTML(tag)}</i></h2></div>
+        <div class="prof-rank">${RANK_SVG}<div><b>SIN RANGO</b><small>La clasificatoria llegará pronto: tu rango aparecerá aquí y en el escuadrón.</small></div></div>
+        <div class="stat-row"><div class="stat"><small>PARTIDAS</small><b>${st.matches}</b></div><div class="stat"><small>BAJAS</small><b>${st.kills}</b></div>
+          <div class="stat"><small>K/D</small><b>${kd}</b></div><div class="stat"><small>OLEADAS</small><b>${st.waves}</b></div>
+          <div class="stat"><small>SKINS</small><b>${SKINS.filter((x) => p.owned.has(x.id)).length}</b></div><div class="stat"><small>TARJETAS</small><b>${PLAYER_CARDS.filter((x) => p.owned.has(x.id)).length}</b></div></div>
+        <div class="play-head"><span class="kicker">TARJETA DE JUGADOR</span><small class="muted">La ven tus compañeros en el escuadrón. Las bloqueadas se compran en INVENTARIO › TIENDA.</small></div>
+        <div class="cards">${opt('', playerArtHTML(null, photo, name), photo ? 'FOTO DE GOOGLE' : 'INICIAL', 'DE SERIE', true)}${
+          PLAYER_CARDS.map((c) => opt(c.id, `<div class="card-art">${cardSVG(c)}</div>`, c.name.toUpperCase(), p.owned.has(c.id) ? c.tier : `BLOQUEADA · ¤ ${c.price}`, p.owned.has(c.id))).join('')}</div>
+      </div>`;
+  }
+
+  _onProfileClick(e) {
+    const b = e.target.closest('[data-pick]'); if (!b) return;
+    this._sfx('click');
+    const id = b.dataset.pick || null, p = this.game.profile;
+    if (id && !p.owned.has(id)) { this.openBuy(CARD_BY_ID[id]); return; }
+    if (p.equip('card', id)) { this.toast(id ? `Tarjeta ${CARD_BY_ID[id].name} equipada.` : 'Vuelves a usar tu foto de Google.'); this.refreshProfile(); }
+  }
+
+  renderCardShop() {
+    const p = this.game.profile;
+    document.getElementById('card-shop').innerHTML = PLAYER_CARDS.map((c) => {
+      const own = p.owned.has(c.id), on = p.equipped.card === c.id;
+      return `<button class="pcard${on ? ' sel' : ''}" data-card="${c.id}"><div class="card-art">${cardSVG(c)}</div>
+        <span class="lbl">${c.name.toUpperCase()}<small>${own ? (on ? 'EQUIPADA' : 'EN PROPIEDAD · equipar en PERFIL') : `${c.tier} · ¤ ${c.price}`}</small></span></button>`;
+    }).join('');
+  }
 
   /* ----------------------------- Cuenta de Google ----------------------------- */
   /** Botón de login o chip del jugador (foto, nombre, estado de la nube) según CloudAccount. */
@@ -5858,6 +6377,11 @@ class LobbyUI {
     this.updateWallet();
     this.renderSkins();
     this.renderCollection();
+    this.renderCardShop();
+    if (!this.root.querySelector('[data-panel="profile"]').hidden) this.renderProfile();
+    if (!this.root.querySelector('[data-panel="history"]').hidden) this.renderHistory();
+    this.social.render();                          // la tarjeta del centro del escuadrón
+    this.game.social.syncCard();
     if (this.accountMenuOpen) this.renderAccountStats();
     if (this.buySkin) this._renderBuy();
   }
@@ -5875,6 +6399,8 @@ class LobbyUI {
   /** Esc: cierra lo que esté encima (compra, menú de cuenta, ajustes). Devuelve true si cerró algo. */
   closeTop() {
     if (this.buySkin) { this.closeBuy(); return true; }
+    if (!document.getElementById('mode-pop').hidden) { this.closeModePop(); return true; }
+    if (!this.root.classList.contains('social-collapsed')) { this.root.classList.add('social-collapsed'); return true; }
     if (this.accountMenuOpen) { this.closeAccountMenu(); return true; }
     if (this.settingsOpen) { this.closeSettings(); return true; }
     return false;
@@ -5897,17 +6423,22 @@ class LobbyUI {
 
   /* ----------------------------- Compra con confirmación ----------------------------- */
   openBuy(skin) {
+    // Las tarjetas en la nube necesitan las reglas lobby-1 (su precio no está en las antiguas).
+    const g = this.game;
+    if (skin.weapon === 'card' && !g.profile.isGuest && !(g.social.ready && g.social.lobbyOk)) {
+      this.toast('Las tarjetas se podrán comprar cuando publiques las reglas nuevas de Firestore.', true); return;
+    }
     this.buySkin = skin;
     this._renderBuy();
     document.getElementById('buy-confirm').classList.add('open');
   }
 
   _renderBuy() {
-    const p = this.game.profile, skin = this.buySkin, w = WEAPON_DEFS[skin.weapon];
+    const p = this.game.profile, skin = this.buySkin, card = skin.weapon === 'card', w = card ? null : WEAPON_DEFS[skin.weapon];
     const owned = p.owned.has(skin.id), after = p.credits - skin.price;
     document.getElementById('buy-body').innerHTML = `
-      <div class="confirm-art" style="--c1:${skin.css[0]};--c2:${skin.css[1]}">${this._skinArt(w, skin)}</div>
-      <div class="confirm-line"><span>${skin.name.toUpperCase()}</span><span>${skin.tier} · ${w.name.toUpperCase()}</span></div>
+      <div class="confirm-art${card ? ' card' : ''}" style="--c1:${skin.css[0]};--c2:${skin.css[1]}">${card ? cardSVG(skin) : this._skinArt(w, skin)}</div>
+      <div class="confirm-line"><span>${skin.name.toUpperCase()}</span><span>${skin.tier} · ${card ? 'TARJETA DE JUGADOR' : w.name.toUpperCase()}</span></div>
       <div class="confirm-line"><span>Precio</span><b>¤ ${skin.price}</b></div>
       <div class="confirm-line"><span>Saldo después de comprar</span><span class="${after < 0 ? 'neg' : ''}">¤ ${after}</span></div>
       <p class="note">${owned ? 'Ya tienes esta skin.'
@@ -6112,7 +6643,7 @@ class LobbyUI {
   showPause(ready = false) {
     document.getElementById('pause-title').textContent = ready ? 'LISTO' : 'PAUSA';
     document.getElementById('pause-resume').textContent = ready ? 'EMPEZAR' : 'REANUDAR';
-    document.getElementById('pause-map').textContent = `${MAPS[this.game.world.mapId]?.name.toUpperCase() ?? ''} · 5 VS 5 - TÁCTICO (VS BOTS)`;
+    document.getElementById('pause-map').textContent = `${MAPS[this.game.world.mapId]?.name.toUpperCase() ?? ''} · ${(MODES[this.game.matchMode] ?? MODES[DEFAULT_MODE]).title} (VS BOTS)`;
     this.pauseEl.style.display = 'flex';
   }
   hidePause() { this.pauseEl.style.display = 'none'; this.closeSettings(); }
@@ -6792,6 +7323,8 @@ class Game {
     this.profile = new Profile();
     this.kills = 0; this.deaths = 0;
     this.match = emptyStats();                     // progreso de cuenta aún no sumado (se suma al volver al menú)
+    this.matchMode = null;                         // modo de la partida en curso (MODES) o null en el menú
+    this.cur = null;                               // partida en curso para el HISTORIAL { map, mode, at, hs, waves }
 
     this.scene = new THREE.Scene();
     this.input = new InputController(canvas);
@@ -6816,7 +7349,7 @@ class Game {
       if (this.player.shield <= 0) this.shop.shield = null;
     };
     this.player.onDeath = () => {
-      this.deaths++; this.match.deaths++;
+      this.deaths++; if (!this._noStats) this.match.deaths++;
       this.player.respawn(); this.view.reset(this.world.spawnYaw); this.shop.shield = null;
       this.weapons.isInspecting = false;
       if (this.net.active) {                       // en grupo la partida sigue para los demás: solo reapareces tú
@@ -6896,7 +7429,9 @@ class Game {
       this.ui.hidePause();
       if (document.pointerLockElement) document.exitPointerLock();
       this.ui.updateWallet();
-      if (this.world.mapId !== this.ui.selectedMap) this.loadMap(this.ui.selectedMap);
+      const special = this.matchMode !== null && (MODES[this.matchMode].bots || MODES[this.matchMode].passive);
+      this.matchMode = null;                       // el diorama del lobby lleva los bots normales
+      if (this.world.mapId !== this.ui.selectedMap || special) this.loadMap(this.ui.selectedMap);
       else this.bots.resetAll();
       this.input.keys.clear();
       this.matchDifficulty = null;                 // fuera de partida manda la dificultad de Ajustes
@@ -6934,6 +7469,7 @@ class Game {
 
   /** Carga un mapa y coloca a sus defensores en los puestos. */
   loadMap(mapId) {
+    this.bots.configure(this.matchMode);          // duelo: 1 francotirador · práctica: blancos que no disparan
     this.world.load(mapId);
     this.bots.setup(this.world.botPosts);
     this.impacts.clear();
@@ -6941,12 +7477,16 @@ class Game {
 
   /** Botón INICIAR PARTIDA. Solo: empieza ya. En grupo lo pulsa el líder y arranca a todos a la vez (onPartyLaunch). */
   requestStart() {
-    const s = this.social;
-    if (!(s.ready && s.inParty)) { this.startMatch(this.ui.selectedMap); return; }
+    const s = this.social, mode = this.ui.selectedMode;
+    if (!(s.ready && s.inParty)) { this.startMatch(this.ui.selectedMap, { mode }); return; }
     if (!s.isLeader) return;
+    if (MODES[mode].solo) { this.ui.toast(`${MODES[mode].name} es individual: sal del grupo o elige otro modo.`, true); return; }
     this.ui.social.setLaunching(true);
-    s.launch(this.ui.selectedMap).then((ok) => { if (!ok) this.ui.social.setLaunching(false); });
+    s.launch(this.ui.selectedMap, mode).then((ok) => { if (!ok) this.ui.social.setLaunching(false); });
   }
+
+  /** PRÁCTICA: galería de tiro al momento, sin cola y siempre en solitario (aunque estés en un grupo). */
+  startPractice() { this.startMatch(MODES.practica.map, { mode: 'practica' }); }
 
   /** El líder inició la partida del grupo: misma cuenta atrás, mismo mapa y misma dificultad para todos. */
   onPartyLaunch(p) {
@@ -6957,7 +7497,7 @@ class Game {
     if (this.state !== GameState.MENU) return;
     this.net.begin(p);                             // la conexión entre navegadores se abre durante la cuenta atrás
     this.ui.social.countdown(p, () => {
-      if (this.state === GameState.MENU) this.startMatch(p.map, { difficulty: p.difficulty, gesture: false });
+      if (this.state === GameState.MENU) this.startMatch(p.map, { difficulty: p.difficulty, gesture: false, mode: p.mode });
     });
   }
 
@@ -6965,12 +7505,18 @@ class Game {
    * Carga el mapa, reinicia la partida y captura el ratón con el mismo clic de INICIAR PARTIDA.
    * En grupo la arranca la cuenta atrás (gesture = false), con el mapa y la dificultad del líder.
    */
-  startMatch(mapId, { difficulty = null, gesture = true } = {}) {
+  startMatch(mapId, { difficulty = null, gesture = true, mode = DEFAULT_MODE } = {}) {
     if (gesture) this.audio.init();
     this.ui.social.cancelCountdown();
-    this.matchDifficulty = difficulty;
+    const M = MODES[mode] ?? MODES[DEFAULT_MODE];
+    this.matchMode = MODES[mode] ? mode : DEFAULT_MODE;
+    if (M.map) mapId = M.map;
+    this.matchDifficulty = M.difficulty ?? difficulty;
     this.applyDifficulty();
-    this.match.matches++;
+    this._noStats = !!M.noStats;                   // la práctica no suma a la carrera ni da monedas
+    if (!this._noStats) this.match.matches++;
+    this.cur = { map: mapId, mode: this.matchMode, at: Date.now(), hs: 0, waves: 0 };
+    this.social.setReady(false);                   // el LISTO es para la partida que empieza: se reinicia
     this.ui.fade();
     this.loadMap(mapId);
     this.resetMatch();
@@ -6987,7 +7533,9 @@ class Game {
     this.view.reset(this.world.spawnYaw);
     this.weapons = new WeaponSystem(this);
     this.view.onWeaponChanged(this.weapons.current.def);   // aplica la skin equipada (cuenta o invitado) sin reconstruir el arma
-    this.shop.credits = ECONOMY.startCredits;
+    const M = MODES[this.matchMode] ?? MODES[DEFAULT_MODE];
+    if (M.weapon) this.weapons.give(WEAPON_DEFS[M.weapon]);   // duelo: Titán desde el primer segundo
+    this.shop.credits = M.credits;
     this.shop.shield = null;
     this.kills = 0; this.deaths = 0;
     this.bots.wave = 1; this.bots.resetAll();
@@ -7000,11 +7548,26 @@ class Game {
   /** Llamado por BotManager. Solo suma contadores: nada de memoria nueva ni red en mitad del tick. */
   onBotKilled(head) {
     this.kills++;
+    if (this.cur && head) this.cur.hs++;
+    if (this._noStats) return;
     this.match.kills++;
     if (head) this.match.headshots++;
   }
 
-  onWaveCleared() { this.match.waves++; }
+  onWaveCleared() { if (this.cur) this.cur.waves++; if (!this._noStats) this.match.waves++; }
+
+  /** Al salir de una partida: una fila en el HISTORIAL (se guarda en este navegador, por cuenta). */
+  recordMatch() {
+    const c = this.cur;
+    this.cur = null;
+    if (!c) return;
+    const secs = Math.round((Date.now() - c.at) / 1000);
+    if (secs < 5) return;
+    const key = 'vertice.history.' + (this.account.user?.uid ?? 'guest');
+    const list = store.load(key, { rows: [] }).rows.slice(0, 29);
+    list.unshift({ at: c.at, map: c.map, mode: c.mode, kills: this.kills, deaths: this.deaths, hs: c.hs, waves: c.waves, secs });
+    store.save(key, { rows: list });
+  }
 
   /**
    * Suma a la cuenta lo jugado desde el último guardado: estadísticas y créditos de cuenta.
@@ -7025,7 +7588,7 @@ class Game {
 
   resume() { this.input.requestLock(); }
 
-  quitToMenu() { this.commitProgress(true); this.ui.fade(); this.setState(GameState.MENU); this.social.settle(); }
+  quitToMenu() { this.recordMatch(); this.commitProgress(true); this.ui.fade(); this.setState(GameState.MENU); this.social.settle(); this.ui.renderHistory(); }
 
   _onLockChange(locked) {
     if (this.state !== GameState.INGAME) return;
