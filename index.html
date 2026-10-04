@@ -1225,7 +1225,9 @@ const WeaponAssets = {
     this.envMap = pm.fromScene(room, 0.04).texture;   // una sola vez: un cubemap prefiltrado pequeño
     room.dispose?.(); pm.dispose();
     const loader = new GLTFLoader();
-    await Promise.all(Object.values(BASE_SKINS).map(async (s) => {
+    // Skins base y skins de la tienda con modelo propio (estas usan las poses de la base de su arma).
+    const list = [...Object.values(BASE_SKINS), ...SKINS.filter((k) => k.modelPath)];
+    await Promise.all(list.map(async (s) => {
       try {
         const gltf = await loader.loadAsync(s.modelPath);
         gltf.scene.traverse((o) => {
@@ -4376,7 +4378,8 @@ const ViewmodelFactory = {
    * Viewmodel a partir del .glb de una skin base: la escena del glTF tal cual (1 malla, 1 material),
    * su `Muzzle_Point` como boca del cañón y las poses de cadera / ADS / retroceso de BASE_SKINS.
    */
-  fromGltf(skin, scene) {
+  fromGltf(cfg, scene) {
+    const skin = BASE_SKINS[cfg.id] ?? BASE_SKINS[WEAPON_DEFS[cfg.weapon].defaultSkin];   // poses: las de la base del arma
     const root = new THREE.Group(), model = scene.clone(true);
     root.add(model);
     model.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
@@ -4387,7 +4390,7 @@ const ViewmodelFactory = {
     const tilt = skin.hipTilt.map((d) => d * DEG);
     // Vuelta al reposo en `recover` s: exponencial que se queda en el 5 % (e^-3) en ese tiempo.
     return { root, muzzle, flash: muzzle.children[muzzle.children.length - 1], base, ads, tilt, center, length: box.max.z - box.min.z,
-      kickReturn: 3 / skin.kick.recover, skin: skin.id };
+      kickReturn: 3 / skin.kick.recover, skin: cfg.id };
   },
 };
 
@@ -4916,10 +4919,11 @@ class ViewController {
    */
   applySkin(def = this.game.weapons.current.def) {
     const skin = this.game.profile.skinFor(def.id);
-    const glb = !skin && def.defaultSkin && WeaponAssets.scenes[def.defaultSkin];
-    const key = glb ? def.defaultSkin : def.id;
+    const glbId = skin ? (skin.modelPath ? skin.id : null) : def.defaultSkin;   // skin con modelo propio, o la base
+    const glb = glbId && WeaponAssets.scenes[glbId];
+    const key = glb ? glbId : def.id;
     if (!this.models[key]) {
-      const m = glb ? ViewmodelFactory.fromGltf(BASE_SKINS[def.defaultSkin], glb)
+      const m = glb ? ViewmodelFactory.fromGltf(skin ?? BASE_SKINS[glbId], glb)
         : ViewmodelFactory.build(def.model, def.category === 'shotgun' || def.category === 'sniper' ? 1.4 : 1);
       this.vmPivot.add(m.root);
       this.models[key] = m;
@@ -5500,7 +5504,8 @@ class Shop {
 const SKINS = [
   { id: 'martillo_prime', weapon: 'martillo', name: 'Martillo Prime', tier: 'PREMIUM', price: 1775, tex: 'prime', css: ['#e2bd62', '#3a3220'] },
   { id: 'martillo_obsidiana', weapon: 'martillo', name: 'Martillo Obsidiana', tier: 'EXCLUSIVA', price: 2175, tex: 'obsidiana', css: ['#ff3b00', '#24100a'] },
-  { id: 'titan_dragon', weapon: 'titan', name: 'Titán Dragón', tier: 'EXCLUSIVA', price: 2475, tex: 'dragon', css: ['#ff7a2e', '#3b1210'] },
+  { id: 'titan_dragon', weapon: 'titan', name: 'Titán Dragón', tier: 'EXCLUSIVA', price: 2475, tex: 'dragon', css: ['#ff7a2e', '#3b1210'],
+    modelPath: 'assets/weapons/titan_dragon.glb' },   // modelo propio de Blender (blender/titan.py dragon); tex = respaldo procedural
   { id: 'cuervo_glaciar', weapon: 'cuervo', name: 'Cuervo Glaciar', tier: 'DELUXE', price: 1275, tex: 'glaciar', css: ['#7ccfff', '#1c2b3a'] },
   { id: 'cuervo_neon', weapon: 'cuervo', name: 'Cuervo Neón', tier: 'SELECTA', price: 875, tex: 'neon', css: ['#00f3ff', '#0e2a33'] },
   { id: 'pica_neon', weapon: 'pica', name: 'Pica Neón', tier: 'SELECTA', price: 875, tex: 'neon', css: ['#00f3ff', '#0e2a33'] },
