@@ -13,7 +13,7 @@ rules_version = '2';
 // parties/{grupo}                   Grupo: líder, miembros (máx. 5), mapa, dificultad y arranque de partida.
 // parties/{grupo}/rtc/{miembro}     Conexión WebRTC de la partida en grupo: oferta del líder (anfitrión) y respuesta del miembro.
 // parties/{grupo}/chat/{mensaje}    Chat del grupo (/party). chat/{mensaje}: chat general (/all).
-// rulesVersion/social-2, net-1, maps-1, lobby-1, match-1  Marcas de versión (no existen; solo se pueden leer). El juego lee social-2 al conectar:
+// rulesVersion/social-2, net-1, maps-1, lobby-1, match-1, agents-1  Marcas de versión (no existen; solo se pueden leer). El juego lee social-2 al conectar:
 //                                   si se deniega, las reglas publicadas en Firebase son antiguas.
 //
 // Cuentas (players):
@@ -177,7 +177,7 @@ service cloud.firestore {
       }
 
       function validUser(d) {
-        return d.keys().hasOnly(['displayName', 'nameKey', 'tag', 'handle', 'photo', 'status', 'lastSeen', 'partyId', 'partySize', 'createdAt', 'card', 'ready'])
+        return d.keys().hasOnly(['displayName', 'nameKey', 'tag', 'handle', 'photo', 'status', 'lastSeen', 'partyId', 'partySize', 'createdAt', 'card', 'ready', 'agent'])
           && d.keys().hasAll(['displayName', 'nameKey', 'tag', 'handle', 'photo', 'status', 'lastSeen', 'partyId', 'partySize', 'createdAt'])
           && d.displayName is string && d.displayName.matches('[A-Za-z0-9àáâãäåçèéêëìíîïñòóôõöøùúûüýÿ._-][A-Za-z0-9àáâãäåçèéêëìíîïñòóôõöøùúûüýÿ ._-]{0,15}')
           && d.nameKey == foldName(d.displayName)
@@ -191,7 +191,9 @@ service cloud.firestore {
           && d.createdAt is timestamp
           // Opcionales (lobby-1): tarjeta de jugador equipada ('' = foto de Google) y LISTO en el grupo.
           && (!('card' in d) || (d.card is string && d.card.matches('(card_[a-z0-9_]{1,24})?')))
-          && (!('ready' in d) || d.ready is bool);
+          && (!('ready' in d) || d.ready is bool)
+          // Opcional (agents-1): agente elegido en el lobby (CHARACTERS de index.html).
+          && (!('agent' in d) || d.agent in ['valquiria', 'kage', 'nyx', 'aegis', 'vortex']);
       }
 
       allow read: if signedIn();
@@ -392,8 +394,9 @@ service cloud.firestore {
     // que incluyen la señalización de la partida en grupo (parties/{grupo}/rtc). maps-1: el grupo acepta el mapa Páramo.
     // lobby-1: tarjetas de jugador, LISTO, modo del grupo y chat (/party y /all).
     // match-1: el grupo acepta los mapas Acrópolis y Códice.
+    // agents-1: el perfil público lleva el agente elegido (users/{uid}.agent).
     match /rulesVersion/{version} {
-      allow get: if version in ['social-2', 'net-1', 'maps-1', 'lobby-1', 'match-1'];
+      allow get: if version in ['social-2', 'net-1', 'maps-1', 'lobby-1', 'match-1', 'agents-1'];
     }
 
     // Todo lo demás, cerrado.
